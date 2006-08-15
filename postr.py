@@ -229,6 +229,17 @@ def on_upload_activate(menuitem):
 
 glade.get_widget('upload').connect('activate', on_upload_activate)
 
+def on_about_activate(menuitem):
+    dialog = gtk.AboutDialog()
+    dialog.set_transient_for(window)
+    dialog.set_name('Flickr Uploader')
+    dialog.set_copyright(u'Copyright \u00A9 2006 Ross Burton')
+    dialog.set_authors(('Ross Burton <ross@burtonini.com>',))
+    dialog.set_website('http://burtonini.com/')
+    dialog.run()
+
+glade.get_widget('about').connect('activate', on_about_activate)
+
 Uploader().start()
 window.show()
 gtk.main()
