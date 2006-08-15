@@ -17,11 +17,12 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
-import os
+import os, threading
 from urlparse import urlparse
 
 import pygtk; pygtk.require ("2.0")
 import gobject, gtk, gtk.glade
+gtk.gdk.threads_init()
 
 import EXIF
 from flickrapi import FlickrAPI
@@ -55,20 +56,22 @@ glade = gtk.glade.XML("postr.glade")
 # TODO: autoconnect
 
 window = glade.get_widget("main_window")
+
+# TODO: hook into state of upload and confirm quit if still uploading
 window.connect('destroy', gtk.main_quit)
+glade.get_widget('quit').connect('activate', gtk.main_quit)
 
 thumbnail_image = glade.get_widget('thumbnail_image')
-
 title_entry = glade.get_widget("title_entry")
 desc_entry = glade.get_widget("desc_entry")
 tags_entry = glade.get_widget("tags_entry")
+
 def on_field_changed(entry, column):
     global current_it
     # We often get called when there is no iterator as we've just cleared the
     # field
     if current_it is None: return
     model.set_value (current_it, column, entry.get_text())
-
 title_entry.connect('changed', on_field_changed, COL_TITLE)
 desc_entry.connect('changed', on_field_changed, COL_DESCRIPTION)
 tags_entry.connect('changed', on_field_changed, COL_TAGS)
@@ -164,25 +167,66 @@ def on_drag_uri(widget, context, x, y, selection, targetType, timestamp):
         print "Unhandled target type %d" % targetType
     
     context.finish(True, True, timestamp)
-    #iconview.select_path(model.get_path(current_it))
 
 iconview.connect('drag-data-received', on_drag_uri)
 
+class UploadTask:
+    uri = None
+    title = None
+    description = None
+    tags = None
+    
+from Queue import Queue
+upload_queue = Queue()
+
+# Called when the uploading is done, to empty the model and unlock the view.
+def done():
+    gtk.gdk.threads_enter()
+    model.clear()
+    iconview.set_sensitive(True)
+    # TODO: enable upload menu item
+    gtk.gdk.threads_leave()
+
+class Uploader(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.setDaemon(True)
+        
+    def run(self):
+        while 1:
+            # This blocks when the queue is empty
+            t = upload_queue.get()
+            ret = fapi.upload(api_key=flickrAPIKey, auth_token=token,
+                              filename=urlparse(t.uri)[2],
+                              title=t.title, description=t.description, tags=t.tags)
+            if not fapi.isSuccessful(ret):
+                print fapi.getPrintableError(rsp)
+
+            if upload_queue.empty():
+                done()
+
 def on_upload_activate(menuitem):
     it = model.get_iter_first()
-    while (it is not None):
+    # If we have some pictures, disable the iconview
+    if it is not None:
+        # TODO: disable upload menu item
+        iconview.set_sensitive(False)
+    
+    while it is not None:
         (uri, title, desc, tags) = model.get(it, COL_URI, COL_TITLE, COL_DESCRIPTION, COL_TAGS)
-        ret = fapi.upload(api_key=flickrAPIKey, auth_token=token,
-                    filename=urlparse(uri)[2],
-                    title=title, description=desc, tags=tags)
-        if not fapi.wasSuccessful(ret):
-            print fapi.getPrintableError(rsp)
+
+        t = UploadTask()
+        t.uri = uri
+        t.title = title
+        t.description = desc
+        t.tags = tags
+
+        upload_queue.put(t)
         
-        previous_it = it
         it = model.iter_next(it)
-        model.remove(previous_it)
 
 glade.get_widget('upload').connect('activate', on_upload_activate)
 
+Uploader().start()
 window.show()
 gtk.main()
