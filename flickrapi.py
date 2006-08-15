@@ -349,12 +349,6 @@ class FlickrAPI:
 
 	#-----------------------------------------------------------------------
 	@classmethod
-	def isSuccessful(cls, rsp):
-		"""Return False if the rsp XMLNode indicates failure, otherwise True."""
-		return rsp['stat'] != "fail"
-
-	#-----------------------------------------------------------------------
-	@classmethod
 	def testFailure(cls, rsp, exit=True):
 		"""Exit app if the rsp XMLNode indicates failure."""
 		if rsp['stat'] == "fail":

@@ -27,6 +27,7 @@ gtk.gdk.threads_init()
 import EXIF
 from flickrapi import FlickrAPI
 
+# My top secret Flickr API keys
 flickrAPIKey = "c53cebd15ed936073134cec858036f1d"
 flickrSecret = "7db1b8ef68979779"
 
@@ -199,7 +200,8 @@ class Uploader(threading.Thread):
             ret = fapi.upload(api_key=flickrAPIKey, auth_token=token,
                               filename=urlparse(t.uri)[2],
                               title=t.title, description=t.description, tags=t.tags)
-            if not fapi.isSuccessful(ret):
+            if fapi.getRspErrorCode(ret) != 0:
+                # TODO: fire error dialog
                 print fapi.getPrintableError(rsp)
 
             if upload_queue.empty():
