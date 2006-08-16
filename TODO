@@ -1,0 +1,9 @@
+Add a uploading progress bar.  Use libnotify when completed?
+
+Handle directory drops and recurse into sub-directories
+
+Make image data drops work (first finding a program that can drop image data)
+
+Add menu items to add images
+
+Let user remove images from the list
