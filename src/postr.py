@@ -53,7 +53,7 @@ token = fapi.getToken(browser="epiphany -p", perms="write")
 model = gtk.ListStore (gobject.TYPE_STRING, gtk.gdk.Pixbuf, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
 current_it = None
 
-glade = gtk.glade.XML("postr.glade")
+glade = gtk.glade.XML(os.path.join (os.path.dirname(__file__), "postr.glade"))
 # TODO: autoconnect
 
 window = glade.get_widget("main_window")
