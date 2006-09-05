@@ -12,5 +12,6 @@ setup(name='Postr',
       scripts=['postr'],
       package_dir={'postr': 'src'},
       packages=['postr'],
-      package_data={'postr': ['postr.glade']}
+      package_data={'postr': ['postr.glade']},
+      data_files=[('share/applications', ['src/postr.desktop'])]
       )

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Flickr Uploader
+Comment=Upload photos to Flickr
+Exec=postr
+StartupNotify=true
+Terminal=false
+Type=Application
+Categories=GNOME;GTK;Application;Graphics;
