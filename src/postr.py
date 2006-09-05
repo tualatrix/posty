@@ -237,6 +237,7 @@ def on_about_activate(menuitem):
     dialog.set_authors(('Ross Burton <ross@burtonini.com>',))
     dialog.set_website('http://burtonini.com/')
     dialog.run()
+    dialog.destroy()
 
 glade.get_widget('about').connect('activate', on_about_activate)
 
