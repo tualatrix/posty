@@ -258,6 +258,7 @@ class FlickrAPI:
 		return "http://%s%s?%s" % (FlickrAPI.flickrHost, \
 			FlickrAPI.flickrAuthForm, urllib.urlencode(data))
 
+	# TODO: rename jpegData and remove image/jpeg
 	#-------------------------------------------------------------------
 	def upload(self, filename=None, jpegData=None, **arg):
 		"""Upload a file to flickr.
