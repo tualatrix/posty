@@ -41,11 +41,12 @@ token = fapi.getToken(browser="epiphany -p", perms="write")
 
 # Column indexes
 (COL_URI,
+ COL_IMAGE,
  COL_THUMBNAIL,
  COL_TITLE,
  COL_DESCRIPTION,
- COL_TAGS) = range (0, 5)
-model = gtk.ListStore (gobject.TYPE_STRING, gtk.gdk.Pixbuf, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
+ COL_TAGS) = range (0, 6)
+model = gtk.ListStore (gobject.TYPE_STRING, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
 current_it = None
 
 glade = gtk.glade.XML(os.path.join (os.path.dirname(__file__), "postr.glade"))
@@ -78,8 +79,9 @@ iconview.set_text_column (COL_TITLE)
 iconview.set_pixbuf_column (COL_THUMBNAIL)
 
 iconview.drag_dest_set (gtk.DEST_DEFAULT_ALL, (), gtk.gdk.ACTION_COPY)
-targets = gtk.target_list_add_uri_targets(None, DRAG_URI)
+targets = ()
 targets = gtk.target_list_add_image_targets(targets, DRAG_IMAGE, False)
+targets = gtk.target_list_add_uri_targets(targets, DRAG_URI)
 iconview.drag_dest_set_target_list(targets)
 
 def on_selection_changed(iconview):
@@ -119,8 +121,27 @@ def on_selection_changed(iconview):
 
 iconview.connect('selection-changed', on_selection_changed)
 
-def on_drag_uri(widget, context, x, y, selection, targetType, timestamp):
-    if targetType == DRAG_URI:
+def get_thumb_size(width, height):
+    ratio = width/float(height)
+    if width > height:
+        return (64, int(64/ratio))
+    else:
+        return (int(64/ratio), 64)
+
+def on_drop(widget, context, x, y, selection, targetType, timestamp):
+    if targetType == DRAG_IMAGE:
+        pixbuf = selection.get_pixbuf()
+        sizes = get_thumb_size (pixbuf.get_width(), pixbuf.get_height())
+        thumb = pixbuf.scale_simple(sizes[0], sizes[1], gtk.gdk.INTERP_BILINEAR)
+        model.set(model.append(),
+                  COL_IMAGE, pixbuf,
+                  COL_URI, None,
+                  COL_THUMBNAIL, thumb,
+                  COL_TITLE, "",
+                  COL_DESCRIPTION, "",
+                  COL_TAGS, "")
+    
+    elif targetType == DRAG_URI:
         for uri in selection.get_uris():
             
             # TODO: MIME type check
@@ -134,11 +155,7 @@ def on_drag_uri(widget, context, x, y, selection, targetType, timestamp):
             if thumb:
                 loader = gtk.gdk.PixbufLoader()
                 def on_size_prepared(loader, width, height):
-                    ratio = width/float(height)
-                    if width > height:
-                        loader.set_size(64, int(64/ratio))
-                    else:
-                        loader.set_size(int(64/ratio), 64)
+                    loader.set_size(*get_thumb_size(width, height))
                 loader.connect('size-prepared', on_size_prepared)
                 loader.write(thumb)
                 loader.close()
@@ -153,21 +170,21 @@ def on_drag_uri(widget, context, x, y, selection, targetType, timestamp):
             
             model.set(model.append(),
                       COL_URI, uri,
+                      COL_IMAGE, None,
                       COL_THUMBNAIL, thumb,
                       COL_TITLE, title,
                       COL_DESCRIPTION, desc,
                       COL_TAGS, "")
-    elif targetType == DRAG_IMAGE:
-        print "TODO"
     else:
         print "Unhandled target type %d" % targetType
     
     context.finish(True, True, timestamp)
 
-iconview.connect('drag-data-received', on_drag_uri)
+iconview.connect('drag-data-received', on_drop)
 
 class UploadTask:
     uri = None
+    pixbuf = None
     title = None
     description = None
     tags = None
@@ -192,9 +209,22 @@ class Uploader(threading.Thread):
         while 1:
             # This blocks when the queue is empty
             t = upload_queue.get()
-            ret = fapi.upload(api_key=flickrAPIKey, auth_token=token,
-                              filename=urlparse(t.uri)[2],
-                              title=t.title, description=t.description, tags=t.tags)
+            # TODO: construct a list and pass that to avoid duplication
+            if t.uri:
+                ret = fapi.upload(api_key=flickrAPIKey, auth_token=token,
+                                  filename=urlparse(t.uri)[2],
+                                  title=t.title, description=t.description, tags=t.tags)
+            elif t.pixbuf:
+                # This isn't very nice, but might be the best way
+                data = []
+                t.pixbuf.save_to_callback(lambda d: data.append(d), "png", {})
+                ret = fapi.upload(api_key=flickrAPIKey, auth_token=token,
+                                  jpegData=''.join(data),
+                                  title=t.title, description=t.description, tags=t.tags)
+            else:
+                print "No data in task"
+                continue
+            
             if fapi.getRspErrorCode(ret) != 0:
                 # TODO: fire error dialog
                 print fapi.getPrintableError(rsp)
@@ -210,10 +240,11 @@ def on_upload_activate(menuitem):
         iconview.set_sensitive(False)
     
     while it is not None:
-        (uri, title, desc, tags) = model.get(it, COL_URI, COL_TITLE, COL_DESCRIPTION, COL_TAGS)
+        (uri, pixbuf, title, desc, tags) = model.get(it, COL_URI, COL_IMAGE, COL_TITLE, COL_DESCRIPTION, COL_TAGS)
 
         t = UploadTask()
         t.uri = uri
+        t.pixbuf = pixbuf
         t.title = title
         t.description = desc
         t.tags = tags

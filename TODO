@@ -2,8 +2,6 @@ Add a uploading progress bar.  Use libnotify when completed?
 
 Handle directory drops and recurse into sub-directories
 
-Make image data drops work (first finding a program that can drop image data)
-
 Add menu items to add images
 
 Let user remove images from the list
@@ -13,3 +11,6 @@ Let user add photos to sets and groups
 Set privacy options
 
 Show upload quota in statusbar
+
+When dropping image data store the data not a pixbuf in the model to allow
+dragging of lossy data
