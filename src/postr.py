@@ -70,10 +70,6 @@ class Postr:
 
         self.window = glade.get_widget("main_window")
 
-        # TODO: hook into state of upload and confirm quit if still uploading
-        self.window.connect('destroy', gtk.main_quit)
-        glade.get_widget('quit').connect('activate', gtk.main_quit)
-
         self.thumbnail_image = glade.get_widget('thumbnail_image')
         self.title_entry = glade.get_widget("title_entry")
         self.desc_entry = glade.get_widget("desc_entry")
@@ -108,6 +104,10 @@ class Postr:
         targets = gtk.target_list_add_uri_targets(targets, DRAG_URI)
         self.iconview.drag_dest_set_target_list(targets)
 
+    def on_quit_activate (self, menuitem):
+        # TODO: if there are pending uploads, confirm first
+        gtk.main_quit()
+    
     def on_about_activate(self, menuitem):
         dialog = AboutDialog(self.window)
         dialog.run()
