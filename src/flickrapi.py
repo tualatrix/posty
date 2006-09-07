@@ -258,9 +258,8 @@ class FlickrAPI:
 		return "http://%s%s?%s" % (FlickrAPI.flickrHost, \
 			FlickrAPI.flickrAuthForm, urllib.urlencode(data))
 
-	# TODO: rename jpegData and remove image/jpeg
 	#-------------------------------------------------------------------
-	def upload(self, filename=None, jpegData=None, **arg):
+	def upload(self, filename=None, imageData=None, **arg):
 		"""Upload a file to flickr.
 
 		Be extra careful you spell the parameters correctly, or you will
@@ -268,11 +267,11 @@ class FlickrAPI:
 
 		Supported parameters:
 
-		One of filename or jpegData must be specified by name when 
+		One of filename or imageData must be specified by name when 
 		calling this method:
 
 		filename -- name of a file to upload
-		jpegData -- array of jpeg data to upload
+		imageData -- array of image data to upload
 
 		api_key
 		auth_token
@@ -285,10 +284,10 @@ class FlickrAPI:
 
 		"""
 
-		if filename == None and jpegData == None or \
-			filename != None and jpegData != None:
+		if filename == None and imageData == None or \
+			filename != None and imageData != None:
 
-			raise UploadException("filename OR jpegData must be specified")
+			raise UploadException("filename OR imageData must be specified")
 
 		# verify key names
 		for a in arg.keys():
@@ -324,7 +323,7 @@ class FlickrAPI:
 		body += "--%s\r\n" % (boundary)
 		body += "Content-Disposition: form-data; name=\"photo\";"
 		body += " filename=\"%s\"\r\n" % filename
-		body += "Content-Type: image/jpeg\r\n\r\n"
+		body += "Content-Type: application/octet-stream\r\n\r\n"
 
 		#print body
 
@@ -333,7 +332,7 @@ class FlickrAPI:
 			data = fp.read()
 			fp.close()
 		else:
-			data = jpegData
+			data = imageData
 
 		postData = body.encode("utf_8") + data + \
 			("--%s--" % (boundary)).encode("utf_8")

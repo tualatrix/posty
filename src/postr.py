@@ -219,7 +219,7 @@ class Uploader(threading.Thread):
                 data = []
                 t.pixbuf.save_to_callback(lambda d: data.append(d), "png", {})
                 ret = fapi.upload(api_key=flickrAPIKey, auth_token=token,
-                                  jpegData=''.join(data),
+                                  imageData=''.join(data),
                                   title=t.title, description=t.description, tags=t.tags)
             else:
                 print "No data in task"
