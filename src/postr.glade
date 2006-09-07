@@ -133,6 +133,8 @@
 		  <property name="selection_mode">GTK_SELECTION_SINGLE</property>
 		  <property name="orientation">GTK_ORIENTATION_VERTICAL</property>
 		  <property name="reorderable">False</property>
+		  <signal name="drag_data_received" handler="on_drag_data_received" last_modification_time="Thu, 07 Sep 2006 20:49:53 GMT"/>
+		  <signal name="selection_changed" handler="on_selection_changed" last_modification_time="Thu, 07 Sep 2006 20:50:33 GMT"/>
 		</widget>
 	      </child>
 	    </widget>
