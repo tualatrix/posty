@@ -238,4 +238,6 @@ glade.get_widget('about').connect('activate', on_about_activate)
 
 Uploader().start()
 window.show()
-gtk.main()
+
+if __name__ == "__main__":
+    gtk.main()

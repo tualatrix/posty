@@ -3,3 +3,4 @@
 # TODO: wow this sucks.
 
 from postr import postr
+gtk.main()
