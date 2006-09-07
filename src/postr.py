@@ -18,6 +18,7 @@
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
 import os, threading
+from Queue import Queue
 from urlparse import urlparse
 
 import pygtk; pygtk.require ("2.0")
@@ -31,8 +32,8 @@ from flickrapi import FlickrAPI
 flickrAPIKey = "c53cebd15ed936073134cec858036f1d"
 flickrSecret = "7db1b8ef68979779"
 
-fapi = FlickrAPI(flickrAPIKey, flickrSecret)
 # TODO: do this in a thread or something to stop blocking
+fapi = FlickrAPI(flickrAPIKey, flickrSecret)
 token = fapi.getToken(browser="epiphany -p", perms="write")
 
 # Constants for the drag handling
@@ -47,10 +48,8 @@ token = fapi.getToken(browser="epiphany -p", perms="write")
  COL_DESCRIPTION,
  COL_TAGS) = range (0, 6)
 
-# TODO: move into Postr
-current_it = None
 
-from Queue import Queue
+# The task queue to transfer jobs to the upload thread
 upload_queue = Queue()
 
 
@@ -80,14 +79,19 @@ class Postr:
         self.desc_entry = glade.get_widget("desc_entry")
         self.tags_entry = glade.get_widget("tags_entry")
 
-        self.model = gtk.ListStore (gobject.TYPE_STRING, gtk.gdk.Pixbuf, gtk.gdk.Pixbuf, gobject.TYPE_STRING, gobject.TYPE_STRING, gobject.TYPE_STRING)
+        self.model = gtk.ListStore (gobject.TYPE_STRING,
+                                    gtk.gdk.Pixbuf,
+                                    gtk.gdk.Pixbuf,
+                                    gobject.TYPE_STRING,
+                                    gobject.TYPE_STRING,
+                                    gobject.TYPE_STRING)
+        self.current_it = None
 
         def on_field_changed(entry, column):
-            global current_it
             # We often get called when there is no iterator as we've just
             # cleared the field
-            if current_it is None: return
-            self.model.set_value (current_it, column, entry.get_text())
+            if self.current_it is None: return
+            self.model.set_value (self.current_it, column, entry.get_text())
 
         self.title_entry.connect('changed', on_field_changed, COL_TITLE)
         self.desc_entry.connect('changed', on_field_changed, COL_DESCRIPTION)
@@ -117,7 +121,12 @@ class Postr:
             self.iconview.set_sensitive(False)
         
         while it is not None:
-            (uri, pixbuf, title, desc, tags) = self.model.get(it, COL_URI, COL_IMAGE, COL_TITLE, COL_DESCRIPTION, COL_TAGS)
+            (uri, pixbuf, title, desc, tags) = self.model.get(it,
+                                                              COL_URI,
+                                                              COL_IMAGE,
+                                                              COL_TITLE,
+                                                              COL_DESCRIPTION,
+                                                              COL_TAGS)
     
             t = UploadTask()
             t.uri = uri
@@ -131,20 +140,18 @@ class Postr:
             it = self.model.iter_next(it)
     
     def on_selection_changed(self, iconview):
-        global current_it
-        
         items = iconview.get_selected_items()
         if len(items) > 1:
             print "Unexpected number of selections"
             return
         
         if items:
-            current_it = self.model.get_iter(items[0])
-            (title, desc, tags, thumb) = self.model.get(current_it,
-                                                   COL_TITLE,
-                                                   COL_DESCRIPTION,
-                                                   COL_TAGS,
-                                                   COL_THUMBNAIL)
+            self.current_it = self.model.get_iter(items[0])
+            (title, desc, tags, thumb) = self.model.get(self.current_it,
+                                                        COL_TITLE,
+                                                        COL_DESCRIPTION,
+                                                        COL_TAGS,
+                                                        COL_THUMBNAIL)
             
             self.title_entry.set_sensitive(True)
             self.title_entry.set_text(title)
@@ -155,7 +162,7 @@ class Postr:
     
             self.thumbnail_image.set_from_pixbuf(thumb)
         else:
-            current_it = None
+            self.current_it = None
             self.title_entry.set_sensitive(False)
             self.title_entry.set_text("")
             self.desc_entry.set_sensitive(False)
@@ -179,12 +186,12 @@ class Postr:
             sizes = self.get_thumb_size (pixbuf.get_width(), pixbuf.get_height())
             thumb = pixbuf.scale_simple(sizes[0], sizes[1], gtk.gdk.INTERP_BILINEAR)
             self.model.set(self.model.append(),
-                      COL_IMAGE, pixbuf,
-                      COL_URI, None,
-                      COL_THUMBNAIL, thumb,
-                      COL_TITLE, "",
-                      COL_DESCRIPTION, "",
-                      COL_TAGS, "")
+                           COL_IMAGE, pixbuf,
+                           COL_URI, None,
+                           COL_THUMBNAIL, thumb,
+                           COL_TITLE, "",
+                           COL_DESCRIPTION, "",
+                           COL_TAGS, "")
         
         elif targetType == DRAG_URI:
             for uri in selection.get_uris():
@@ -214,12 +221,12 @@ class Postr:
                 desc = exif.get('Image ImageDescription', "")
                 
                 self.model.set(self.model.append(),
-                          COL_URI, uri,
-                          COL_IMAGE, None,
-                          COL_THUMBNAIL, thumb,
-                          COL_TITLE, title,
-                          COL_DESCRIPTION, desc,
-                          COL_TAGS, "")
+                               COL_URI, uri,
+                               COL_IMAGE, None,
+                               COL_THUMBNAIL, thumb,
+                               COL_TITLE, title,
+                               COL_DESCRIPTION, desc,
+                               COL_TAGS, "")
         else:
             print "Unhandled target type %d" % targetType
         
@@ -231,6 +238,7 @@ class Postr:
         self.iconview.set_sensitive(True)
         # TODO: enable upload menu item
         gtk.gdk.threads_leave()
+
 
 class UploadTask:
     uri = None
