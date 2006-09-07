@@ -35,11 +35,6 @@ fapi = FlickrAPI(flickrAPIKey, flickrSecret)
 # TODO: do this in a thread or something to stop blocking
 token = fapi.getToken(browser="epiphany -p", perms="write")
 
-#rsp=fapi.tags_getListUserPopular(api_key=flickrAPIKey, auth_token=token)
-#fapi.testFailure(rsp)
-#for t in rsp.who[0].tags[0].tag:
-#    print "%s (%d)" % (t.elementText, int(t['count']))
-
 # Constants for the drag handling
 (DRAG_URI,
  DRAG_IMAGE) = range (0, 2)
