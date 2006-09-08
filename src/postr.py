@@ -141,9 +141,13 @@ class Postr:
     
     def on_selection_changed(self, iconview):
         items = iconview.get_selected_items()
-        if len(items) > 1:
-            print "Unexpected number of selections"
-            return
+
+        def enable_field(field, text):
+            field.set_sensitive(True)
+            field.set_text(text)
+        def disable_field(field):
+            field.set_sensitive(False)
+            field.set_text("")
         
         if items:
             self.current_it = self.model.get_iter(items[0])
@@ -153,22 +157,16 @@ class Postr:
                                                         COL_TAGS,
                                                         COL_THUMBNAIL)
             
-            self.title_entry.set_sensitive(True)
-            self.title_entry.set_text(title)
-            self.desc_entry.set_sensitive(True)
-            self.desc_entry.set_text(desc)
-            self.tags_entry.set_sensitive(True)
-            self.tags_entry.set_text(tags)
+            enable_field(self.title_entry, title)
+            enable_field(self.desc_entry, desc)
+            enable_field(self.tags_entry, tags)
     
             self.thumbnail_image.set_from_pixbuf(thumb)
         else:
             self.current_it = None
-            self.title_entry.set_sensitive(False)
-            self.title_entry.set_text("")
-            self.desc_entry.set_sensitive(False)
-            self.desc_entry.set_text("")
-            self.tags_entry.set_sensitive(False)
-            self.tags_entry.set_text("")
+            disable_field(self.title_entry)
+            disable_field(self.desc_entry)
+            disable_field(self.tags_entry)
             
             self.thumbnail_image.set_from_pixbuf(None)
 
