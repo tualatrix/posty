@@ -1,6 +1,10 @@
 #! /usr/bin/env python
 
 # TODO: wow this sucks.
-
+import gtk
 from postr import postr
+
+p = postr.Postr()
+postr.Uploader(p).start()
+p.window.show()
 gtk.main()
