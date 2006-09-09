@@ -51,7 +51,7 @@ token = fapi.getToken(browser="epiphany -p", perms="write")
 
 # The task queue to transfer jobs to the upload thread
 upload_queue = Queue()
-
+uploading = threading.Event()
 
 class AboutDialog(gtk.AboutDialog):
     def __init__(self, parent):
@@ -105,7 +105,9 @@ class Postr:
             self.model.set_value (it, column, entry.get_text())
     
     def on_quit_activate (self, menuitem):
-        # TODO: if there are pending uploads, confirm first
+        if uploading.isSet():
+            # TODO: if there are pending uploads, confirm first
+            print "Uploading, should query user"
         gtk.main_quit()
     
     def on_about_activate(self, menuitem):
@@ -257,6 +259,8 @@ class Uploader(threading.Thread):
         while 1:
             # This blocks when the queue is empty
             t = upload_queue.get()
+            uploading.set()
+            
             # TODO: construct a list and pass that to avoid duplication
             if t.uri:
                 ret = fapi.upload(api_key=flickrAPIKey, auth_token=token,
@@ -278,6 +282,7 @@ class Uploader(threading.Thread):
                 print fapi.getPrintableError(rsp)
 
             if upload_queue.empty():
+                uploading.clear()
                 self.postr.done()
 
 
