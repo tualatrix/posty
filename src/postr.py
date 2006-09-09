@@ -83,15 +83,9 @@ class Postr:
                                     gobject.TYPE_STRING)
         self.current_it = None
 
-        def on_field_changed(entry, column):
-            # We often get called when there is no iterator as we've just
-            # cleared the field
-            if self.current_it is None: return
-            self.model.set_value (self.current_it, column, entry.get_text())
-
-        self.title_entry.connect('changed', on_field_changed, COL_TITLE)
-        self.desc_entry.connect('changed', on_field_changed, COL_DESCRIPTION)
-        self.tags_entry.connect('changed', on_field_changed, COL_TAGS)
+        self.title_entry.connect('changed', self.on_field_changed, COL_TITLE)
+        self.desc_entry.connect('changed', self.on_field_changed, COL_DESCRIPTION)
+        self.tags_entry.connect('changed', self.on_field_changed, COL_TAGS)
 
         self.iconview = glade.get_widget("iconview")
         self.iconview.set_model (self.model)
@@ -104,6 +98,12 @@ class Postr:
         targets = gtk.target_list_add_uri_targets(targets, DRAG_URI)
         self.iconview.drag_dest_set_target_list(targets)
 
+    def on_field_changed(self, entry, column):
+        items = self.iconview.get_selected_items()
+        for path in items:
+            it = self.model.get_iter(path)
+            self.model.set_value (it, column, entry.get_text())
+    
     def on_quit_activate (self, menuitem):
         # TODO: if there are pending uploads, confirm first
         gtk.main_quit()
@@ -150,6 +150,7 @@ class Postr:
             field.set_text("")
         
         if items:
+            # TODO: do something clever with multiple selections
             self.current_it = self.model.get_iter(items[0])
             (title, desc, tags, thumb) = self.model.get(self.current_it,
                                                         COL_TITLE,
