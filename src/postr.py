@@ -136,7 +136,11 @@ class Postr:
             print fapi.getPrintableError(rsp)
         else:
             gtk.gdk.threads_enter()
-            self.set_quota(int(rsp.user[0].bandwidth[0]['remainingbytes']))
+            bandwidth = rsp.user[0].bandwidth[0]
+            context = self.statusbar.get_context_id("quota")
+            self.statusbar.pop(context)
+            self.statusbar.push(context, "You have %s remaining this month" %
+                                greek(int(bandwidth['remainingbytes'])))
             gtk.gdk.threads_leave()
 
     def on_field_changed(self, entry, column):
@@ -332,13 +336,9 @@ class Postr:
         self.iconview.set_sensitive(True)
         # TODO: enable upload menu item
         self.get_quota()
-
-    def set_quota(self, remainingbytes):
-        context = self.statusbar.get_context_id("quota")
-        self.statusbar.pop(context)
-        self.statusbar.push(context, "You have %s remaining this month" % greek(remainingbytes))
     
 
+# TODO: replace this mojo with @threaded
 class UploadTask:
     uri = None
     pixbuf = None
