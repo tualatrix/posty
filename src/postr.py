@@ -271,8 +271,12 @@ class Postr:
             return (int(64/ratio), 64)
 
     def add_image_filename(self, filename):
+        # TODO: MIME type check
+
+        # TODO: this will fail on anything that cannot support EXIF
         exif = EXIF.process_file(open(filename, 'rb'))
-        
+
+        # TODO: should we even use this?
         thumb = exif.get('JPEGThumbnail', None)
         if thumb:
             loader = gtk.gdk.PixbufLoader()
@@ -313,7 +317,6 @@ class Postr:
         
         elif targetType == DRAG_URI:
             for uri in selection.get_uris():
-                # TODO: MIME type check
                 # TODO: use gnome-vfs to handle remote files
                 filename = urlparse(uri)[2]
                 self.add_image_filename(filename)
