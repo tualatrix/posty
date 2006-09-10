@@ -2,10 +2,6 @@ Add a uploading progress bar.  Use libnotify when completed?
 
 Handle directory drops and recurse into sub-directories
 
-Add menu items to add images
-
-Let user remove images from the list
-
 Let user add photos to sets and groups
 
 Set privacy options
