@@ -53,6 +53,38 @@ token = fapi.getToken(browser="epiphany -p", perms="write")
 upload_queue = Queue()
 uploading = threading.Event()
 
+_abbrevs = [
+    (1<<50L, 'P'),
+    (1<<40L, 'T'), 
+    (1<<30L, 'G'), 
+    (1<<20L, 'M'), 
+    (1<<10L, 'k'),
+    (1, '')
+    ]
+
+def greek(size):
+    for factor, suffix in _abbrevs:
+        if size > factor:
+            break
+    return "%.1f%s" % (float(size)/factor, suffix)
+
+class GetQuota(threading.Thread):
+    def __init__(self, postr):
+        threading.Thread.__init__(self)
+        self.setDaemon(True)
+        self.postr = postr
+
+    def run(self):
+        rsp = fapi.people_getUploadStatus(api_key=flickrAPIKey, auth_token=token)
+        if fapi.getRspErrorCode(rsp) != 0:
+            # TODO: fire error dialog or ignore
+            print fapi.getPrintableError(rsp)
+        else:
+            def done(postr, quota):
+                postr.set_quota(quota)
+                return False
+            gobject.idle_add(done, self.postr, int(rsp.user[0].bandwidth[0]['remainingbytes']))
+    
 class AboutDialog(gtk.AboutDialog):
     def __init__(self, parent):
         gtk.AboutDialog.__init__(self)
@@ -69,7 +101,8 @@ class Postr:
         glade.signal_autoconnect(self)
 
         self.window = glade.get_widget("main_window")
-
+        self.statusbar = glade.get_widget("statusbar")
+        
         self.thumbnail_image = glade.get_widget('thumbnail_image')
         self.title_entry = glade.get_widget("title_entry")
         self.desc_entry = glade.get_widget("desc_entry")
@@ -98,6 +131,9 @@ class Postr:
         targets = gtk.target_list_add_uri_targets(targets, DRAG_URI)
         self.iconview.drag_dest_set_target_list(targets)
 
+        # TODO: probably need some sort of lock to stop multiple threads
+        GetQuota(self).start()
+    
     def on_field_changed(self, entry, column):
         items = self.iconview.get_selected_items()
         for path in items:
@@ -234,13 +270,17 @@ class Postr:
         context.finish(True, True, timestamp)
 
     def done(self):
-        gtk.gdk.threads_enter()
         self.model.clear()
         self.iconview.set_sensitive(True)
         # TODO: enable upload menu item
-        gtk.gdk.threads_leave()
+        GetQuota(self).start()
 
-
+    def set_quota(self, remainingbytes):
+        context = self.statusbar.get_context_id("quota")
+        self.statusbar.pop(context)
+        # TODO: display nicely
+        self.statusbar.push(context, "You have %s remaining this month" % greek(remainingbytes))
+    
 class UploadTask:
     uri = None
     pixbuf = None
@@ -279,12 +319,14 @@ class Uploader(threading.Thread):
             
             if fapi.getRspErrorCode(ret) != 0:
                 # TODO: fire error dialog
-                print fapi.getPrintableError(rsp)
+                print fapi.getPrintableError(ret)
 
             if upload_queue.empty():
                 uploading.clear()
-                self.postr.done()
-
+                def done(postr):
+                    postr.done()
+                    return False
+                gobject.idle_add(done, self.postr)
 
 
 if __name__ == "__main__":

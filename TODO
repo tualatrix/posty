@@ -10,7 +10,5 @@ Let user add photos to sets and groups
 
 Set privacy options
 
-Show upload quota in statusbar
-
 When dropping image data store the data not a pixbuf in the model to allow
 dragging of lossy data
