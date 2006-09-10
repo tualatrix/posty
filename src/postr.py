@@ -151,6 +151,11 @@ class Postr:
         dialog.run()
         dialog.destroy()
 
+    def on_delete_activate(self, menuitem):
+        selection = self.iconview.get_selected_items()
+        for path in selection:
+            self.model.remove(self.model.get_iter(path))
+    
     def on_select_all_activate(self, menuitem):
         self.iconview.select_all()
 
