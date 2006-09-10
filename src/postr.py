@@ -150,7 +150,22 @@ class Postr:
         dialog = AboutDialog(self.window)
         dialog.run()
         dialog.destroy()
-    
+
+    def on_select_all_activate(self, menuitem):
+        self.iconview.select_all()
+
+    def on_deselect_all_activate(self, menuitem):
+        self.iconview.unselect_all()
+
+    def on_invert_selection_activate(self, menuitem):
+        selected = self.iconview.get_selected_items()
+        def inverter(model, path, iter, selected):
+            if path in selected:
+                self.iconview.unselect_path(path)
+            else:
+                self.iconview.select_path(path)
+        self.model.foreach(inverter, selected)
+
     def on_upload_activate(self, menuitem):
         it = self.model.get_iter_first()
         # If we have some pictures, disable the iconview
@@ -278,7 +293,6 @@ class Postr:
     def set_quota(self, remainingbytes):
         context = self.statusbar.get_context_id("quota")
         self.statusbar.pop(context)
-        # TODO: display nicely
         self.statusbar.push(context, "You have %s remaining this month" % greek(remainingbytes))
     
 class UploadTask:
