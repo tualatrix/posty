@@ -41,7 +41,7 @@ token = fapi.getToken(browser="epiphany -p", perms="write")
  DRAG_IMAGE) = range (0, 2)
 
 # Column indexes
-(COL_URI,
+(COL_FILENAME,
  COL_IMAGE,
  COL_THUMBNAIL,
  COL_TITLE,
@@ -53,6 +53,7 @@ token = fapi.getToken(browser="epiphany -p", perms="write")
 upload_queue = Queue()
 uploading = threading.Event()
 
+# TODO: split out
 _abbrevs = [
     (1<<50L, 'P'),
     (1<<40L, 'T'), 
@@ -67,6 +68,7 @@ def greek(size):
         if size > factor:
             break
     return "%.1f%s" % (float(size)/factor, suffix)
+
 
 class GetQuota(threading.Thread):
     def __init__(self, postr):
@@ -85,6 +87,7 @@ class GetQuota(threading.Thread):
                 return False
             gobject.idle_add(done, self.postr, int(rsp.user[0].bandwidth[0]['remainingbytes']))
     
+
 class AboutDialog(gtk.AboutDialog):
     def __init__(self, parent):
         gtk.AboutDialog.__init__(self)
@@ -140,17 +143,42 @@ class Postr:
             it = self.model.get_iter(path)
             self.model.set_value (it, column, entry.get_text())
     
-    def on_quit_activate (self, menuitem):
+    def on_add_photos_activate(self, menuitem):
+        # TODO: add preview widget
+        dialog = gtk.FileChooserDialog(title="Add Photos", parent=self.window,
+                                       action=gtk.FILE_CHOOSER_ACTION_OPEN,
+                                       buttons=(gtk.STOCK_CANCEL,
+                                                gtk.RESPONSE_CANCEL,
+                                                gtk.STOCK_OPEN,
+                                                gtk.RESPONSE_OK))
+        dialog.set_select_multiple(True)
+        
+        filters = gtk.FileFilter()
+        filters.set_name("Images")
+        filters.add_mime_type("image/png")
+        filters.add_mime_type("image/jpeg")
+        filters.add_mime_type("image/gif")
+        dialog.add_filter(filters)
+        filters = gtk.FileFilter()
+        filters.set_name("All Files")
+        filters.add_pattern("*")
+        dialog.add_filter(filters)
+
+        if dialog.run() != gtk.RESPONSE_OK:
+            return
+        
+        files = dialog.get_filenames()
+        dialog.destroy()
+        
+        for f in files:
+            self.add_image_filename(f)
+    
+    def on_quit_activate(self, menuitem):
         if uploading.isSet():
             # TODO: if there are pending uploads, confirm first
             print "Uploading, should query user"
         gtk.main_quit()
     
-    def on_about_activate(self, menuitem):
-        dialog = AboutDialog(self.window)
-        dialog.run()
-        dialog.destroy()
-
     def on_delete_activate(self, menuitem):
         selection = self.iconview.get_selected_items()
         for path in selection:
@@ -179,15 +207,15 @@ class Postr:
             self.iconview.set_sensitive(False)
         
         while it is not None:
-            (uri, pixbuf, title, desc, tags) = self.model.get(it,
-                                                              COL_URI,
+            (filename, pixbuf, title, desc, tags) = self.model.get(it,
+                                                              COL_FILENAME,
                                                               COL_IMAGE,
                                                               COL_TITLE,
                                                               COL_DESCRIPTION,
                                                               COL_TAGS)
     
             t = UploadTask()
-            t.uri = uri
+            t.filename = filename
             t.pixbuf = pixbuf
             t.title = title
             t.description = desc
@@ -197,6 +225,11 @@ class Postr:
             
             it = self.model.iter_next(it)
     
+    def on_about_activate(self, menuitem):
+        dialog = AboutDialog(self.window)
+        dialog.run()
+        dialog.destroy()
+
     def on_selection_changed(self, iconview):
         items = iconview.get_selected_items()
 
@@ -236,6 +269,34 @@ class Postr:
             return (64, int(64/ratio))
         else:
             return (int(64/ratio), 64)
+
+    def add_image_filename(self, filename):
+        exif = EXIF.process_file(open(filename, 'rb'))
+        
+        thumb = exif.get('JPEGThumbnail', None)
+        if thumb:
+            loader = gtk.gdk.PixbufLoader()
+            def on_size_prepared(loader, width, height):
+                loader.set_size(*self.get_thumb_size(width, height))
+            loader.connect('size-prepared', on_size_prepared)
+            loader.write(thumb)
+            loader.close()
+            thumb = loader.get_pixbuf()
+            # TODO: rotate if required?
+        else:
+            thumb = gtk.gdk.pixbuf_new_from_file_at_size (filename, 64, 64)
+    
+        # Extra useful data from image
+        title = os.path.splitext(os.path.basename(filename))[0] # TODO: more
+        desc = exif.get('Image ImageDescription', "")
+        
+        self.model.set(self.model.append(),
+                       COL_FILENAME, filename,
+                       COL_IMAGE, None,
+                       COL_THUMBNAIL, thumb,
+                       COL_TITLE, title,
+                       COL_DESCRIPTION, desc,
+                       COL_TAGS, "")
     
     def on_drag_data_received(self, widget, context, x, y, selection, targetType, timestamp):
         if targetType == DRAG_IMAGE:
@@ -244,7 +305,7 @@ class Postr:
             thumb = pixbuf.scale_simple(sizes[0], sizes[1], gtk.gdk.INTERP_BILINEAR)
             self.model.set(self.model.append(),
                            COL_IMAGE, pixbuf,
-                           COL_URI, None,
+                           COL_FILENAME, None,
                            COL_THUMBNAIL, thumb,
                            COL_TITLE, "",
                            COL_DESCRIPTION, "",
@@ -252,38 +313,10 @@ class Postr:
         
         elif targetType == DRAG_URI:
             for uri in selection.get_uris():
-                
                 # TODO: MIME type check
-                
                 # TODO: use gnome-vfs to handle remote files
                 filename = urlparse(uri)[2]
-    
-                exif = EXIF.process_file(open(filename, 'rb'))
-    
-                thumb = exif.get('JPEGThumbnail', None)
-                if thumb:
-                    loader = gtk.gdk.PixbufLoader()
-                    def on_size_prepared(loader, width, height):
-                        loader.set_size(*self.get_thumb_size(width, height))
-                    loader.connect('size-prepared', on_size_prepared)
-                    loader.write(thumb)
-                    loader.close()
-                    thumb = loader.get_pixbuf()
-                    # TODO: rotate if required?
-                else:
-                    thumb = gtk.gdk.pixbuf_new_from_file_at_size (filename, 64, 64)
-    
-                # Extra useful data from image
-                title = os.path.splitext(os.path.basename(filename))[0] # TODO: more
-                desc = exif.get('Image ImageDescription', "")
-                
-                self.model.set(self.model.append(),
-                               COL_URI, uri,
-                               COL_IMAGE, None,
-                               COL_THUMBNAIL, thumb,
-                               COL_TITLE, title,
-                               COL_DESCRIPTION, desc,
-                               COL_TAGS, "")
+                self.add_image_filename(filename)
         else:
             print "Unhandled target type %d" % targetType
         
@@ -300,6 +333,7 @@ class Postr:
         self.statusbar.pop(context)
         self.statusbar.push(context, "You have %s remaining this month" % greek(remainingbytes))
     
+
 class UploadTask:
     uri = None
     pixbuf = None
@@ -321,9 +355,9 @@ class Uploader(threading.Thread):
             uploading.set()
             
             # TODO: construct a list and pass that to avoid duplication
-            if t.uri:
+            if t.filename:
                 ret = fapi.upload(api_key=flickrAPIKey, auth_token=token,
-                                  filename=urlparse(t.uri)[2],
+                                  filename=t.filename,
                                   title=t.title, description=t.description, tags=t.tags)
             elif t.pixbuf:
                 # This isn't very nice, but might be the best way
