@@ -135,10 +135,9 @@ class Postr:
             # TODO: fire error dialog or ignore
             print fapi.getPrintableError(rsp)
         else:
-            def done(postr, quota):
-                postr.set_quota(quota)
-                return False
-            gobject.idle_add(done, self, int(rsp.user[0].bandwidth[0]['remainingbytes']))
+            gtk.gdk.threads_enter()
+            self.set_quota(int(rsp.user[0].bandwidth[0]['remainingbytes']))
+            gtk.gdk.threads_leave()
 
     def on_field_changed(self, entry, column):
         items = self.iconview.get_selected_items()
