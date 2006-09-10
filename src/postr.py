@@ -70,23 +70,14 @@ def greek(size):
     return "%.1f%s" % (float(size)/factor, suffix)
 
 
-class GetQuota(threading.Thread):
-    def __init__(self, postr):
-        threading.Thread.__init__(self)
-        self.setDaemon(True)
-        self.postr = postr
-
-    def run(self):
-        rsp = fapi.people_getUploadStatus(api_key=flickrAPIKey, auth_token=token)
-        if fapi.getRspErrorCode(rsp) != 0:
-            # TODO: fire error dialog or ignore
-            print fapi.getPrintableError(rsp)
-        else:
-            def done(postr, quota):
-                postr.set_quota(quota)
-                return False
-            gobject.idle_add(done, self.postr, int(rsp.user[0].bandwidth[0]['remainingbytes']))
-    
+# A cunning wrapper to thread an arbitary method.  See
+# http://www.oreillynet.com/onlamp/blog/2006/07/pygtk_and_threading.html
+def threaded(f):
+    def wrapper(*args):
+        t = threading.Thread(target=f, args=args)
+        t.setDaemon(True)
+        t.start()
+    return wrapper
 
 class AboutDialog(gtk.AboutDialog):
     def __init__(self, parent):
@@ -135,8 +126,20 @@ class Postr:
         self.iconview.drag_dest_set_target_list(targets)
 
         # TODO: probably need some sort of lock to stop multiple threads
-        GetQuota(self).start()
-    
+        self.get_quota()
+
+    @threaded
+    def get_quota(self):
+        rsp = fapi.people_getUploadStatus(api_key=flickrAPIKey, auth_token=token)
+        if fapi.getRspErrorCode(rsp) != 0:
+            # TODO: fire error dialog or ignore
+            print fapi.getPrintableError(rsp)
+        else:
+            def done(postr, quota):
+                postr.set_quota(quota)
+                return False
+            gobject.idle_add(done, self, int(rsp.user[0].bandwidth[0]['remainingbytes']))
+
     def on_field_changed(self, entry, column):
         items = self.iconview.get_selected_items()
         for path in items:
@@ -329,7 +332,7 @@ class Postr:
         self.model.clear()
         self.iconview.set_sensitive(True)
         # TODO: enable upload menu item
-        GetQuota(self).start()
+        self.get_quota()
 
     def set_quota(self, remainingbytes):
         context = self.statusbar.get_context_id("quota")
