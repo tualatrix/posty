@@ -23,7 +23,7 @@ from urlparse import urlparse
 
 import pygtk; pygtk.require ("2.0")
 import gobject, gtk, gtk.glade
-gtk.gdk.threads_init()
+gobject.threads_init()
 
 import EXIF
 from flickrapi import FlickrAPI
