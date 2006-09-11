@@ -70,7 +70,7 @@ def greek(size):
     return "%.1f%s" % (float(size)/factor, suffix)
 
 
-# A cunning wrapper to thread an arbitary method.  See
+# A cunning decorator to thread an arbitrary method.  See
 # http://www.oreillynet.com/onlamp/blog/2006/07/pygtk_and_threading.html
 def threaded(f):
     def wrapper(*args):
