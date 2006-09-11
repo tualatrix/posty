@@ -81,6 +81,16 @@ def threaded(f):
         t.start()
     return wrapper
 
+# An even more cunning decorator (you could say as cunning as a fox) to run a
+# method call in the main thread via an idle handler.
+def threadsafe(f):
+    def wrapper(*args):
+        def task(*args):
+            f(*args)
+            return False
+        gobject.idle_add(task, *args)
+    return wrapper
+
 class AboutDialog(gtk.AboutDialog):
     def __init__(self, parent):
         gtk.AboutDialog.__init__(self)
@@ -391,6 +401,7 @@ class Postr:
         
         context.finish(True, True, timestamp)
 
+    @threadsafe
     def done(self):
         self.model.clear()
         self.iconview.set_sensitive(True)
@@ -441,10 +452,7 @@ class Uploader(threading.Thread):
 
             if upload_queue.empty():
                 uploading.clear()
-                def done(postr):
-                    postr.done()
-                    return False
-                gobject.idle_add(done, self.postr)
+                self.postr.done()
 
 
 if __name__ == "__main__":
