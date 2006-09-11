@@ -95,6 +95,10 @@ class Postr:
         glade.signal_autoconnect(self)
 
         self.window = glade.get_widget("main_window")
+        # Just for you, Daniel.
+        if os.getlogin() == "daniels":
+            self.window.set_title("Respecognise")
+        
         self.statusbar = glade.get_widget("statusbar")
 
         self.thumbnail_image = glade.get_widget("thumbnail_image")
