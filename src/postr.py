@@ -189,16 +189,12 @@ class Postr:
         filters.add_pattern("*")
         dialog.add_filter(filters)
 
-        if dialog.run() != gtk.RESPONSE_OK:
-            dialog.destroy()
-            return
-        
-        files = dialog.get_filenames()
+        if dialog.run() == gtk.RESPONSE_OK:
+            dialog.hide()
+            for f in dialog.get_filenames():
+                self.add_image_filename(f)
         dialog.destroy()
-        
-        for f in files:
-            self.add_image_filename(f)
-    
+            
     def on_quit_activate(self, menuitem):
         if uploading.isSet():
             # TODO: if there are pending uploads, confirm first
