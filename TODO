@@ -8,3 +8,7 @@ Set privacy options
 
 When dropping image data store the data not a pixbuf in the model to allow
 dragging of lossy data
+
+Show date/time taken
+
+Load a 500x500 preview of the image for displaying
