@@ -115,6 +115,7 @@ class Postr:
         self.tags_entry.connect('changed', self.on_field_changed, COL_TAGS)
         self.thumbnail_image.connect('size-allocate', self.update_thumbnail)
         self.old_thumb_allocation = None
+        self.zoom_factor = 0.0
 
         self.iconview = glade.get_widget("iconview")
         self.iconview.set_model (self.model)
@@ -260,7 +261,8 @@ class Postr:
             (tw, th) = self.get_thumb_size(image.get_width(),
                                            image.get_height(),
                                            allocation.width,
-                                           allocation.height)
+                                           allocation.height,
+                                           True)
             thumb = image.scale_simple(tw, th, gtk.gdk.INTERP_BILINEAR)
             widget.set_from_pixbuf(thumb)
 
@@ -298,16 +300,31 @@ class Postr:
             disable_field(self.title_entry)
             disable_field(self.desc_entry)
             disable_field(self.tags_entry)
+            self.zoom_factor = 0
+            self.update_zoom_status()
 
             self.thumbnail_image.set_from_pixbuf(None)
 
-    @staticmethod
-    def get_thumb_size(srcw, srch, dstw, dsth):
+    def update_zoom_status(self):
+        context = self.statusbar.get_context_id("zoom")
+        self.statusbar.pop(context)
+        if self.zoom_factor > 0.0:
+            self.statusbar.push(context,
+                                "Zoomed to %d%%" % int(self.zoom_factor * 100))
+
+    def get_thumb_size(self, srcw, srch, dstw, dsth, update_zoom = False):
         srcr = srcw/float(srch)
         dstr = dstw/float(dsth)
+
         if srcr > dstr:
+            if update_zoom:
+                self.zoom_factor = dstw / float(srcw)
+                self.update_zoom_status()
             return (dstw, int(dstw / srcr))
         else:
+            if update_zoom:
+                self.zoom_factor = dsth / float(srch)
+                self.update_zoom_status()
             return (int(srcr * dsth), dsth)
 
     def add_image_filename(self, filename):
