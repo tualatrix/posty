@@ -190,6 +190,7 @@ class Postr:
         dialog.add_filter(filters)
 
         if dialog.run() != gtk.RESPONSE_OK:
+            dialog.destroy()
             return
         
         files = dialog.get_filenames()
