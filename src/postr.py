@@ -375,7 +375,15 @@ class Postr:
             for uri in selection.get_uris():
                 # TODO: use gnome-vfs to handle remote files
                 filename = urlparse(uri)[2]
-                self.add_image_filename(filename)
+                if os.path.isfile(filename):
+                    self.add_image_filename(filename)
+                elif os.path.isdir(filename):
+                    for root, dirs, files in os.walk(filename):
+                        for f in files:
+                            self.add_image_filename (os.path.join(root, f))
+                else:
+                    print "Unhandled file %s" % filename
+                    
         else:
             print "Unhandled target type %d" % targetType
         
