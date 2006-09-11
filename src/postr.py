@@ -380,6 +380,8 @@ class Postr:
                 elif os.path.isdir(filename):
                     for root, dirs, files in os.walk(filename):
                         for f in files:
+                            # TODO: handle symlinks to directories as they are
+                            # in files
                             self.add_image_filename (os.path.join(root, f))
                 else:
                     print "Unhandled file %s" % filename
