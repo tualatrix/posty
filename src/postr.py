@@ -41,12 +41,14 @@ token = fapi.getToken(browser="firefox", perms="write")
  DRAG_IMAGE) = range (0, 2)
 
 # Column indexes
-(COL_FILENAME,
- COL_IMAGE,
- COL_THUMBNAIL,
- COL_TITLE,
- COL_DESCRIPTION,
- COL_TAGS) = range (0, 6)
+(COL_FILENAME, # The filename of an image (can be None)
+ COL_IMAGE, # The image data (if filename is None)
+ COL_PREVIEW, # A 512x512 preview of the image
+ COL_THUMBNAIL, # A 64x64 thumbnail of the image
+ COL_TITLE, # The image title
+ COL_DESCRIPTION, # The image description
+ COL_TAGS # A space deliminated list of tags for the image
+ ) = range (0, 7)
 
 
 # The task queue to transfer jobs to the upload thread
@@ -109,6 +111,7 @@ class Postr:
         self.model = gtk.ListStore (gobject.TYPE_STRING,
                                     gtk.gdk.Pixbuf,
                                     gtk.gdk.Pixbuf,
+                                    gtk.gdk.Pixbuf,
                                     gobject.TYPE_STRING,
                                     gobject.TYPE_STRING,
                                     gobject.TYPE_STRING)
@@ -119,7 +122,6 @@ class Postr:
         self.tags_entry.connect('changed', self.on_field_changed, COL_TAGS)
         self.thumbnail_image.connect('size-allocate', self.update_thumbnail)
         self.old_thumb_allocation = None
-        self.zoom_factor = 0.0
 
         self.iconview = glade.get_widget("iconview")
         self.iconview.set_model (self.model)
@@ -261,13 +263,22 @@ class Postr:
 
             self.old_thumb_allocation = allocation
 
-            image = (self.model.get(self.current_it, COL_IMAGE))[0]
-            (tw, th) = self.get_thumb_size(image.get_width(),
-                                           image.get_height(),
-                                           allocation.width,
-                                           allocation.height,
-                                           True)
-            thumb = image.scale_simple(tw, th, gtk.gdk.INTERP_BILINEAR)
+            (image, simage, filename) = self.model.get(self.current_it,
+                                                       COL_IMAGE,
+                                                       COL_PREVIEW,
+                                                       COL_FILENAME)
+
+            tw = allocation.width
+            th = allocation.height
+            # Clamp the size to 512
+            if tw > 512: tw = 512
+            if th > 512: th = 512
+            (tw, th) = self.get_thumb_size(simage.get_width(),
+                                           simage.get_height(),
+                                           tw, th)
+
+            
+            thumb = simage.scale_simple(tw, th, gtk.gdk.INTERP_BILINEAR)
             widget.set_from_pixbuf(thumb)
 
     def on_selection_changed(self, iconview):
@@ -283,20 +294,14 @@ class Postr:
         if items:
             # TODO: do something clever with multiple selections
             self.current_it = self.model.get_iter(items[0])
-            (title, desc, tags, image, filename) = self.model.get(self.current_it,
-                                                                  COL_TITLE,
-                                                                  COL_DESCRIPTION,
-                                                                  COL_TAGS,
-                                                                  COL_IMAGE,
-                                                                  COL_FILENAME)
+            (title, desc, tags) = self.model.get(self.current_it,
+                                                 COL_TITLE,
+                                                 COL_DESCRIPTION,
+                                                 COL_TAGS)
 
             enable_field(self.title_entry, title)
             enable_field(self.desc_entry, desc)
             enable_field(self.tags_entry, tags)
-
-            if filename and not image:
-                image = gtk.gdk.pixbuf_new_from_file(filename)
-                self.model.set_value(self.current_it, COL_IMAGE, image)
 
             self.update_thumbnail(self.thumbnail_image)
         else:
@@ -304,53 +309,32 @@ class Postr:
             disable_field(self.title_entry)
             disable_field(self.desc_entry)
             disable_field(self.tags_entry)
-            self.zoom_factor = 0
-            self.update_zoom_status()
 
             self.thumbnail_image.set_from_pixbuf(None)
 
-    def update_zoom_status(self):
-        context = self.statusbar.get_context_id("zoom")
-        self.statusbar.pop(context)
-        if self.zoom_factor > 0.0:
-            self.statusbar.push(context,
-                                "Zoomed to %d%%" % int(self.zoom_factor * 100))
-
-    def get_thumb_size(self, srcw, srch, dstw, dsth, update_zoom = False):
-        srcr = srcw/float(srch)
-        dstr = dstw/float(dsth)
-
-        if srcr > dstr:
-            if update_zoom:
-                self.zoom_factor = dstw / float(srcw)
-                self.update_zoom_status()
-            return (dstw, int(dstw / srcr))
+    @staticmethod
+    def get_thumb_size(srcw, srch, dstw, dsth):
+        ratio = srcw/float(srch)
+        if srcw > srch:
+            return (dstw, int(dstw/ratio))
         else:
-            if update_zoom:
-                self.zoom_factor = dsth / float(srch)
-                self.update_zoom_status()
-            return (int(srcr * dsth), dsth)
+            return (int(dsth*ratio), dsth)
 
     def add_image_filename(self, filename):
         # TODO: MIME type check
 
-        # TODO: this will fail on anything that cannot support EXIF
-        file = open(filename, 'rb')
-        exif = EXIF.process_file(file)
+        # On a file that doesn't contain EXIF, like a PNG, this just returns an
+        # empty set.
+        exif = EXIF.process_file(open(filename, 'rb'))
 
-        # TODO: should we even use this?
-        thumb = exif.get('JPEGThumbnail', None)
-        if thumb:
-            loader = gtk.gdk.PixbufLoader()
-            def on_size_prepared(loader, width, height):
-                loader.set_size(*self.get_thumb_size(width, height, 64, 64))
-            loader.connect('size-prepared', on_size_prepared)
-            loader.write(thumb)
-            loader.close()
-            thumb = loader.get_pixbuf()
-            # TODO: rotate if required?
-        else:
-            thumb = gtk.gdk.pixbuf_new_from_file_at_size(filename, 64, 64)
+        # TODO: rotate if required
+
+        # First we load the image scaled to 512x512 for the preview.
+        preview = gtk.gdk.pixbuf_new_from_file_at_size(filename, 512, 512)
+
+        # Now scale the preview to a thumbnail
+        sizes = self.get_thumb_size(preview.get_width(), preview.get_height(), 64, 64)
+        thumb = preview.scale_simple(sizes[0], sizes[1], gtk.gdk.INTERP_BILINEAR)
     
         # Extra useful data from image
         title = os.path.splitext(os.path.basename(filename))[0] # TODO: more
@@ -359,6 +343,7 @@ class Postr:
         self.model.set(self.model.append(),
                        COL_FILENAME, filename,
                        COL_IMAGE, None,
+                       COL_PREVIEW, preview,
                        COL_THUMBNAIL, thumb,
                        COL_TITLE, title,
                        COL_DESCRIPTION, desc,
@@ -367,11 +352,20 @@ class Postr:
     def on_drag_data_received(self, widget, context, x, y, selection, targetType, timestamp):
         if targetType == DRAG_IMAGE:
             pixbuf = selection.get_pixbuf()
+
+            # TODO: don't scale up if the image is smaller than 512/512
+            
+            # Scale the pixbuf to a preview
+            sizes = self.get_thumb_size (pixbuf.get_width(), pixbuf.get_height(), 512, 512)
+            preview = pixbuf.scale_simple(sizes[0], sizes[1], gtk.gdk.INTERP_BILINEAR)
+            # Now scale to a thumbnail
             sizes = self.get_thumb_size (pixbuf.get_width(), pixbuf.get_height(), 64, 64)
             thumb = pixbuf.scale_simple(sizes[0], sizes[1], gtk.gdk.INTERP_BILINEAR)
+            
             self.model.set(self.model.append(),
                            COL_IMAGE, pixbuf,
                            COL_FILENAME, None,
+                           COL_PREVIEW, preview,
                            COL_THUMBNAIL, thumb,
                            COL_TITLE, "",
                            COL_DESCRIPTION, "",
