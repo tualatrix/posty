@@ -34,7 +34,7 @@ flickrSecret = "7db1b8ef68979779"
 
 # TODO: do this in a thread or something to stop blocking
 fapi = FlickrAPI(flickrAPIKey, flickrSecret)
-token = fapi.getToken(browser="epiphany -p", perms="write")
+token = fapi.getToken(browser="firefox", perms="write")
 
 # Constants for the drag handling
 (DRAG_URI,
@@ -96,8 +96,8 @@ class Postr:
 
         self.window = glade.get_widget("main_window")
         self.statusbar = glade.get_widget("statusbar")
-        
-        self.thumbnail_image = glade.get_widget('thumbnail_image')
+
+        self.thumbnail_image = glade.get_widget("thumbnail_image")
         self.title_entry = glade.get_widget("title_entry")
         self.desc_entry = glade.get_widget("desc_entry")
         self.tags_entry = glade.get_widget("tags_entry")
@@ -113,6 +113,8 @@ class Postr:
         self.title_entry.connect('changed', self.on_field_changed, COL_TITLE)
         self.desc_entry.connect('changed', self.on_field_changed, COL_DESCRIPTION)
         self.tags_entry.connect('changed', self.on_field_changed, COL_TAGS)
+        self.thumbnail_image.connect('size-allocate', self.update_thumbnail)
+        self.old_thumb_allocation = None
 
         self.iconview = glade.get_widget("iconview")
         self.iconview.set_model (self.model)
@@ -236,6 +238,32 @@ class Postr:
         dialog.run()
         dialog.destroy()
 
+    def update_thumbnail(self, widget, allocation = None):
+        if self.current_it:
+            if not allocation:
+                allocation = widget.get_allocation()
+                force = True
+            else:
+                force = False
+
+            # hrngh.  seemingly a size-allocate call (with identical params,
+            # mind) gets called every time we call set_from_pixbuf.  even if
+            # we connect it to the window.  so very braindead.
+            if not force and self.old_thumb_allocation and \
+               self.old_thumb_allocation.width == allocation.width and \
+               self.old_thumb_allocation.height == allocation.height:
+                return;
+
+            self.old_thumb_allocation = allocation
+
+            image = (self.model.get(self.current_it, COL_IMAGE))[0]
+            (tw, th) = self.get_thumb_size(image.get_width(),
+                                           image.get_height(),
+                                           allocation.width,
+                                           allocation.height)
+            thumb = image.scale_simple(tw, th, gtk.gdk.INTERP_BILINEAR)
+            widget.set_from_pixbuf(thumb)
+
     def on_selection_changed(self, iconview):
         items = iconview.get_selected_items()
 
@@ -249,52 +277,59 @@ class Postr:
         if items:
             # TODO: do something clever with multiple selections
             self.current_it = self.model.get_iter(items[0])
-            (title, desc, tags, thumb) = self.model.get(self.current_it,
-                                                        COL_TITLE,
-                                                        COL_DESCRIPTION,
-                                                        COL_TAGS,
-                                                        COL_THUMBNAIL)
-            
+            (title, desc, tags, image, filename) = self.model.get(self.current_it,
+                                                                  COL_TITLE,
+                                                                  COL_DESCRIPTION,
+                                                                  COL_TAGS,
+                                                                  COL_IMAGE,
+                                                                  COL_FILENAME)
+
             enable_field(self.title_entry, title)
             enable_field(self.desc_entry, desc)
             enable_field(self.tags_entry, tags)
-    
-            self.thumbnail_image.set_from_pixbuf(thumb)
+
+            if filename and not image:
+                image = gtk.gdk.pixbuf_new_from_file(filename)
+                self.model.set_value(self.current_it, COL_IMAGE, image)
+
+            self.update_thumbnail(self.thumbnail_image)
         else:
             self.current_it = None
             disable_field(self.title_entry)
             disable_field(self.desc_entry)
             disable_field(self.tags_entry)
-            
+
             self.thumbnail_image.set_from_pixbuf(None)
 
     @staticmethod
-    def get_thumb_size(width, height):
-        ratio = width/float(height)
-        if width > height:
-            return (64, int(64/ratio))
+    def get_thumb_size(srcw, srch, dstw, dsth):
+        srcr = srcw/float(srch)
+        dstr = dstw/float(dsth)
+        if srcr > dstr:
+            return (dstw, int(dstw / srcr))
         else:
-            return (int(64/ratio), 64)
+            return (int(srcr * dsth), dsth)
 
     def add_image_filename(self, filename):
         # TODO: MIME type check
 
         # TODO: this will fail on anything that cannot support EXIF
-        exif = EXIF.process_file(open(filename, 'rb'))
+        file = open(filename, 'rb')
+        exif = EXIF.process_file(file)
 
         # TODO: should we even use this?
         thumb = exif.get('JPEGThumbnail', None)
         if thumb:
             loader = gtk.gdk.PixbufLoader()
             def on_size_prepared(loader, width, height):
-                loader.set_size(*self.get_thumb_size(width, height))
+                loader.set_size(*self.get_thumb_size(width, height, 64, 64))
             loader.connect('size-prepared', on_size_prepared)
             loader.write(thumb)
             loader.close()
             thumb = loader.get_pixbuf()
             # TODO: rotate if required?
         else:
-            thumb = gtk.gdk.pixbuf_new_from_file_at_size (filename, 64, 64)
+            thumb = gtk.gdk.pixbuf_new_from_file_at_size(filename, 64, 64)
     
         # Extra useful data from image
         title = os.path.splitext(os.path.basename(filename))[0] # TODO: more
@@ -311,7 +346,7 @@ class Postr:
     def on_drag_data_received(self, widget, context, x, y, selection, targetType, timestamp):
         if targetType == DRAG_IMAGE:
             pixbuf = selection.get_pixbuf()
-            sizes = self.get_thumb_size (pixbuf.get_width(), pixbuf.get_height())
+            sizes = self.get_thumb_size (pixbuf.get_width(), pixbuf.get_height(), 64, 64)
             thumb = pixbuf.scale_simple(sizes[0], sizes[1], gtk.gdk.INTERP_BILINEAR)
             self.model.set(self.model.append(),
                            COL_IMAGE, pixbuf,
