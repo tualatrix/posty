@@ -75,10 +75,11 @@ def greek(size):
 # A cunning decorator to thread an arbitrary method.  See
 # http://www.oreillynet.com/onlamp/blog/2006/07/pygtk_and_threading.html
 def threaded(f):
-    def wrapper(*args):
-        t = threading.Thread(target=f, args=args)
+    def wrapper(*args, **kwargs):
+        t = threading.Thread(target=f, args=args, kwargs=kwargs)
         t.setDaemon(True)
         t.start()
+    wrapper.__name__ = f.__name__
     return wrapper
 
 # An even more cunning decorator (you could say as cunning as a fox) to run a
