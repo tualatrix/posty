@@ -125,8 +125,15 @@ class Postr:
         targets = gtk.target_list_add_uri_targets(targets, DRAG_URI)
         self.iconview.drag_dest_set_target_list(targets)
 
+        # The upload progress dialog
+        self.progress_dialog = glade.get_widget("progress_dialog")
+        self.progress_dialog.set_transient_for(self.window)
+        self.progressbar = glade.get_widget("progressbar")
+        
         # TODO: probably need some sort of lock to stop multiple threads
         self.get_quota()
+
+        self.uploader = Uploader(self).start()
 
     @threaded
     def get_quota(self):
@@ -204,10 +211,17 @@ class Postr:
 
     def on_upload_activate(self, menuitem):
         it = self.model.get_iter_first()
-        # If we have some pictures, disable the iconview
-        if it is not None:
-            # TODO: disable upload menu item
-            self.iconview.set_sensitive(False)
+        if it is None:
+            return
+
+        # TODO: disable upload menu item
+        self.iconview.set_sensitive(False)
+
+        self.progress_dialog.show()
+        def pulse(bar):
+            bar.pulse()
+            return True
+        self.pulse_id = gobject.timeout_add(100, pulse, self.progressbar)
         
         while it is not None:
             (filename, pixbuf, title, desc, tags) = self.model.get(it,
@@ -381,6 +395,8 @@ class Postr:
 
     @threadsafe
     def done(self):
+        self.progress_dialog.hide()
+        gobject.source_remove(self.pulse_id)
         self.model.clear()
         self.iconview.set_sensitive(True)
         # TODO: enable upload menu item
@@ -408,7 +424,7 @@ class Uploader(threading.Thread):
             t = upload_queue.get()
             uploading.set()
             
-            # TODO: construct a list and pass that to avoid duplication
+            # TODO: construct a set of args and pass that to avoid duplication
             if t.filename:
                 ret = fapi.upload(api_key=flickrAPIKey, auth_token=token,
                                   filename=t.filename,
@@ -435,6 +451,5 @@ class Uploader(threading.Thread):
 
 if __name__ == "__main__":
     p = Postr()
-    Uploader(p).start()
     p.window.show()
     gtk.main()

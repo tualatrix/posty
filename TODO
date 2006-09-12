@@ -1,6 +1,8 @@
 Add an loading progress bar
 
-Add a uploading progress bar.  Use libnotify when completed?
+Upload progress bar needs work:
+- Cancel
+- A real progress bar instead of activity
 
 Let user add photos to sets and groups
 
