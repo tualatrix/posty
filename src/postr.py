@@ -27,6 +27,7 @@ gobject.threads_init()
 
 import EXIF
 from flickrapi import FlickrAPI
+from decorators import *
 
 # My top secret Flickr API keys
 flickrAPIKey = "c53cebd15ed936073134cec858036f1d"
@@ -70,27 +71,6 @@ def greek(size):
         if size > factor:
             break
     return "%.1f%s" % (float(size)/factor, suffix)
-
-
-# A cunning decorator to thread an arbitrary method.  See
-# http://www.oreillynet.com/onlamp/blog/2006/07/pygtk_and_threading.html
-def threaded(f):
-    def wrapper(*args, **kwargs):
-        t = threading.Thread(target=f, args=args, kwargs=kwargs)
-        t.setDaemon(True)
-        t.start()
-    wrapper.__name__ = f.__name__
-    return wrapper
-
-# An even more cunning decorator (you could say as cunning as a fox) to run a
-# method call in the main thread via an idle handler.
-def threadsafe(f):
-    def wrapper(*args):
-        def task(*args):
-            f(*args)
-            return False
-        gobject.idle_add(task, *args)
-    return wrapper
 
 class AboutDialog(gtk.AboutDialog):
     def __init__(self, parent):
