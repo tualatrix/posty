@@ -28,12 +28,21 @@ def threaded(f):
     wrapper.__name__ = f.__name__
     return wrapper
 
-# An even more cunning decorator (you could say as cunning as a fox) to run a
-# method call in the main thread via an idle handler.
-def threadsafe(f):
-    def wrapper(*args):
-        def task(*args):
-            f(*args)
+# An even more cunning decorator to run a method call in the main thread via an
+# idle handler.  This could simply wrap the call in gtk.threads_enter()/leave()
+# but as those locks are not recursive having lots of idle events is better than
+# deadlocking.  Thanks to James Hensbridge for improving this, adding kwargs and
+# the return value.
+def as_idle(f):
+    def wrapper(*args, **kwargs):
+        event = threading.Event()
+        ret = []
+        def task():
+            ret.append(f(*args, **kwargs))
+            event.set()
             return False
-        gobject.idle_add(task, *args)
+        gobject.idle_add(task)
+        event.wait()
+        return ret[0]
+    wrapper.__name__ = f.__name__
     return wrapper

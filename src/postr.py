@@ -393,7 +393,7 @@ class Postr:
         
         context.finish(True, True, timestamp)
 
-    @threadsafe
+    @as_idle
     def done(self):
         self.progress_dialog.hide()
         gobject.source_remove(self.pulse_id)
