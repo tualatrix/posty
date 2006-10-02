@@ -1,7 +1,7 @@
 Grand Architecture Changes
 ==
 
-Truly asynchronous Flickr API.  Maybe using XML-RPC and Twisted.
+Truly asynchronous Flickr calls using FlickREST.
 
 Callback-based authentication so the calling application can handle the user interaction.
 
@@ -23,3 +23,5 @@ When dropping image data store the data not a pixbuf in the model to allow
 dragging of lossy data
 
 Show date/time taken
+
+Nice interface for tagging
