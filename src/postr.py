@@ -89,8 +89,11 @@ class Postr:
 
         self.window = glade.get_widget("main_window")
         # Just for you, Daniel.
-        if os.getlogin() == "daniels":
-            self.window.set_title("Respecognise")
+        try:
+            if os.getlogin() == "daniels":
+                self.window.set_title("Respecognise")
+        except Exception:
+            pass
         
         self.statusbar = glade.get_widget("statusbar")
 
