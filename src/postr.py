@@ -20,6 +20,7 @@
 import os, threading
 from Queue import Queue
 from urlparse import urlparse
+from os.path import basename
 
 import pygtk; pygtk.require ("2.0")
 import gobject, gtk, gtk.glade
@@ -131,7 +132,9 @@ class Postr:
         # The upload progress dialog
         self.progress_dialog = glade.get_widget("progress_dialog")
         self.progress_dialog.set_transient_for(self.window)
-        self.progressbar = glade.get_widget("progressbar")
+        self.progressbar = glade.get_widget("progressbar_main")
+        self.progress_filename = glade.get_widget("progress_filename")
+        self.progress_thumbnail = glade.get_widget("progress_thumbnail")
         
         # TODO: probably need some sort of lock to stop multiple threads
         self.get_quota()
@@ -221,21 +224,24 @@ class Postr:
         self.iconview.set_sensitive(False)
 
         self.progress_dialog.show()
-        def pulse(bar):
-            bar.pulse()
-            return True
-        self.pulse_id = gobject.timeout_add(100, pulse, self.progressbar)
+        self.job = 0
+        #def pulse(bar):
+        #    bar.pulse()
+        #    return True
+        #self.pulse_id = gobject.timeout_add(100, pulse, 
+        #                                    self.progressbar_partial)
         
         while it is not None:
-            (filename, pixbuf, title, desc, tags) = self.model.get(it,
+            (filename, thumb, pixbuf, title, desc, tags) = self.model.get(it,
                                                               COL_FILENAME,
+                                                              COL_THUMBNAIL,
                                                               COL_IMAGE,
                                                               COL_TITLE,
                                                               COL_DESCRIPTION,
                                                               COL_TAGS)
-    
             t = UploadTask()
             t.filename = filename
+            t.thumb = thumb
             t.pixbuf = pixbuf
             t.title = title
             t.description = desc
@@ -245,6 +251,24 @@ class Postr:
             
             it = self.model.iter_next(it)
     
+    def update_progress(self, task, size):
+        label = '%s (%s)' % (task.title, basename(task.filename))
+        self.progress_filename.set_label(label)
+
+        try:
+            self.progress_thumbnail.set_from_pixbuf(task.thumb)
+            self.progress_thumbnail.show()
+        except:
+            self.progress_thumbnail.set_from_pixbuf(None)
+            self.progress_thumbnail.hide()
+
+        self.progressbar.set_fraction(float(self.job) / float(size))
+
+        self.job = self.job + 1
+        #progress_label = '%d of %d' % (current, total)
+        #self.progressbar.set_text(progress_label)
+        
+
     def on_about_activate(self, menuitem):
         dialog = AboutDialog(self.window)
         dialog.run()
@@ -399,7 +423,7 @@ class Postr:
     @as_idle
     def done(self):
         self.progress_dialog.hide()
-        gobject.source_remove(self.pulse_id)
+        #gobject.source_remove(self.pulse_id)
         self.model.clear()
         self.iconview.set_sensitive(True)
         # TODO: enable upload menu item
@@ -409,6 +433,7 @@ class Postr:
 # TODO: replace this mojo with @threaded
 class UploadTask:
     uri = None
+    thumb = None
     pixbuf = None
     title = None
     description = None
@@ -427,18 +452,22 @@ class Uploader(threading.Thread):
             t = upload_queue.get()
             uploading.set()
             
+            self.postr.update_progress(t, upload_queue.qsize() + 1)
+
             # TODO: construct a set of args and pass that to avoid duplication
             if t.filename:
                 ret = fapi.upload(api_key=flickrAPIKey, auth_token=token,
                                   filename=t.filename,
-                                  title=t.title, description=t.description, tags=t.tags)
+                                  title=t.title, description=t.description,
+                                  tags=t.tags)
             elif t.pixbuf:
                 # This isn't very nice, but might be the best way
                 data = []
                 t.pixbuf.save_to_callback(lambda d: data.append(d), "png", {})
                 ret = fapi.upload(api_key=flickrAPIKey, auth_token=token,
                                   imageData=''.join(data),
-                                  title=t.title, description=t.description, tags=t.tags)
+                                  title=t.title, description=t.description,
+                                  tags=t.tags)
             else:
                 print "No data in task"
                 continue
