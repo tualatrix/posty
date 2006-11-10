@@ -265,7 +265,7 @@ class Postr:
         self.progressbar.set_fraction(float(self.task_count) / 
                                       float(self.max_task_size))
 
-        progress_label = 'Uploading %d of %d' % (self.task_count, self.max_task_size)
+        progress_label = 'Uploading %d of %d' % (self.task_count + 1, self.max_task_size)
         self.progressbar.set_text(progress_label)
         self.task_count = self.task_count + 1
 
