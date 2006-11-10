@@ -141,7 +141,7 @@ class Postr:
 
         self.uploader = Uploader(self).start()
         self.max_task_size = 1
-        self.tasks_count = 1
+        self.task_count = 0
 
     @threaded
     def get_quota(self):
@@ -226,12 +226,7 @@ class Postr:
         self.iconview.set_sensitive(False)
 
         self.progress_dialog.show()
-        self.task_count = 1
-        #def pulse(bar):
-        #    bar.pulse()
-        #    return True
-        #self.pulse_id = gobject.timeout_add(100, pulse, 
-        #                                    self.progressbar_partial)
+        self.task_count = 0
         
         while it is not None:
             (filename, thumb, pixbuf, title, desc, tags) = self.model.get(it,
@@ -434,7 +429,7 @@ class Postr:
         # TODO: enable upload menu item
         self.get_quota()
         self.max_task_size = 1
-        self.task_count = 1
+        self.task_count = 0
     
 
 # TODO: replace this mojo with @threaded
