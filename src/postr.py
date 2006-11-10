@@ -257,7 +257,7 @@ class Postr:
         if size > self.max_task_size:
             self.max_task_size = size
 
-        label = '<b>%s</b> (<i>%s</i>)' % (task.title, basename(task.filename))
+        label = '<b>%s</b>\n<i>%s</i>' % (task.title, basename(task.filename))
         self.progress_filename.set_label(label)
 
         try:
@@ -433,6 +433,8 @@ class Postr:
         self.iconview.set_sensitive(True)
         # TODO: enable upload menu item
         self.get_quota()
+        self.max_task_size = 1
+        self.task_count = 1
     
 
 # TODO: replace this mojo with @threaded
