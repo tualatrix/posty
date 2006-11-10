@@ -2,7 +2,15 @@
 
 # TODO: wow this sucks.
 import gtk
-from postr import postr
+import sys
+from os.path import dirname
+
+# If postr is not installed we can run it from source
+try:
+    from postr import postr
+except:
+    sys.path.insert(0, dirname(__file__))
+    from src import postr
 
 p = postr.Postr()
 postr.Uploader(p).start()
