@@ -140,6 +140,8 @@ class Postr:
         self.get_quota()
 
         self.uploader = Uploader(self).start()
+        self.max_task_size = 1
+        self.tasks_count = 1
 
     @threaded
     def get_quota(self):
@@ -224,7 +226,7 @@ class Postr:
         self.iconview.set_sensitive(False)
 
         self.progress_dialog.show()
-        self.job = 0
+        self.task_count = 1
         #def pulse(bar):
         #    bar.pulse()
         #    return True
@@ -252,7 +254,10 @@ class Postr:
             it = self.model.iter_next(it)
     
     def update_progress(self, task, size):
-        label = '%s (%s)' % (task.title, basename(task.filename))
+        if size > self.max_task_size:
+            self.max_task_size = size
+
+        label = '<b>%s</b> (<i>%s</i>)' % (task.title, basename(task.filename))
         self.progress_filename.set_label(label)
 
         try:
@@ -262,12 +267,12 @@ class Postr:
             self.progress_thumbnail.set_from_pixbuf(None)
             self.progress_thumbnail.hide()
 
-        self.progressbar.set_fraction(float(self.job) / float(size))
+        self.progressbar.set_fraction(float(self.task_count) / 
+                                      float(self.max_task_size))
 
-        self.job = self.job + 1
-        #progress_label = '%d of %d' % (current, total)
-        #self.progressbar.set_text(progress_label)
-        
+        progress_label = 'Uploading %d of %d' % (self.task_count, self.max_task_size)
+        self.progressbar.set_text(progress_label)
+        self.task_count = self.task_count + 1
 
     def on_about_activate(self, menuitem):
         dialog = AboutDialog(self.window)
