@@ -112,9 +112,10 @@ class Postr:
                                     gobject.TYPE_STRING)
         self.current_it = None
 
-        self.title_entry.connect('changed', self.on_field_changed, COL_TITLE)
-        self.desc_entry.connect('changed', self.on_field_changed, COL_DESCRIPTION)
-        self.tags_entry.connect('changed', self.on_field_changed, COL_TAGS)
+        self.change_signals = []
+        self.change_signals.append((self.title_entry, self.title_entry.connect('changed', self.on_field_changed, COL_TITLE)))
+        self.change_signals.append((self.desc_entry, self.desc_entry.connect('changed', self.on_field_changed, COL_DESCRIPTION)))
+        self.change_signals.append((self.tags_entry, self.tags_entry.connect('changed', self.on_field_changed, COL_TAGS)))
         self.thumbnail_image.connect('size-allocate', self.update_thumbnail)
         self.old_thumb_allocation = None
 
@@ -311,6 +312,8 @@ class Postr:
             widget.set_from_pixbuf(thumb)
 
     def on_selection_changed(self, iconview):
+        [obj.handler_block(i) for obj,i in self.change_signals]
+        
         items = iconview.get_selected_items()
 
         def enable_field(field, text):
@@ -340,6 +343,8 @@ class Postr:
             disable_field(self.tags_entry)
 
             self.thumbnail_image.set_from_pixbuf(None)
+
+        [obj.handler_unblock(i) for obj,i in self.change_signals]
 
     @staticmethod
     def get_thumb_size(srcw, srch, dstw, dsth):
