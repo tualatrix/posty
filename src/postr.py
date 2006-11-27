@@ -18,7 +18,6 @@
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
 import os, threading
-from Queue import Queue
 from urlparse import urlparse
 from os.path import basename
 
@@ -52,9 +51,7 @@ token = fapi.getToken(browser="firefox", perms="write")
  COL_TAGS # A space deliminated list of tags for the image
  ) = range (0, 7)
 
-
-# The task queue to transfer jobs to the upload thread
-upload_queue = Queue()
+# If we are uploading.
 uploading = threading.Event()
 
 # TODO: split out
@@ -140,10 +137,6 @@ class Postr:
         # TODO: probably need some sort of lock to stop multiple threads
         self.get_quota()
 
-        self.uploader = Uploader(self).start()
-        self.max_task_size = 1
-        self.task_count = 0
-
     @threaded
     def get_quota(self):
         rsp = fapi.people_getUploadStatus(api_key=flickrAPIKey, auth_token=token)
@@ -219,16 +212,21 @@ class Postr:
         self.model.foreach(inverter, selected)
 
     def on_upload_activate(self, menuitem):
+        if uploading.isSet():
+            print "Upload should be disabled, currently uploading"
+            return
+        
         it = self.model.get_iter_first()
         if it is None:
+            print "Upload should be disabled, no photos"
             return
 
         # TODO: disable upload menu item
         self.iconview.set_sensitive(False)
 
         self.progress_dialog.show()
-        self.task_count = 0
-        
+
+        upload_queue = []
         while it is not None:
             (filename, thumb, pixbuf, title, desc, tags) = self.model.get(it,
                                                               COL_FILENAME,
@@ -245,14 +243,12 @@ class Postr:
             t.description = desc
             t.tags = tags
     
-            upload_queue.put(t)
+            upload_queue.append(t)
             
             it = self.model.iter_next(it)
+        Uploader(self, upload_queue).start()
     
-    def update_progress(self, task, size):
-        if size > self.max_task_size:
-            self.max_task_size = size
-
+    def update_progress(self, task, current, total):
         label = '<b>%s</b>\n<i>%s</i>' % (task.title, basename(task.filename))
         self.progress_filename.set_label(label)
 
@@ -263,12 +259,10 @@ class Postr:
             self.progress_thumbnail.set_from_pixbuf(None)
             self.progress_thumbnail.hide()
 
-        self.progressbar.set_fraction(float(self.task_count) / 
-                                      float(self.max_task_size))
+        self.progressbar.set_fraction(float(current-1) / float(total))
 
-        progress_label = 'Uploading %d of %d' % (self.task_count + 1, self.max_task_size)
+        progress_label = 'Uploading %d of %d' % (current, total)
         self.progressbar.set_text(progress_label)
-        self.task_count = self.task_count + 1
 
     def on_about_activate(self, menuitem):
         dialog = AboutDialog(self.window)
@@ -432,9 +426,7 @@ class Postr:
         self.iconview.set_sensitive(True)
         # TODO: enable upload menu item
         self.get_quota()
-        self.max_task_size = 1
-        self.task_count = 0
-    
+
 
 # TODO: replace this mojo with @threaded
 class UploadTask:
@@ -447,18 +439,17 @@ class UploadTask:
 
 
 class Uploader(threading.Thread):
-    def __init__(self, postr):
+    def __init__(self, postr, upload_queue):
         threading.Thread.__init__(self)
         self.setDaemon(True)
         self.postr = postr
+        self.queue = upload_queue
         
     def run(self):
-        while 1:
-            # This blocks when the queue is empty
-            t = upload_queue.get()
-            uploading.set()
-            
-            self.postr.update_progress(t, upload_queue.qsize() + 1)
+        uploading.set()
+        for t in self.queue:
+            # TODO: Should iterate really
+            self.postr.update_progress(t, self.queue.index(t) + 1, len(self.queue))
 
             # TODO: construct a set of args and pass that to avoid duplication
             if t.filename:
@@ -482,12 +473,5 @@ class Uploader(threading.Thread):
                 # TODO: fire error dialog
                 print fapi.getPrintableError(ret)
 
-            if upload_queue.empty():
-                uploading.clear()
-                self.postr.done()
-
-
-if __name__ == "__main__":
-    p = Postr()
-    p.window.show()
-    gtk.main()
+        uploading.clear()
+        self.postr.done()

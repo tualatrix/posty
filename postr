@@ -13,6 +13,5 @@ except:
     from src import postr
 
 p = postr.Postr()
-postr.Uploader(p).start()
 p.window.show()
 gtk.main()
