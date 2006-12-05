@@ -35,7 +35,6 @@ flickrSecret = "7db1b8ef68979779"
 
 # TODO: do this in a thread or something to stop blocking
 fapi = FlickrAPI(flickrAPIKey, flickrSecret)
-token = fapi.getToken(browser="firefox", perms="write")
 
 # Constants for the drag handling
 (DRAG_URI,
@@ -135,11 +134,12 @@ class Postr:
         self.progress_thumbnail = glade.get_widget("progress_thumbnail")
         
         # TODO: probably need some sort of lock to stop multiple threads
+        self.token = fapi.getToken(browser="firefox", perms="write")
         self.get_quota()
 
     @threaded
     def get_quota(self):
-        rsp = fapi.people_getUploadStatus(api_key=flickrAPIKey, auth_token=token)
+        rsp = fapi.people_getUploadStatus(api_key=flickrAPIKey, auth_token=self.token)
         if fapi.getRspErrorCode(rsp) != 0:
             # TODO: fire error dialog or ignore
             print fapi.getPrintableError(rsp)
@@ -453,7 +453,7 @@ class Uploader(threading.Thread):
 
             # TODO: construct a set of args and pass that to avoid duplication
             if t.filename:
-                ret = fapi.upload(api_key=flickrAPIKey, auth_token=token,
+                ret = fapi.upload(api_key=flickrAPIKey, auth_token=self.token,
                                   filename=t.filename,
                                   title=t.title, description=t.description,
                                   tags=t.tags)
@@ -461,7 +461,7 @@ class Uploader(threading.Thread):
                 # This isn't very nice, but might be the best way
                 data = []
                 t.pixbuf.save_to_callback(lambda d: data.append(d), "png", {})
-                ret = fapi.upload(api_key=flickrAPIKey, auth_token=token,
+                ret = fapi.upload(api_key=flickrAPIKey, auth_token=self.token,
                                   imageData=''.join(data),
                                   title=t.title, description=t.description,
                                   tags=t.tags)
