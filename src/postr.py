@@ -453,7 +453,7 @@ class Uploader(threading.Thread):
 
             # TODO: construct a set of args and pass that to avoid duplication
             if t.filename:
-                ret = fapi.upload(api_key=flickrAPIKey, auth_token=self.token,
+                ret = fapi.upload(api_key=flickrAPIKey, auth_token=self.postr.token,
                                   filename=t.filename,
                                   title=t.title, description=t.description,
                                   tags=t.tags)
