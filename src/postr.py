@@ -448,7 +448,6 @@ class Uploader(threading.Thread):
     def run(self):
         uploading.set()
         for t in self.queue:
-            # TODO: Should iterate really
             self.postr.update_progress(t, self.queue.index(t) + 1, len(self.queue))
 
             # TODO: construct a set of args and pass that to avoid duplication
