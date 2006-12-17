@@ -22,7 +22,7 @@ from urlparse import urlparse
 from os.path import basename
 
 import pygtk; pygtk.require ("2.0")
-import gobject, gtk, gtk.glade
+import gobject, gtk, gtk.glade, gconf
 gobject.threads_init()
 
 import EXIF
@@ -134,7 +134,9 @@ class Postr:
         self.progress_thumbnail = glade.get_widget("progress_thumbnail")
         
         # TODO: probably need some sort of lock to stop multiple threads
-        self.token = fapi.getToken(browser="firefox", perms="write")
+        client = gconf.client_get_default()
+        preferred_browser = client.get_string("/desktop/gnome/applications/browser/exec") or "firefox"
+        self.token = fapi.getToken(browser=preferred_browser, perms="write")
         self.get_quota()
 
     @threaded
