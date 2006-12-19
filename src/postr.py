@@ -17,24 +17,20 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
-import os, threading
+import logging, os
 from urlparse import urlparse
 from os.path import basename
 
 import pygtk; pygtk.require ("2.0")
-import gobject, gtk, gtk.glade, gconf
-gobject.threads_init()
+import gobject, gtk, gtk.glade
 
 import EXIF
-from flickrapi import FlickrAPI
-from decorators import *
+from flickrest import Flickr
 
-# My top secret Flickr API keys
-flickrAPIKey = "c53cebd15ed936073134cec858036f1d"
-flickrSecret = "7db1b8ef68979779"
+#logging.basicConfig(level=logging.DEBUG)
 
-# TODO: do this in a thread or something to stop blocking
-fapi = FlickrAPI(flickrAPIKey, flickrSecret)
+# TODO: write a global error handler for passing to flickr methods that displays
+# a dialog
 
 # Constants for the drag handling
 (DRAG_URI,
@@ -51,7 +47,7 @@ fapi = FlickrAPI(flickrAPIKey, flickrSecret)
  ) = range (0, 7)
 
 # If we are uploading.
-uploading = threading.Event()
+uploading = False
 
 # TODO: split out
 _abbrevs = [
@@ -81,6 +77,10 @@ class AboutDialog(gtk.AboutDialog):
 
 class Postr:
     def __init__(self):
+        self.flickr = Flickr(api_key="c53cebd15ed936073134cec858036f1d",
+                             secret="7db1b8ef68979779",
+                             perms="write")
+        
         glade = gtk.glade.XML(os.path.join (os.path.dirname(__file__), "postr.glade"))
         glade.signal_autoconnect(self)
 
@@ -132,27 +132,22 @@ class Postr:
         self.progressbar = glade.get_widget("progressbar_main")
         self.progress_filename = glade.get_widget("progress_filename")
         self.progress_thumbnail = glade.get_widget("progress_thumbnail")
-        
-        # TODO: probably need some sort of lock to stop multiple threads
-        client = gconf.client_get_default()
-        preferred_browser = client.get_string("/desktop/gnome/applications/browser/exec") or "firefox"
-        self.token = fapi.getToken(browser=preferred_browser, perms="write")
-        self.get_quota()
+                
+        # Connect to flickr, go go go
+        #client = gconf.client_get_default()
+        # TODO preferred_browser = client.get_string("/desktop/gnome/applications/browser/exec") or "firefox"
+        self.token = self.flickr.authenticate().addCallback(self.connected)
 
-    @threaded
-    def get_quota(self):
-        rsp = fapi.people_getUploadStatus(api_key=flickrAPIKey, auth_token=self.token)
-        if fapi.getRspErrorCode(rsp) != 0:
-            # TODO: fire error dialog or ignore
-            print fapi.getPrintableError(rsp)
-        else:
-            gtk.gdk.threads_enter()
-            bandwidth = rsp.user[0].bandwidth[0]
-            context = self.statusbar.get_context_id("quota")
-            self.statusbar.pop(context)
-            self.statusbar.push(context, "You have %s remaining this month" %
-                                greek(int(bandwidth['remainingbytes'])))
-            gtk.gdk.threads_leave()
+    def connected(self, connected):
+        if connected:
+            self.flickr.people_getUploadStatus().addCallback(self.got_quota)
+
+    def got_quota(self, rsp):
+        bandwidth = rsp.find("user/bandwidth").get("remainingbytes")
+        context = self.statusbar.get_context_id("quota")
+        self.statusbar.pop(context)
+        self.statusbar.push(context, "You have %s remaining this month" %
+                            greek(int(bandwidth)))
 
     def on_field_changed(self, entry, column):
         items = self.iconview.get_selected_items()
@@ -188,10 +183,11 @@ class Postr:
         dialog.destroy()
             
     def on_quit_activate(self, menuitem):
-        if uploading.isSet():
+        if uploading:
             # TODO: if there are pending uploads, confirm first
             print "Uploading, should query user"
-        gtk.main_quit()
+        import twisted.internet.reactor
+        twisted.internet.reactor.stop()
     
     def on_delete_activate(self, menuitem):
         selection = self.iconview.get_selected_items()
@@ -214,7 +210,7 @@ class Postr:
         self.model.foreach(inverter, selected)
 
     def on_upload_activate(self, menuitem):
-        if uploading.isSet():
+        if uploading:
             print "Upload should be disabled, currently uploading"
             return
         
@@ -228,44 +224,10 @@ class Postr:
 
         self.progress_dialog.show()
 
-        upload_queue = []
-        while it is not None:
-            (filename, thumb, pixbuf, title, desc, tags) = self.model.get(it,
-                                                              COL_FILENAME,
-                                                              COL_THUMBNAIL,
-                                                              COL_IMAGE,
-                                                              COL_TITLE,
-                                                              COL_DESCRIPTION,
-                                                              COL_TAGS)
-            t = UploadTask()
-            t.filename = filename
-            t.thumb = thumb
-            t.pixbuf = pixbuf
-            t.title = title
-            t.description = desc
-            t.tags = tags
-    
-            upload_queue.append(t)
-            
-            it = self.model.iter_next(it)
-        Uploader(self, upload_queue).start()
-    
-    def update_progress(self, task, current, total):
-        label = '<b>%s</b>\n<i>%s</i>' % (task.title, basename(task.filename))
-        self.progress_filename.set_label(label)
-
-        try:
-            self.progress_thumbnail.set_from_pixbuf(task.thumb)
-            self.progress_thumbnail.show()
-        except:
-            self.progress_thumbnail.set_from_pixbuf(None)
-            self.progress_thumbnail.hide()
-
-        self.progressbar.set_fraction(float(current-1) / float(total))
-
-        progress_label = 'Uploading %d of %d' % (current, total)
-        self.progressbar.set_text(progress_label)
-
+        self.upload_count = self.model.iter_n_children (None)
+        self.upload_index = 0
+        self.upload(None)
+        
     def on_about_activate(self, menuitem):
         dialog = AboutDialog(self.window)
         dialog.run()
@@ -421,58 +383,54 @@ class Postr:
         
         context.finish(True, True, timestamp)
 
-    @as_idle
+    def update_progress(self, title, filename, thumb):
+        label = '<b>%s</b>\n<i>%s</i>' % (title, basename(filename))
+        self.progress_filename.set_label(label)
+
+        try:
+            self.progress_thumbnail.set_from_pixbuf(thumb)
+            self.progress_thumbnail.show()
+        except:
+            self.progress_thumbnail.set_from_pixbuf(None)
+            self.progress_thumbnail.hide()
+
+        self.progressbar.set_fraction(float(self.upload_index) / float(self.upload_count))
+        progress_label = 'Uploading %d of %d' % (self.upload_index+1, self.upload_count)
+        self.progressbar.set_text(progress_label)
+
+    def upload(self, response):
+        if self.upload_index >= self.upload_count:
+            self.done()
+            return
+
+        it = self.model.get_iter_from_string(str(self.upload_index))
+        (filename, thumb, pixbuf, title, desc, tags) = self.model.get(it,
+                                                                      COL_FILENAME,
+                                                                      COL_THUMBNAIL,
+                                                                      COL_IMAGE,
+                                                                      COL_TITLE,
+                                                                      COL_DESCRIPTION,
+                                                                      COL_TAGS)
+        self.update_progress(filename, title, thumb)
+        self.upload_index += 1
+
+        if filename:
+            self.flickr.upload(filename=filename,
+                               title=title, desc=desc,
+                               tags=tags).addCallback(self.upload)
+        elif pixbuf:
+            # This isn't very nice, but might be the best way
+            data = []
+            pixbuf.save_to_callback(lambda d: data.append(d), "png", {})
+            self.flickr.upload(imageData=''.join(data),
+                                title=title, desc=desc,
+                                tags=tags).addCallback(self.upload)
+        else:
+            print "No filename or pixbuf stored"
+    
     def done(self):
         self.progress_dialog.hide()
         self.model.clear()
         self.iconview.set_sensitive(True)
         # TODO: enable upload menu item
-        self.get_quota()
-
-
-# TODO: replace this mojo with @threaded
-class UploadTask:
-    uri = None
-    thumb = None
-    pixbuf = None
-    title = None
-    description = None
-    tags = None
-
-
-class Uploader(threading.Thread):
-    def __init__(self, postr, upload_queue):
-        threading.Thread.__init__(self)
-        self.setDaemon(True)
-        self.postr = postr
-        self.queue = upload_queue
-        
-    def run(self):
-        uploading.set()
-        for t in self.queue:
-            self.postr.update_progress(t, self.queue.index(t) + 1, len(self.queue))
-
-            # TODO: construct a set of args and pass that to avoid duplication
-            if t.filename:
-                ret = fapi.upload(api_key=flickrAPIKey, auth_token=self.postr.token,
-                                  filename=t.filename,
-                                  title=t.title, description=t.description,
-                                  tags=t.tags)
-            elif t.pixbuf:
-                # This isn't very nice, but might be the best way
-                data = []
-                t.pixbuf.save_to_callback(lambda d: data.append(d), "png", {})
-                ret = fapi.upload(api_key=flickrAPIKey, auth_token=self.postr.token,
-                                  imageData=''.join(data),
-                                  title=t.title, description=t.description,
-                                  tags=t.tags)
-            else:
-                print "No data in task"
-                continue
-            
-            if fapi.getRspErrorCode(ret) != 0:
-                # TODO: fire error dialog
-                print fapi.getPrintableError(ret)
-
-        uploading.clear()
-        self.postr.done()
+        self.flickr.people_getUploadStatus().addCallback(self.got_quota)
