@@ -1,15 +1,11 @@
 Grand Architecture Changes
 ==
 
-Truly asynchronous Flickr calls using FlickREST.
-
 Callback-based authentication so the calling application can handle the user interaction.
 
 
 Missing Features
 ==
-
-Add an loading progress bar
 
 Upload progress bar needs work:
 - Cancel
