@@ -35,6 +35,7 @@ from flickrest import Flickr
 # TODO: write a global error handler for passing to flickr methods that displays
 # a dialog
 
+# TODO: move into Postr object
 flickr = Flickr(api_key="c53cebd15ed936073134cec858036f1d",
                 secret="7db1b8ef68979779",
                 perms="write")
@@ -397,16 +398,15 @@ class Postr:
             self.progress_thumbnail.hide()
 
         self.progressbar.set_fraction(float(self.upload_index) / float(self.upload_count))
-        progress_label = 'Uploading %d of %d' % (self.upload_index, self.upload_count)
+        progress_label = 'Uploading %d of %d' % (self.upload_index+1, self.upload_count)
         self.progressbar.set_text(progress_label)
 
     def upload(self, response):
-        try:
-            it = self.model.get_iter_from_string(str(self.upload_index))
-        except ValueError:
+        if self.upload_index >= self.upload_count:
             self.done()
             return
-        
+
+        it = self.model.get_iter_from_string(str(self.upload_index))
         (filename, thumb, pixbuf, title, desc, tags) = self.model.get(it,
                                                                       COL_FILENAME,
                                                                       COL_THUMBNAIL,
@@ -436,7 +436,7 @@ class Postr:
         self.model.clear()
         self.iconview.set_sensitive(True)
         # TODO: enable upload menu item
-        # TODO: update quota
+        flickr.people_getUploadStatus().addCallback(self.got_quota)
 
 if __name__ == "__main__":
     p = Postr()
