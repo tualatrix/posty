@@ -1,17 +1,17 @@
 #! /usr/bin/env python
 
 from twisted.internet import gtk2reactor
-import sys
-from os.path import dirname
+reactor = gtk2reactor.install()
 
 # If postr is not installed we can run it from source
 try:
     from postr import postr
 except:
+    import sys
+    from os.path import dirname
     sys.path.insert(0, dirname(__file__))
     from src import postr
 
-reactor = gtk2reactor.install()
 p = postr.Postr()
 p.window.show()
 reactor.run()

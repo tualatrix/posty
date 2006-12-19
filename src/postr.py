@@ -24,9 +24,6 @@ from os.path import basename
 import pygtk; pygtk.require ("2.0")
 import gobject, gtk, gtk.glade
 
-from twisted.internet import gtk2reactor
-reactor = gtk2reactor.install()
-
 import EXIF
 from flickrest import Flickr
 
@@ -189,7 +186,8 @@ class Postr:
         if uploading:
             # TODO: if there are pending uploads, confirm first
             print "Uploading, should query user"
-        reactor.stop()
+        import twisted.internet.reactor
+        twisted.internet.reactor.stop()
     
     def on_delete_activate(self, menuitem):
         selection = self.iconview.get_selected_items()
@@ -436,8 +434,3 @@ class Postr:
         self.iconview.set_sensitive(True)
         # TODO: enable upload menu item
         self.flickr.people_getUploadStatus().addCallback(self.got_quota)
-
-if __name__ == "__main__":
-    p = Postr()
-    p.window.show()
-    reactor.run()
