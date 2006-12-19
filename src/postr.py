@@ -35,11 +35,6 @@ from flickrest import Flickr
 # TODO: write a global error handler for passing to flickr methods that displays
 # a dialog
 
-# TODO: move into Postr object
-flickr = Flickr(api_key="c53cebd15ed936073134cec858036f1d",
-                secret="7db1b8ef68979779",
-                perms="write")
-
 # Constants for the drag handling
 (DRAG_URI,
  DRAG_IMAGE) = range (0, 2)
@@ -85,6 +80,10 @@ class AboutDialog(gtk.AboutDialog):
 
 class Postr:
     def __init__(self):
+        self.flickr = Flickr(api_key="c53cebd15ed936073134cec858036f1d",
+                             secret="7db1b8ef68979779",
+                             perms="write")
+        
         glade = gtk.glade.XML(os.path.join (os.path.dirname(__file__), "postr.glade"))
         glade.signal_autoconnect(self)
 
@@ -140,11 +139,11 @@ class Postr:
         # Connect to flickr, go go go
         #client = gconf.client_get_default()
         # TODO preferred_browser = client.get_string("/desktop/gnome/applications/browser/exec") or "firefox"
-        self.token = flickr.authenticate().addCallback(self.connected)
+        self.token = self.flickr.authenticate().addCallback(self.connected)
 
     def connected(self, connected):
         if connected:
-            flickr.people_getUploadStatus().addCallback(self.got_quota)
+            self.flickr.people_getUploadStatus().addCallback(self.got_quota)
 
     def got_quota(self, rsp):
         bandwidth = rsp.find("user/bandwidth").get("remainingbytes")
@@ -418,14 +417,14 @@ class Postr:
         self.upload_index += 1
 
         if filename:
-            flickr.upload(filename=filename,
-                                title=title, desc=desc,
-                                tags=tags).addCallback(self.upload)
+            self.flickr.upload(filename=filename,
+                               title=title, desc=desc,
+                               tags=tags).addCallback(self.upload)
         elif pixbuf:
             # This isn't very nice, but might be the best way
             data = []
             pixbuf.save_to_callback(lambda d: data.append(d), "png", {})
-            flickr.upload(imageData=''.join(data),
+            self.flickr.upload(imageData=''.join(data),
                                 title=title, desc=desc,
                                 tags=tags).addCallback(self.upload)
         else:
@@ -436,7 +435,7 @@ class Postr:
         self.model.clear()
         self.iconview.set_sensitive(True)
         # TODO: enable upload menu item
-        flickr.people_getUploadStatus().addCallback(self.got_quota)
+        self.flickr.people_getUploadStatus().addCallback(self.got_quota)
 
 if __name__ == "__main__":
     p = Postr()
