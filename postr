@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 
-# TODO: wow this sucks.
-import pygtk; pygtk.require ("2.0")
-import gtk
+from twisted.internet import gtk2reactor
 import sys
 from os.path import dirname
 
@@ -13,6 +11,7 @@ except:
     sys.path.insert(0, dirname(__file__))
     from src import postr
 
+reactor = gtk2reactor.install()
 p = postr.Postr()
 p.window.show()
-gtk.main()
+reactor.run()
