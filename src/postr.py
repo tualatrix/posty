@@ -220,8 +220,8 @@ class Postr:
             return
 
         # TODO: disable upload menu item
+        self.uploading = True
         self.iconview.set_sensitive(False)
-
         self.progress_dialog.show()
 
         self.upload_count = self.model.iter_n_children (None)
@@ -429,6 +429,7 @@ class Postr:
             print "No filename or pixbuf stored"
     
     def done(self):
+        self.uploading = False
         self.progress_dialog.hide()
         self.model.clear()
         self.iconview.set_sensitive(True)
