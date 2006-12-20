@@ -399,7 +399,12 @@ class Postr:
 
     def upload(self, response):
         if self.upload_index >= self.upload_count:
-            self.done()
+            self.uploading = False
+            self.progress_dialog.hide()
+            self.model.clear()
+            self.iconview.set_sensitive(True)
+            # TODO: enable upload menu item
+            self.flickr.people_getUploadStatus().addCallback(self.got_quota)
             return
 
         it = self.model.get_iter_from_string(str(self.upload_index))
@@ -426,11 +431,3 @@ class Postr:
                                 tags=tags).addCallback(self.upload)
         else:
             print "No filename or pixbuf stored"
-    
-    def done(self):
-        self.uploading = False
-        self.progress_dialog.hide()
-        self.model.clear()
-        self.iconview.set_sensitive(True)
-        # TODO: enable upload menu item
-        self.flickr.people_getUploadStatus().addCallback(self.got_quota)
