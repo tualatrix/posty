@@ -50,6 +50,8 @@ from flickrest import Flickr
 uploading = False
 
 def greek(size):
+    """Take a quantity (like 1873627) and display it in a human-readable rounded
+    form (like 1.8M)"""
     _abbrevs = [
         (1<<50L, 'P'),
         (1<<40L, 'T'), 
@@ -62,6 +64,7 @@ def greek(size):
         if size > factor:
             break
     return "%.1f%s" % (float(size)/factor, suffix)
+
 
 class AboutDialog(gtk.AboutDialog):
     def __init__(self, parent):
@@ -100,13 +103,13 @@ class Postr (gtkunique.UniqueApp):
         self.desc_entry = glade.get_widget("desc_entry")
         self.tags_entry = glade.get_widget("tags_entry")
 
-        self.model = gtk.ListStore (gobject.TYPE_STRING,
-                                    gtk.gdk.Pixbuf,
-                                    gtk.gdk.Pixbuf,
-                                    gtk.gdk.Pixbuf,
-                                    gobject.TYPE_STRING,
-                                    gobject.TYPE_STRING,
-                                    gobject.TYPE_STRING)
+        self.model = gtk.ListStore (gobject.TYPE_STRING, # COL_FILENAME
+                                    gtk.gdk.Pixbuf, # COL_IMAGE
+                                    gtk.gdk.Pixbuf, # COL_PREVIEW
+                                    gtk.gdk.Pixbuf,  #COL_THUMBNAIL
+                                    gobject.TYPE_STRING, # COL_TITLE
+                                    gobject.TYPE_STRING, # COL_DESCRIPTION
+                                    gobject.TYPE_STRING) # COL_TAGS
         self.current_it = None
 
         self.change_signals = []
@@ -139,7 +142,7 @@ class Postr (gtkunique.UniqueApp):
         # TODO preferred_browser = client.get_string("/desktop/gnome/applications/browser/exec") or "firefox"
         # TODO: move out of here so it only happens if this is the first instance
         self.token = self.flickr.authenticate().addCallback(self.connected)
-
+    
     def on_message(self, app, command, command_data, startup_id, screen, workspace):
         if command == gtkunique.OPEN:
             self.add_image_filename(command_data)
@@ -148,10 +151,13 @@ class Postr (gtkunique.UniqueApp):
             return gtkunique.RESPONSE_ABORT
     
     def connected(self, connected):
+        """Callback when the Flickr authentication completes."""
         if connected:
             self.flickr.people_getUploadStatus().addCallback(self.got_quota)
 
     def got_quota(self, rsp):
+        """Callback for the getUploadStatus call, which updates the remaining
+        quota in the status bar."""
         bandwidth = rsp.find("user/bandwidth").get("remainingbytes")
         context = self.statusbar.get_context_id("quota")
         self.statusbar.pop(context)
@@ -159,12 +165,14 @@ class Postr (gtkunique.UniqueApp):
                             greek(int(bandwidth)))
 
     def on_field_changed(self, entry, column):
+        """Callback when the entry fields are changed."""
         items = self.iconview.get_selected_items()
         for path in items:
             it = self.model.get_iter(path)
             self.model.set_value (it, column, entry.get_text())
     
     def on_add_photos_activate(self, menuitem):
+        """Callback from the File->Add Photos menu item."""
         # TODO: add preview widget
         dialog = gtk.FileChooserDialog(title="Add Photos", parent=self.window,
                                        action=gtk.FILE_CHOOSER_ACTION_OPEN,
@@ -192,6 +200,7 @@ class Postr (gtkunique.UniqueApp):
         dialog.destroy()
             
     def on_quit_activate(self, menuitem):
+        """Callback from File->Quit."""
         if uploading:
             # TODO: if there are pending uploads, confirm first
             print "Uploading, should query user"
@@ -199,17 +208,21 @@ class Postr (gtkunique.UniqueApp):
         twisted.internet.reactor.stop()
     
     def on_delete_activate(self, menuitem):
+        """Callback from Edit->Delete."""
         selection = self.iconview.get_selected_items()
         for path in selection:
             self.model.remove(self.model.get_iter(path))
     
     def on_select_all_activate(self, menuitem):
+        """Callback from Edit->Select All."""
         self.iconview.select_all()
 
     def on_deselect_all_activate(self, menuitem):
+        """Callback from Edit->Deselect All."""
         self.iconview.unselect_all()
 
     def on_invert_selection_activate(self, menuitem):
+        """Callback from Edit->Invert Selection."""
         selected = self.iconview.get_selected_items()
         def inverter(model, path, iter, selected):
             if path in selected:
@@ -219,6 +232,7 @@ class Postr (gtkunique.UniqueApp):
         self.model.foreach(inverter, selected)
 
     def on_upload_activate(self, menuitem):
+        """Callback from File->Upload."""
         if uploading:
             print "Upload should be disabled, currently uploading"
             return
@@ -235,14 +249,16 @@ class Postr (gtkunique.UniqueApp):
 
         self.upload_count = self.model.iter_n_children (None)
         self.upload_index = 0
-        self.upload(None)
+        self.upload()
         
     def on_about_activate(self, menuitem):
+        """Callback from Help->About."""
         dialog = AboutDialog(self.window)
         dialog.run()
         dialog.destroy()
 
     def update_thumbnail(self, widget, allocation = None):
+        """Update the preview, as the selected image was changed."""
         if self.current_it:
             if not allocation:
                 allocation = widget.get_allocation()
@@ -279,6 +295,8 @@ class Postr (gtkunique.UniqueApp):
             widget.set_from_pixbuf(thumb)
 
     def on_selection_changed(self, iconview):
+        """Callback when the selection was changed, to update the entries and
+        preview."""
         [obj.handler_block(i) for obj,i in self.change_signals]
         
         items = iconview.get_selected_items()
@@ -315,6 +333,8 @@ class Postr (gtkunique.UniqueApp):
 
     @staticmethod
     def get_thumb_size(srcw, srch, dstw, dsth):
+        """Scale scrw x srch to an dimensions with the same ratio that fits as
+        closely as possible to dstw x dsth."""
         ratio = srcw/float(srch)
         if srcw > srch:
             return (dstw, int(dstw/ratio))
@@ -322,6 +342,8 @@ class Postr (gtkunique.UniqueApp):
             return (int(dsth*ratio), dsth)
 
     def add_image_filename(self, filename):
+        """Add a file to the image list.  Called by the File->Add Photo and drag
+        and drop callbacks."""
         # TODO: MIME type check
 
         # On a file that doesn't contain EXIF, like a PNG, this just returns an
@@ -351,6 +373,7 @@ class Postr (gtkunique.UniqueApp):
                        COL_TAGS, "")
     
     def on_drag_data_received(self, widget, context, x, y, selection, targetType, timestamp):
+        """Drag and drop callback when data is received."""
         if targetType == DRAG_IMAGE:
             pixbuf = selection.get_pixbuf()
 
@@ -393,6 +416,7 @@ class Postr (gtkunique.UniqueApp):
         context.finish(True, True, timestamp)
 
     def update_progress(self, title, filename, thumb):
+        """Update the progress bar whilst uploading."""
         label = '<b>%s</b>\n<i>%s</i>' % (title, basename(filename))
         self.progress_filename.set_label(label)
 
@@ -407,9 +431,16 @@ class Postr (gtkunique.UniqueApp):
         progress_label = 'Uploading %d of %d' % (self.upload_index+1, self.upload_count)
         self.progressbar.set_text(progress_label)
 
-    def upload(self, response):
+    def upload(self, response=None):
+        """Upload worker function, called by the File->Upload callback.  As this
+        calls itself in the deferred callback, it takes a response argument."""
         if self.upload_index >= self.upload_count:
-            self.done()
+            self.uploading = False
+            self.progress_dialog.hide()
+            self.model.clear()
+            self.iconview.set_sensitive(True)
+            # TODO: enable upload menu item
+            self.flickr.people_getUploadStatus().addCallback(self.got_quota)
             return
 
         it = self.model.get_iter_from_string(str(self.upload_index))
@@ -436,11 +467,3 @@ class Postr (gtkunique.UniqueApp):
                                 tags=tags).addCallback(self.upload)
         else:
             print "No filename or pixbuf stored"
-    
-    def done(self):
-        self.uploading = False
-        self.progress_dialog.hide()
-        self.model.clear()
-        self.iconview.set_sensitive(True)
-        # TODO: enable upload menu item
-        self.flickr.people_getUploadStatus().addCallback(self.got_quota)
