@@ -63,6 +63,7 @@ def greek(size):
             break
     return "%.1f%s" % (float(size)/factor, suffix)
 
+
 class AboutDialog(gtk.AboutDialog):
     def __init__(self, parent):
         gtk.AboutDialog.__init__(self)
@@ -97,13 +98,13 @@ class Postr:
         self.desc_entry = glade.get_widget("desc_entry")
         self.tags_entry = glade.get_widget("tags_entry")
 
-        self.model = gtk.ListStore (gobject.TYPE_STRING,
-                                    gtk.gdk.Pixbuf,
-                                    gtk.gdk.Pixbuf,
-                                    gtk.gdk.Pixbuf,
-                                    gobject.TYPE_STRING,
-                                    gobject.TYPE_STRING,
-                                    gobject.TYPE_STRING)
+        self.model = gtk.ListStore (gobject.TYPE_STRING, # COL_FILENAME
+                                    gtk.gdk.Pixbuf, # COL_IMAGE
+                                    gtk.gdk.Pixbuf, # COL_PREVIEW
+                                    gtk.gdk.Pixbuf,  #COL_THUMBNAIL
+                                    gobject.TYPE_STRING, # COL_TITLE
+                                    gobject.TYPE_STRING, # COL_DESCRIPTION
+                                    gobject.TYPE_STRING) # COL_TAGS
         self.current_it = None
 
         self.change_signals = []
