@@ -13,7 +13,13 @@ except ImportError:
     from src import postr
 
 p = postr.Postr()
-p.window.show()
-for url in sys.argv[1:]:
-    p.add_image_filename(url)
-reactor.run()
+if p.is_running():
+    for url in sys.argv[1:]:
+        p.open_uri(url)
+    sys.exit(0)
+else:
+    p.window.show()
+    p.add_window(p.window)
+    for url in sys.argv[1:]:
+        p.add_image_filename(url)
+    reactor.run()

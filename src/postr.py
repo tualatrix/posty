@@ -24,6 +24,18 @@ from os.path import basename
 import pygtk; pygtk.require ("2.0")
 import gobject, gtk, gtk.glade
 
+try:
+    import gtkunique
+    UniqueApp = gtkunique.UniqueApp
+except ImportError:
+    class UniqueApp:
+        def __init__(self, name):
+            pass
+        def add_window(self, window):
+            pass
+        def is_running(self):
+            return False
+
 import EXIF
 from flickrest import Flickr
 
@@ -76,8 +88,14 @@ class AboutDialog(gtk.AboutDialog):
         self.set_website('http://burtonini.com/')
 
 
-class Postr:
+class Postr (UniqueApp):
     def __init__(self):
+        UniqueApp.__init__(self, 'com.burtonini.Postr')
+        try:
+            self.connect("message", self.on_message)
+        except AttributeError:
+            pass
+        
         self.flickr = Flickr(api_key="c53cebd15ed936073134cec858036f1d",
                              secret="7db1b8ef68979779",
                              perms="write")
@@ -86,6 +104,7 @@ class Postr:
         glade.signal_autoconnect(self)
 
         self.window = glade.get_widget("main_window")
+        
         # Just for you, Daniel.
         try:
             if os.getlogin() == "daniels":
@@ -137,7 +156,15 @@ class Postr:
         # Connect to flickr, go go go
         #client = gconf.client_get_default()
         # TODO preferred_browser = client.get_string("/desktop/gnome/applications/browser/exec") or "firefox"
+        # TODO: move out of here so it only happens if this is the first instance
         self.token = self.flickr.authenticate().addCallback(self.connected)
+    
+    def on_message(self, app, command, command_data, startup_id, screen, workspace):
+        if command == gtkunique.OPEN:
+            self.add_image_filename(command_data)
+            return gtkunique.RESPONSE_OK
+        else:
+            return gtkunique.RESPONSE_ABORT
     
     def connected(self, connected):
         """Callback when the Flickr authentication completes."""
