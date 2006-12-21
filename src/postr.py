@@ -22,7 +22,19 @@ from urlparse import urlparse
 from os.path import basename
 
 import pygtk; pygtk.require ("2.0")
-import gobject, gtk, gtk.glade, gtkunique
+import gobject, gtk, gtk.glade
+
+try:
+    import gtkunique
+    UniqueApp = gtkunique.UniqueApp
+except ImportError:
+    class UniqueApp:
+        def __init__(self, name):
+            pass
+        def add_window(self, window):
+            pass
+        def is_running(self):
+            return False
 
 import EXIF
 from flickrest import Flickr
@@ -76,10 +88,13 @@ class AboutDialog(gtk.AboutDialog):
         self.set_website('http://burtonini.com/')
 
 
-class Postr (gtkunique.UniqueApp):
+class Postr (UniqueApp):
     def __init__(self):
-        gtkunique.UniqueApp.__init__(self, 'com.burtonini.Postr')
-        self.connect("message", self.on_message)
+        UniqueApp.__init__(self, 'com.burtonini.Postr')
+        try:
+            self.connect("message", self.on_message)
+        except AttributeError:
+            pass
         
         self.flickr = Flickr(api_key="c53cebd15ed936073134cec858036f1d",
                              secret="7db1b8ef68979779",
@@ -89,6 +104,7 @@ class Postr (gtkunique.UniqueApp):
         glade.signal_autoconnect(self)
 
         self.window = glade.get_widget("main_window")
+        
         # Just for you, Daniel.
         try:
             if os.getlogin() == "daniels":
