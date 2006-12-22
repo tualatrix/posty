@@ -128,6 +128,9 @@ class Postr (UniqueApp):
                                     gobject.TYPE_STRING) # COL_TAGS
         self.current_it = None
 
+        # last opened folder
+        self.last_folder = None
+
         self.change_signals = []
         self.change_signals.append((self.title_entry, self.title_entry.connect('changed', self.on_field_changed, COL_TITLE)))
         self.change_signals.append((self.desc_entry, self.desc_entry.connect('changed', self.on_field_changed, COL_DESCRIPTION)))
@@ -197,6 +200,8 @@ class Postr (UniqueApp):
                                                 gtk.STOCK_OPEN,
                                                 gtk.RESPONSE_OK))
         dialog.set_select_multiple(True)
+        if self.last_folder:
+            dialog.set_current_folder(self.last_folder)
         
         filters = gtk.FileFilter()
         filters.set_name("Images")
@@ -213,6 +218,9 @@ class Postr (UniqueApp):
             dialog.hide()
             for f in dialog.get_filenames():
                 self.add_image_filename(f)
+            
+            self.last_folder = dialog.get_current_folder()
+
         dialog.destroy()
             
     def on_quit_activate(self, menuitem):
