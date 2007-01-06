@@ -25,3 +25,7 @@ Nice interface for tagging
 CLI interface: postr -tags foobar -description blaa -title fooo img.jpg
 
 Nautilus extension/file manager hook.  Maybe Open With->Postr?
+
+Resize before uploading
+
+Parse more data -- EXIF UserCommend, IPTC <caption>
