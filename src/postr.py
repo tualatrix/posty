@@ -37,6 +37,8 @@ except ImportError:
             return False
 
 import EXIF
+import iptc as IPTC
+
 from flickrest import Flickr
 
 #logging.basicConfig(level=logging.DEBUG)
@@ -370,10 +372,15 @@ class Postr (UniqueApp):
         and drop callbacks."""
         # TODO: MIME type check
 
+        # TODO: we open the file three times now, which is madness, especially
+        # if gnome-vfs is used to read remote files.  Need to find/write EXIF
+        # and IPTC parsers that are incremental.
+        
         # On a file that doesn't contain EXIF, like a PNG, this just returns an
         # empty set.
         exif = EXIF.process_file(open(filename, 'rb'))
-
+        iptc = IPTC.getiptc(open(filename, 'rb'))
+        
         # TODO: rotate if required
 
         # First we load the image scaled to 512x512 for the preview.
@@ -382,10 +389,27 @@ class Postr (UniqueApp):
         # Now scale the preview to a thumbnail
         sizes = self.get_thumb_size(preview.get_width(), preview.get_height(), 64, 64)
         thumb = preview.scale_simple(sizes[0], sizes[1], gtk.gdk.INTERP_BILINEAR)
-    
-        # Extra useful data from image
-        title = os.path.splitext(os.path.basename(filename))[0] # TODO: more
-        desc = exif.get('Image ImageDescription', "")
+
+        # Slurp data from the EXIF and IPTC tags
+        title_tags = (
+            (iptc, "Caption"),
+            )
+        desc_tags = (
+            (exif, "Image ImageDescription"),
+            (exif, "UserComment"),
+            )
+        tag_tags = (
+            (iptc, "Keywords"),
+            )
+        def slurp(tags, default=""):
+            for (data, tag) in tags:
+                if data.has_key(tag):
+                    return data[tag]
+            return default
+        
+        title = slurp(title_tags, os.path.splitext(os.path.basename(filename))[0])
+        desc = slurp(desc_tags)
+        tags = slurp(tag_tags)
         
         self.model.set(self.model.append(),
                        COL_FILENAME, filename,
@@ -394,7 +418,7 @@ class Postr (UniqueApp):
                        COL_THUMBNAIL, thumb,
                        COL_TITLE, title,
                        COL_DESCRIPTION, desc,
-                       COL_TAGS, "")
+                       COL_TAGS, tags)
     
     def on_drag_data_received(self, widget, context, x, y, selection, targetType, timestamp):
         """Drag and drop callback when data is received."""
