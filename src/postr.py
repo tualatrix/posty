@@ -106,11 +106,22 @@ class AuthenticationDialog(gtk.Dialog):
                             buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                                      "Continue", gtk.RESPONSE_ACCEPT))
         vbox = gtk.VBox(spacing=8)
-        # TODO: much better wording
-        vbox.add(gtk.Label("Please click the button below to login to Flickr."))
-        # TODO gtk.LinkButton is only in 2.10 so need a custom widget for 2.8.
-        button = gtk.LinkButton(url, "Login to Flickr")
+        vbox.set_border_width(8)
+        
+        label = gtk.Label("Postr needs to login to Flickr to upload your photos. "
+                          "Please click on the link below to login to Flickr.")
+        label.set_line_wrap(True)
+        vbox.add(label)
+
+        # gtk.LinkButton is only in 2.10, so use a normal button if it isn't
+        # available.
+        if hasattr(gtk, "LinkButton"):
+            button = gtk.LinkButton(url, "Login to Flickr")
+        else:
+            button = gtk.Button("Login to Flickr")
+            button.connect("clicked", on_url_clicked, url)
         vbox.add(button)
+        
         self.vbox.add(vbox)
         self.show_all()
 
@@ -241,7 +252,6 @@ class Postr (UniqueApp):
     
     def on_add_photos_activate(self, menuitem):
         """Callback from the File->Add Photos menu item."""
-        # TODO: add preview widget
         dialog = gtk.FileChooserDialog(title="Add Photos", parent=self.window,
                                        action=gtk.FILE_CHOOSER_ACTION_OPEN,
                                        buttons=(gtk.STOCK_CANCEL,
