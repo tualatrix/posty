@@ -171,7 +171,7 @@ class Postr (UniqueApp):
         #client = gconf.client_get_default()
         # TODO preferred_browser = client.get_string("/desktop/gnome/applications/browser/exec") or "firefox"
         # TODO: move out of here so it only happens if this is the first instance
-        self.token = self.flickr.authenticate().addCallback(self.connected)
+        self.token = self.flickr.authenticate_1().addCallback(self.auth_open_url)
     
     def on_message(self, app, command, command_data, startup_id, screen, workspace):
         """Callback from UniqueApp, when a message arrives."""
@@ -180,6 +180,15 @@ class Postr (UniqueApp):
             return gtkunique.RESPONSE_OK
         else:
             return gtkunique.RESPONSE_ABORT
+
+    def auth_open_url(self, state):
+        if state is None:
+            self.connected(True)
+        else:
+            # TODO: show dialog etc
+            import os
+            os.spawnlp(os.P_WAIT, "epiphany", "epiphany", "-p", state['url'])
+            self.flickr.authenticate_2(state).addCallback(self.connected)
     
     def connected(self, connected):
         """Callback when the Flickr authentication completes."""
