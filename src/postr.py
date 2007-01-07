@@ -381,11 +381,21 @@ class Postr (UniqueApp):
         exif = EXIF.process_file(open(filename, 'rb'))
         iptc = IPTC.getiptc(open(filename, 'rb'))
         
-        # TODO: rotate if required
-
         # First we load the image scaled to 512x512 for the preview.
         preview = gtk.gdk.pixbuf_new_from_file_at_size(filename, 512, 512)
 
+        # Rotate the preview if required.  We don't need to manipulate the
+        # original data as Flickr will do that for us.
+        rotation = exif.get("Image Orientation", None)
+        if rotation:
+            rotation = rotation.values[0]
+            if rotation == 3: # Rotated 180 degrees
+                preview = preview.rotate_simple(gtk.gdk.PIXBUF_ROTATE_UPSIDEDOWN)
+            elif rotation == 6: # Rotated 90 degrees CW
+                preview = preview.rotate_simple(gtk.gdk.PIXBUF_ROTATE_CLOCKWISE)
+            elif rotation == 8: # Rotated 90 degrees CCW
+                preview = preview.rotate_simple(gtk.gdk.PIXBUF_ROTATE_COUNTERCLOCKWISE)
+        
         # Now scale the preview to a thumbnail
         sizes = self.get_thumb_size(preview.get_width(), preview.get_height(), 64, 64)
         thumb = preview.scale_simple(sizes[0], sizes[1], gtk.gdk.INTERP_BILINEAR)
