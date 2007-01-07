@@ -115,6 +115,7 @@ class Postr (UniqueApp):
 
         get_glade_widgets (glade, self,
                            ("window",
+                            "upload_menu",
                             "statusbar",
                             "thumbnail_image",
                             "title_entry",
@@ -122,7 +123,7 @@ class Postr (UniqueApp):
                             "tags_entry",
                             "iconview",
                             "progress_dialog",
-                            "progressbar_main",
+                            "progressbar",
                             "progress_filename",
                             "progress_thumbnail")
                            )
@@ -277,7 +278,7 @@ class Postr (UniqueApp):
             print "Upload should be disabled, no photos"
             return
 
-        # TODO: disable upload menu item
+        menuitem.set_sensitive(False)
         self.uploading = True
         self.iconview.set_sensitive(False)
         self.progress_dialog.show()
@@ -502,11 +503,11 @@ class Postr (UniqueApp):
         """Upload worker function, called by the File->Upload callback.  As this
         calls itself in the deferred callback, it takes a response argument."""
         if self.upload_index >= self.upload_count:
+            self.upload_menu.set_sensitive(True)
             self.uploading = False
             self.progress_dialog.hide()
             self.model.clear()
             self.iconview.set_sensitive(True)
-            # TODO: enable upload menu item
             self.flickr.people_getUploadStatus().addCallback(self.got_quota)
             return
 

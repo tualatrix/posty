@@ -72,7 +72,7 @@
 		  </child>
 
 		  <child>
-		    <widget class="GtkImageMenuItem" id="upload">
+		    <widget class="GtkImageMenuItem" id="upload_menu">
 		      <property name="visible">True</property>
 		      <property name="label" translatable="yes">_Upload</property>
 		      <property name="use_underline">True</property>
@@ -534,7 +534,7 @@
       </child>
 
       <child>
-	<widget class="GtkProgressBar" id="progressbar_main">
+	<widget class="GtkProgressBar" id="progressbar">
 	  <property name="visible">True</property>
 	  <property name="orientation">GTK_PROGRESS_LEFT_TO_RIGHT</property>
 	  <property name="fraction">0</property>
