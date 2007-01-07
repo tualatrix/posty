@@ -22,7 +22,7 @@ from urlparse import urlparse
 from os.path import basename
 
 import pygtk; pygtk.require ("2.0")
-import gobject, gtk, gtk.glade
+import gobject, gtk, gtk.glade, gconf
 
 import EXIF
 import iptc as IPTC
@@ -88,7 +88,6 @@ def get_glade_widgets (glade, object, widget_names):
         widget = glade.get_widget(name)
         setattr(object, name, widget)
 
-
 class AboutDialog(gtk.AboutDialog):
     def __init__(self, parent):
         gtk.AboutDialog.__init__(self)
@@ -97,6 +96,31 @@ class AboutDialog(gtk.AboutDialog):
         self.set_copyright(u'Copyright \u00A9 2006 Ross Burton')
         self.set_authors(('Ross Burton <ross@burtonini.com>',))
         self.set_website('http://burtonini.com/')
+
+
+class AuthenticationDialog(gtk.Dialog):
+    def __init__(self, parent, url):
+        gtk.Dialog.__init__(self,
+                            title="Flickr Uploader", parent=parent,
+                            flags=gtk.DIALOG_NO_SEPARATOR,
+                            buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                                     gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        vbox = gtk.VBox(spacing=8)
+        # TODO: much better wording
+        vbox.add(gtk.Label("Please click the button below to login to Flickr."))
+        button = gtk.LinkButton(url, "Login to Flickr")
+        vbox.add(button)
+        self.vbox.add(vbox)
+        self.show_all()
+
+def on_url_clicked(button, url):
+    """Global LinkButton handler that starts the default GNOME HTTP handler, or
+    firefox."""
+    client = gconf.client_get_default()
+    browser = client.get_string("/desktop/gnome/url-handlers/http/command") or "firefox %s"
+    browser = browser % url
+    gobject.spawn_async(browser.split(" "), flags=gobject.SPAWN_SEARCH_PATH)
+gtk.link_button_set_uri_hook(on_url_clicked)
 
 class Postr (UniqueApp):
     def __init__(self):
@@ -127,6 +151,9 @@ class Postr (UniqueApp):
                             "progress_filename",
                             "progress_thumbnail")
                            )
+        
+        # TODO: disable upload by default, so upload doesn't work until
+        # authenticated.
         
         # Just for you, Daniel.
         try:
@@ -168,9 +195,6 @@ class Postr (UniqueApp):
         self.progress_dialog.set_transient_for(self.window)
                 
         # Connect to flickr, go go go
-        #client = gconf.client_get_default()
-        # TODO preferred_browser = client.get_string("/desktop/gnome/applications/browser/exec") or "firefox"
-        # TODO: move out of here so it only happens if this is the first instance
         self.token = self.flickr.authenticate_1().addCallback(self.auth_open_url)
     
     def on_message(self, app, command, command_data, startup_id, screen, workspace):
@@ -189,9 +213,12 @@ class Postr (UniqueApp):
             self.connected(True)
         else:
             # TODO: show dialog etc
-            import os
-            os.spawnlp(os.P_WAIT, "epiphany", "epiphany", "-p", state['url'])
-            self.flickr.authenticate_2(state).addCallback(self.connected)
+            #import os
+            #os.spawnlp(os.P_WAIT, "epiphany", "epiphany", "-p", state['url'])
+            dialog = AuthenticationDialog(self.window, state['url'])
+            if dialog.run() == gtk.RESPONSE_ACCEPT:
+                self.flickr.authenticate_2(state).addCallback(self.connected)
+            dialog.destroy()
     
     def connected(self, connected):
         """Callback when the Flickr authentication completes."""
