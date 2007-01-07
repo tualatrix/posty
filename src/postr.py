@@ -152,10 +152,7 @@ class Postr (UniqueApp):
                             "progress_filename",
                             "progress_thumbnail")
                            )
-        
-        # TODO: disable upload by default, so upload doesn't work until
-        # authenticated.
-        
+                
         # Just for you, Daniel.
         try:
             if os.getlogin() == "daniels":
@@ -194,6 +191,8 @@ class Postr (UniqueApp):
 
         # The upload progress dialog
         self.progress_dialog.set_transient_for(self.window)
+        # Disable the Upload menu until the user has authenticated
+        self.upload_menu.set_sensitive(False)
                 
         # Connect to flickr, go go go
         self.token = self.flickr.authenticate_1().addCallback(self.auth_open_url)
@@ -221,6 +220,7 @@ class Postr (UniqueApp):
     def connected(self, connected):
         """Callback when the Flickr authentication completes."""
         if connected:
+            self.upload_menu.set_sensitive(True)
             self.flickr.people_getUploadStatus().addCallback(self.got_quota)
 
     def got_quota(self, rsp):
