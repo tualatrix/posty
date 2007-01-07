@@ -89,6 +89,13 @@ class AboutDialog(gtk.AboutDialog):
         self.set_authors(('Ross Burton <ross@burtonini.com>',))
         self.set_website('http://burtonini.com/')
 
+def get_glade_widgets (glade, object, widget_names):
+    for name in widget_names:
+        widget = glade.get_widget (name)
+        if widget is None:
+            print "Cannot find widget", name
+            continue
+        setattr(object, name, widget)
 
 class Postr (UniqueApp):
     def __init__(self):
@@ -105,7 +112,19 @@ class Postr (UniqueApp):
         glade = gtk.glade.XML(os.path.join (os.path.dirname(__file__), "postr.glade"))
         glade.signal_autoconnect(self)
 
-        self.window = glade.get_widget("main_window")
+        get_glade_widgets (glade, self,
+                           ("window",
+                            "statusbar",
+                            "thumbnail_image",
+                            "title_entry",
+                            "desc_entry",
+                            "tags_entry",
+                            "iconview",
+                            "progress_dialog",
+                            "progressbar_main",
+                            "progress_filename",
+                            "progress_thumbnail")
+                           )
         
         # Just for you, Daniel.
         try:
@@ -114,13 +133,6 @@ class Postr (UniqueApp):
         except Exception:
             pass
         
-        self.statusbar = glade.get_widget("statusbar")
-
-        self.thumbnail_image = glade.get_widget("thumbnail_image")
-        self.title_entry = glade.get_widget("title_entry")
-        self.desc_entry = glade.get_widget("desc_entry")
-        self.tags_entry = glade.get_widget("tags_entry")
-
         self.model = gtk.ListStore (gobject.TYPE_STRING, # COL_FILENAME
                                     gtk.gdk.Pixbuf, # COL_IMAGE
                                     gtk.gdk.Pixbuf, # COL_PREVIEW
@@ -140,7 +152,6 @@ class Postr (UniqueApp):
         self.thumbnail_image.connect('size-allocate', self.update_thumbnail)
         self.old_thumb_allocation = None
 
-        self.iconview = glade.get_widget("iconview")
         self.iconview.set_model (self.model)
         self.iconview.set_text_column (COL_TITLE)
         self.iconview.set_pixbuf_column (COL_THUMBNAIL)
@@ -152,11 +163,7 @@ class Postr (UniqueApp):
         self.iconview.drag_dest_set_target_list(targets)
 
         # The upload progress dialog
-        self.progress_dialog = glade.get_widget("progress_dialog")
         self.progress_dialog.set_transient_for(self.window)
-        self.progressbar = glade.get_widget("progressbar_main")
-        self.progress_filename = glade.get_widget("progress_filename")
-        self.progress_thumbnail = glade.get_widget("progress_thumbnail")
                 
         # Connect to flickr, go go go
         #client = gconf.client_get_default()

@@ -3,7 +3,7 @@
 
 <glade-interface>
 
-<widget class="GtkWindow" id="main_window">
+<widget class="GtkWindow" id="window">
   <property name="visible">True</property>
   <property name="title" translatable="yes">Flickr Uploader</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
