@@ -1,9 +1,3 @@
-Grand Architecture Changes
-==
-
-Callback-based authentication so the calling application can handle the user interaction.
-
-
 Missing Features
 ==
 
