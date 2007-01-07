@@ -81,6 +81,14 @@ def greek(size):
     return "%.1f%s" % (float(size)/factor, suffix)
 
 
+def get_glade_widgets (glade, object, widget_names):
+    """Get the widgets in the list widget_names from the GladeXML object glade
+    and set them as attributes on object."""
+    for name in widget_names:
+        widget = glade.get_widget(name)
+        setattr(object, name, widget)
+
+
 class AboutDialog(gtk.AboutDialog):
     def __init__(self, parent):
         gtk.AboutDialog.__init__(self)
@@ -89,16 +97,6 @@ class AboutDialog(gtk.AboutDialog):
         self.set_copyright(u'Copyright \u00A9 2006 Ross Burton')
         self.set_authors(('Ross Burton <ross@burtonini.com>',))
         self.set_website('http://burtonini.com/')
-
-def get_glade_widgets (glade, object, widget_names):
-    """Get the widgets in the list widget_names from the GladeXML object glade
-    and set them as attributes on object."""
-    for name in widget_names:
-        widget = glade.get_widget (name)
-        if widget is None:
-            print "Cannot find widget", name
-            continue
-        setattr(object, name, widget)
 
 class Postr (UniqueApp):
     def __init__(self):
