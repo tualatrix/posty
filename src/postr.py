@@ -90,6 +90,8 @@ class AboutDialog(gtk.AboutDialog):
         self.set_website('http://burtonini.com/')
 
 def get_glade_widgets (glade, object, widget_names):
+    """Get the widgets in the list widget_names from the GladeXML object glade
+    and set them as attributes on object."""
     for name in widget_names:
         widget = glade.get_widget (name)
         if widget is None:
