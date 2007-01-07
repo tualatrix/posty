@@ -214,7 +214,8 @@ class Postr (UniqueApp):
         dialog.set_select_multiple(True)
         if self.last_folder:
             dialog.set_current_folder(self.last_folder)
-        
+
+        # Add filters for all reasonable image types
         filters = gtk.FileFilter()
         filters.set_name("Images")
         filters.add_mime_type("image/png")
@@ -226,6 +227,20 @@ class Postr (UniqueApp):
         filters.add_pattern("*")
         dialog.add_filter(filters)
 
+        # Add a preview widget
+        preview = gtk.Image()
+        dialog.set_preview_widget(preview)
+        def update_preview_cb(file_chooser, preview):
+            filename = file_chooser.get_preview_filename()
+            try:
+                pixbuf = gtk.gdk.pixbuf_new_from_file_at_size(filename, 128, 128)
+                preview.set_from_pixbuf(pixbuf)
+                have_preview = True
+            except:
+                have_preview = False
+            file_chooser.set_preview_widget_active(have_preview)
+        dialog.connect("update-preview", update_preview_cb, preview)
+        
         if dialog.run() == gtk.RESPONSE_OK:
             dialog.hide()
             for f in dialog.get_filenames():
