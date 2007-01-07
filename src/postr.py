@@ -182,6 +182,9 @@ class Postr (UniqueApp):
             return gtkunique.RESPONSE_ABORT
 
     def auth_open_url(self, state):
+        """Callback from midway through Flickr authentication.  At this point we
+        either have cached tokens so can carry on, or need to open a web browser
+        to authenticate the user."""
         if state is None:
             self.connected(True)
         else:
