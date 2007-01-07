@@ -22,7 +22,7 @@ from urlparse import urlparse
 from os.path import basename
 
 import pygtk; pygtk.require ("2.0")
-import gobject, gtk, gtk.glade
+import gobject, gtk, gtk.glade, gconf
 
 import EXIF
 import iptc as IPTC
@@ -88,7 +88,6 @@ def get_glade_widgets (glade, object, widget_names):
         widget = glade.get_widget(name)
         setattr(object, name, widget)
 
-
 class AboutDialog(gtk.AboutDialog):
     def __init__(self, parent):
         gtk.AboutDialog.__init__(self)
@@ -97,6 +96,43 @@ class AboutDialog(gtk.AboutDialog):
         self.set_copyright(u'Copyright \u00A9 2006 Ross Burton')
         self.set_authors(('Ross Burton <ross@burtonini.com>',))
         self.set_website('http://burtonini.com/')
+
+
+class AuthenticationDialog(gtk.Dialog):
+    def __init__(self, parent, url):
+        gtk.Dialog.__init__(self,
+                            title="Flickr Uploader", parent=parent,
+                            flags=gtk.DIALOG_NO_SEPARATOR,
+                            buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                                     "Continue", gtk.RESPONSE_ACCEPT))
+        vbox = gtk.VBox(spacing=8)
+        vbox.set_border_width(8)
+        
+        label = gtk.Label("Postr needs to login to Flickr to upload your photos. "
+                          "Please click on the link below to login to Flickr.")
+        label.set_line_wrap(True)
+        vbox.add(label)
+
+        # gtk.LinkButton is only in 2.10, so use a normal button if it isn't
+        # available.
+        if hasattr(gtk, "LinkButton"):
+            button = gtk.LinkButton(url, "Login to Flickr")
+        else:
+            button = gtk.Button("Login to Flickr")
+            button.connect("clicked", on_url_clicked, url)
+        vbox.add(button)
+        
+        self.vbox.add(vbox)
+        self.show_all()
+
+def on_url_clicked(button, url):
+    """Global LinkButton handler that starts the default GNOME HTTP handler, or
+    firefox."""
+    client = gconf.client_get_default()
+    browser = client.get_string("/desktop/gnome/url-handlers/http/command") or "firefox %s"
+    browser = browser % url
+    gobject.spawn_async(browser.split(" "), flags=gobject.SPAWN_SEARCH_PATH)
+gtk.link_button_set_uri_hook(on_url_clicked)
 
 class Postr (UniqueApp):
     def __init__(self):
@@ -127,7 +163,7 @@ class Postr (UniqueApp):
                             "progress_filename",
                             "progress_thumbnail")
                            )
-        
+                
         # Just for you, Daniel.
         try:
             if os.getlogin() == "daniels":
@@ -166,12 +202,11 @@ class Postr (UniqueApp):
 
         # The upload progress dialog
         self.progress_dialog.set_transient_for(self.window)
+        # Disable the Upload menu until the user has authenticated
+        self.upload_menu.set_sensitive(False)
                 
         # Connect to flickr, go go go
-        #client = gconf.client_get_default()
-        # TODO preferred_browser = client.get_string("/desktop/gnome/applications/browser/exec") or "firefox"
-        # TODO: move out of here so it only happens if this is the first instance
-        self.token = self.flickr.authenticate().addCallback(self.connected)
+        self.token = self.flickr.authenticate_1().addCallback(self.auth_open_url)
     
     def on_message(self, app, command, command_data, startup_id, screen, workspace):
         """Callback from UniqueApp, when a message arrives."""
@@ -180,10 +215,23 @@ class Postr (UniqueApp):
             return gtkunique.RESPONSE_OK
         else:
             return gtkunique.RESPONSE_ABORT
+
+    def auth_open_url(self, state):
+        """Callback from midway through Flickr authentication.  At this point we
+        either have cached tokens so can carry on, or need to open a web browser
+        to authenticate the user."""
+        if state is None:
+            self.connected(True)
+        else:
+            dialog = AuthenticationDialog(self.window, state['url'])
+            if dialog.run() == gtk.RESPONSE_ACCEPT:
+                self.flickr.authenticate_2(state).addCallback(self.connected)
+            dialog.destroy()
     
     def connected(self, connected):
         """Callback when the Flickr authentication completes."""
         if connected:
+            self.upload_menu.set_sensitive(True)
             self.flickr.people_getUploadStatus().addCallback(self.got_quota)
 
     def got_quota(self, rsp):
@@ -204,7 +252,6 @@ class Postr (UniqueApp):
     
     def on_add_photos_activate(self, menuitem):
         """Callback from the File->Add Photos menu item."""
-        # TODO: add preview widget
         dialog = gtk.FileChooserDialog(title="Add Photos", parent=self.window,
                                        action=gtk.FILE_CHOOSER_ACTION_OPEN,
                                        buttons=(gtk.STOCK_CANCEL,

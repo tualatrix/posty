@@ -1,3 +1,20 @@
+# flickrpc -- a Flickr client library.
+#
+# Copyright (C) 2007 Ross Burton <ross@burtonini.com>
+#
+# This program is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free Software
+# Foundation; either version 2, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
+# St, Fifth Floor, Boston, MA 02110-1301 USA
+
 import logging, md5, os, mimetools, urllib
 from twisted.internet import defer
 from twisted.python.failure import Failure
@@ -137,16 +154,44 @@ class Flickr:
             }
         return client.getPage("http://api.flickr.com/services/upload/", method="POST",
                               headers=headers, postdata=form)
-    
-    def authenticate(self):
-        """Attempts to log in to Flickr.  This will open a web browser if
-        required. The return value is a Twisted Deferred object that callbacks
-        when authentication is complete."""
+
+    def authenticate_2(self, state):
+        d = defer.Deferred()
+        def gotToken(e):
+            # Set the token
+            self.token = e.find("auth/token").text
+            # Cache the authentication
+            filename = self.__getTokenFile()
+            path = os.path.dirname(filename)
+            if not os.path.exists(path):
+                os.makedirs(path, 0700)
+            f = file(filename, "w")
+            f.write(ElementTree.tostring(e))
+            f.close()
+            # Callback to the user
+            d.callback(True)
+        self.auth_getToken(frob=state['frob']).addCallbacks(gotToken, lambda fault: d.errback(fault))
+        return d
+
+    def authenticate_1(self):
+        """Attempts to log in to Flickr. The return value is a Twisted Deferred
+        object that callbacks when the first part of the authentication is
+        completed.  If the result passed to the deferred callback is None, then
+        the required authentication was locally cached and you are
+        authenticated.  Otherwise the result is a dictionary, you should open
+        the URL specified by the 'url' key and instruct the user to follow the
+        instructions.  Once that is done, pass the state to
+        flickrest.authenticate_2()."""
+
         filename = self.__getTokenFile()
         if os.path.exists(filename):
-            e = ElementTree.parse(filename).getroot()
-            self.token = e.find("auth/token").text
-            return defer.succeed(True)
+            try:
+                e = ElementTree.parse(filename).getroot()
+                self.token = e.find("auth/token").text
+                return defer.succeed(None)
+            except:
+                # TODO: print the exception to stderr?
+                pass
         
         d = defer.Deferred()
         def gotFrob(xml):
@@ -155,27 +200,8 @@ class Flickr:
                      'frob': frob }
             self.__sign(keys)
             url = "http://flickr.com/services/auth/?api_key=%(api_key)s&perms=%(perms)s&frob=%(frob)s&api_sig=%(api_sig)s" % keys
-            # TODO: signal or something
-            os.spawnlp(os.P_WAIT, "epiphany", "epiphany", "-p", url)
-            
-            def gotToken(e):
-                # Set the token
-                self.token = e.find("auth/token").text
-                # Cache the authentication
-                filename = self.__getTokenFile()
-                path = os.path.dirname(filename)
-                if not os.path.exists(path):
-                    os.makedirs(path, 0700)
-                f = file(filename, "w")
-                f.write(ElementTree.tostring(e))
-                f.close()
-                # Callback to the user
-                d.callback(True)
-            # TODO: chain up the error callbacks too
-            self.auth_getToken(frob=frob).addCallback(gotToken)
-        
-        # TODO: chain up the error callbacks too
-        self.auth_getFrob().addCallback(gotFrob)
+            d.callback({'url': url, 'frob': frob})
+        self.auth_getFrob().addCallbacks(gotFrob, lambda fault: d.errback(fault))
         return d
 
     @staticmethod
