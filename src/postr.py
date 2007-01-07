@@ -212,9 +212,6 @@ class Postr (UniqueApp):
         if state is None:
             self.connected(True)
         else:
-            # TODO: show dialog etc
-            #import os
-            #os.spawnlp(os.P_WAIT, "epiphany", "epiphany", "-p", state['url'])
             dialog = AuthenticationDialog(self.window, state['url'])
             if dialog.run() == gtk.RESPONSE_ACCEPT:
                 self.flickr.authenticate_2(state).addCallback(self.connected)
