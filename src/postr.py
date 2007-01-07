@@ -104,8 +104,7 @@ class AuthenticationDialog(gtk.Dialog):
                             title="Flickr Uploader", parent=parent,
                             flags=gtk.DIALOG_NO_SEPARATOR,
                             buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                                     gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-        # TODO: use actions instead of OK/cancel
+                                     "Continue", gtk.RESPONSE_ACCEPT))
         vbox = gtk.VBox(spacing=8)
         # TODO: much better wording
         vbox.add(gtk.Label("Please click the button below to login to Flickr."))
