@@ -24,22 +24,23 @@ from os.path import basename
 import pygtk; pygtk.require ("2.0")
 import gobject, gtk, gtk.glade
 
+import EXIF
+import iptc as IPTC
+
+from flickrest import Flickr
+
 try:
     import gtkunique
     UniqueApp = gtkunique.UniqueApp
 except ImportError:
     class UniqueApp:
+        """A dummy UniqueApp for when gtkunique isn't installed."""
         def __init__(self, name):
             pass
         def add_window(self, window):
             pass
         def is_running(self):
             return False
-
-import EXIF
-import iptc as IPTC
-
-from flickrest import Flickr
 
 #logging.basicConfig(level=logging.DEBUG)
 
@@ -174,6 +175,7 @@ class Postr (UniqueApp):
         self.token = self.flickr.authenticate().addCallback(self.connected)
     
     def on_message(self, app, command, command_data, startup_id, screen, workspace):
+        """Callback from UniqueApp, when a message arrives."""
         if command == gtkunique.OPEN:
             self.add_image_filename(command_data)
             return gtkunique.RESPONSE_OK
