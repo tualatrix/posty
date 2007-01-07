@@ -108,6 +108,7 @@ class AuthenticationDialog(gtk.Dialog):
         vbox = gtk.VBox(spacing=8)
         # TODO: much better wording
         vbox.add(gtk.Label("Please click the button below to login to Flickr."))
+        # TODO gtk.LinkButton is only in 2.10 so need a custom widget for 2.8.
         button = gtk.LinkButton(url, "Login to Flickr")
         vbox.add(button)
         self.vbox.add(vbox)
