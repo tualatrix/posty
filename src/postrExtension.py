@@ -34,7 +34,7 @@ class PostrExtension(nautilus.MenuProvider):
         path_list = os.environ['PATH']
         for dir in path_list.split(os.path.pathsep):
             try:
-                if program_name in dir:
+                if program_name in os.listdir(dir):
                     return os.path.sep.join(dir, program_name)
             except:
                 # Normally is a bad idea use 'pass' in a exception,
