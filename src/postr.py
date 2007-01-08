@@ -61,6 +61,12 @@ except ImportError:
  COL_TAGS # A space deliminated list of tags for the image
  ) = range (0, 7)
 
+# Exif information about image orientation
+(ROTATED_180,
+ ROTATED_90_CW,
+ ROTATED_90_CCW
+ ) = (3, 6, 8)
+
 # If we are uploading.
 uploading = False
 
@@ -461,11 +467,11 @@ class Postr (UniqueApp):
         rotation = exif.get("Image Orientation", None)
         if rotation:
             rotation = rotation.values[0]
-            if rotation == 3: # Rotated 180 degrees
+            if rotation == ROTATED_180:
                 preview = preview.rotate_simple(gtk.gdk.PIXBUF_ROTATE_UPSIDEDOWN)
-            elif rotation == 6: # Rotated 90 degrees CW
+            elif rotation == ROTATED_90_CW:
                 preview = preview.rotate_simple(gtk.gdk.PIXBUF_ROTATE_CLOCKWISE)
-            elif rotation == 8: # Rotated 90 degrees CCW
+            elif rotation == ROTATED_90_CCW:
                 preview = preview.rotate_simple(gtk.gdk.PIXBUF_ROTATE_COUNTERCLOCKWISE)
         
         # Now scale the preview to a thumbnail
