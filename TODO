@@ -18,8 +18,10 @@ Nice interface for tagging
 
 CLI interface: postr -tags foobar -description blaa -title fooo img.jpg
 
-Nautilus extension/file manager hook.  Maybe Open With->Postr?
-
 Resize before uploading
 
 Add option to clear authentication cookies
+
+
+FIX EXTENSION
+STOP INSTALLING EXTENSION TO SITE_PACKAGES
