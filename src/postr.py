@@ -17,7 +17,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
-import logging, os
+import gettext, logging, os
 from urlparse import urlparse
 from os.path import basename
 
@@ -179,7 +179,7 @@ class Postr (UniqueApp):
         bandwidth = rsp.find("user/bandwidth").get("remainingbytes")
         context = self.statusbar.get_context_id("quota")
         self.statusbar.pop(context)
-        self.statusbar.push(context, "You have %s remaining this month" %
+        self.statusbar.push(context, _("You have %s remaining this month") %
                             greek(int(bandwidth)))
 
     def on_field_changed(self, entry, column):
@@ -191,7 +191,7 @@ class Postr (UniqueApp):
     
     def on_add_photos_activate(self, menuitem):
         """Callback from the File->Add Photos menu item."""
-        dialog = gtk.FileChooserDialog(title="Add Photos", parent=self.window,
+        dialog = gtk.FileChooserDialog(title=_("Add Photos"), parent=self.window,
                                        action=gtk.FILE_CHOOSER_ACTION_OPEN,
                                        buttons=(gtk.STOCK_CANCEL,
                                                 gtk.RESPONSE_CANCEL,
@@ -203,13 +203,13 @@ class Postr (UniqueApp):
 
         # Add filters for all reasonable image types
         filters = gtk.FileFilter()
-        filters.set_name("Images")
+        filters.set_name(_("Images"))
         filters.add_mime_type("image/png")
         filters.add_mime_type("image/jpeg")
         filters.add_mime_type("image/gif")
         dialog.add_filter(filters)
         filters = gtk.FileFilter()
-        filters.set_name("All Files")
+        filters.set_name(_("All Files"))
         filters.add_pattern("*")
         dialog.add_filter(filters)
 
@@ -242,9 +242,9 @@ class Postr (UniqueApp):
             dialog = gtk.MessageDialog(type=gtk.MESSAGE_WARNING, parent=self.window)
             dialog.add_buttons(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
                                gtk.STOCK_QUIT, gtk.RESPONSE_OK)
-            dialog.set_markup('<b>Currently Uploading</b>')
-            dialog.format_secondary_text('Photos are still being uploaded. '
-                                         'Are you sure you want to quit?')
+            dialog.set_markup(_('<b>Currently Uploading</b>'))
+            dialog.format_secondary_text(_('Photos are still being uploaded. '
+                                         'Are you sure you want to quit?'))
             response = dialog.run()
             dialog.destroy()
             if response == gtk.RESPONSE_CANCEL:
@@ -505,7 +505,7 @@ class Postr (UniqueApp):
             self.progress_thumbnail.hide()
 
         self.progressbar.set_fraction(float(self.upload_index) / float(self.upload_count))
-        progress_label = 'Uploading %d of %d' % (self.upload_index+1, self.upload_count)
+        progress_label = _('Uploading %d of %d') % (self.upload_index+1, self.upload_count)
         self.progressbar.set_text(progress_label)
 
     def upload(self, response=None):

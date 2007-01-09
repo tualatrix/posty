@@ -1,5 +1,8 @@
 #! /usr/bin/env python
 
+import gettext
+gettext.install('postr')
+
 import sys
 from twisted.internet import gtk2reactor
 reactor = gtk2reactor.install()
