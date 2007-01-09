@@ -101,6 +101,14 @@ class AboutDialog(gtk.AboutDialog):
         self.set_website('http://burtonini.com/')
 
 
+def on_url_clicked(button, url):
+    """Global LinkButton handler that starts the default GNOME HTTP handler, or
+    firefox."""
+    client = gconf.client_get_default()
+    browser = client.get_string("/desktop/gnome/url-handlers/http/command") or "firefox %s"
+    browser = browser % url
+    subprocess.Popen(args=browser, shell=True)
+
 class AuthenticationDialog(gtk.Dialog):
     def __init__(self, parent, url):
         gtk.Dialog.__init__(self,
@@ -119,6 +127,7 @@ class AuthenticationDialog(gtk.Dialog):
         # gtk.LinkButton is only in 2.10, so use a normal button if it isn't
         # available.
         if hasattr(gtk, "LinkButton"):
+            gtk.link_button_set_uri_hook(on_url_clicked)
             button = gtk.LinkButton(url, "Login to Flickr")
         else:
             button = gtk.Button("Login to Flickr")
@@ -128,16 +137,6 @@ class AuthenticationDialog(gtk.Dialog):
         self.vbox.add(vbox)
         self.show_all()
 
-def on_url_clicked(button, url):
-    """Global LinkButton handler that starts the default GNOME HTTP handler, or
-    firefox."""
-    client = gconf.client_get_default()
-    browser = client.get_string("/desktop/gnome/url-handlers/http/command") or "firefox %s"
-    browser = browser % url
-    # TODO: do startup notification, but can't just split browser on ' ' because
-    # quotes may remain
-    subprocess.Popen(args=browser, shell=True)
-gtk.link_button_set_uri_hook(on_url_clicked)
 
 class Postr (UniqueApp):
     def __init__(self):
