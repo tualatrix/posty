@@ -14,6 +14,6 @@ setup(name='Postr',
       packages=['postr'],
       package_data={'postr': ['postr.glade']},
       data_files=[('share/applications', ['src/postr.desktop']),
-                  ('lib/nautilus/extensions-1.0/python', ['src/postrExtension.py'])
+                  ('lib/nautilus/extensions-1.0/python', ['nautilus/postrExtension.py'])
                   ]
       )

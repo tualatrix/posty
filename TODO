@@ -21,7 +21,3 @@ CLI interface: postr -tags foobar -description blaa -title fooo img.jpg
 Resize before uploading
 
 Add option to clear authentication cookies
-
-
-FIX EXTENSION
-STOP INSTALLING EXTENSION TO SITE_PACKAGES
