@@ -17,7 +17,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
-import logging, os
+import logging, os, subprocess
 from urlparse import urlparse
 from os.path import basename
 
@@ -134,7 +134,9 @@ def on_url_clicked(button, url):
     client = gconf.client_get_default()
     browser = client.get_string("/desktop/gnome/url-handlers/http/command") or "firefox %s"
     browser = browser % url
-    gobject.spawn_async(browser.split(" "), flags=gobject.SPAWN_SEARCH_PATH)
+    # TODO: do startup notification, but can't just split browser on ' ' because
+    # quotes may remain
+    subprocess.Popen(args=browser, shell=True)
 gtk.link_button_set_uri_hook(on_url_clicked)
 
 class Postr (UniqueApp):
