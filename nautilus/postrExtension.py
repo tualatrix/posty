@@ -16,12 +16,11 @@
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
 import nautilus
-import os, sys
+import os
 import os.path
 import gobject
 from urllib import unquote
 
-SUPPORTED_FORMATS = 'image/jpeg', 'image/png'
 PROGRAM_NAME = 'postr'
 
 class PostrExtension(nautilus.MenuProvider):
@@ -36,8 +35,8 @@ class PostrExtension(nautilus.MenuProvider):
         for d in path_list.split(os.path.pathsep):
             try:
                 if program_name in os.listdir(d):
-                    return os.path.sep.join(d, program_name)
-            except:
+                    return os.path.sep.join([d, program_name])
+            except OSError:
                 # Normally is a bad idea use 'pass' in a exception,
                 # but in this case we don't care if the directory
                 # in path exists or not.
@@ -65,14 +64,13 @@ class PostrExtension(nautilus.MenuProvider):
         # - All selected images are locals (currently Postr doesn't have
         #   support for gnome-vfs
         # - Postr is installed (is in PATH)
-        print >>sys.stderr, "postr get_file_items %s" % files
         if len(files) == 0:
             return
-
+        
         for file in files:
             if file.is_directory() or file.get_uri_scheme() != 'file':
                 return
-            if not file.get_mime_type() in SUPPORTED_FORMATS:
+            if not file.is_mime_type("image/*"):
                 return
 
         #self.program = self.locate_program(PROGRAM_NAME)
