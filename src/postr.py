@@ -336,7 +336,6 @@ class Postr (UniqueApp):
                                            simage.get_height(),
                                            tw, th)
 
-            
             thumb = simage.scale_simple(tw, th, gtk.gdk.INTERP_BILINEAR)
             widget.set_from_pixbuf(thumb)
 
