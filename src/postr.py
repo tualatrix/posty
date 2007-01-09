@@ -67,9 +67,6 @@ except ImportError:
  ROTATED_90_CCW
  ) = (3, 6, 8)
 
-# If we are uploading.
-uploading = False
-
 def greek(size):
     """Take a quantity (like 1873627) and display it in a human-readable rounded
     form (like 1.8M)"""
@@ -207,10 +204,11 @@ class Postr (UniqueApp):
         self.iconview.drag_dest_set_target_list(targets)
 
         # The upload progress dialog
+        self.uploading = False
         self.progress_dialog.set_transient_for(self.window)
         # Disable the Upload menu until the user has authenticated
         self.upload_menu.set_sensitive(False)
-                
+        
         # Connect to flickr, go go go
         self.token = self.flickr.authenticate_1().addCallback(self.auth_open_url)
     
@@ -305,17 +303,18 @@ class Postr (UniqueApp):
             
     def on_quit_activate(self, widget, *args):
         """Callback from File->Quit."""
-        if uploading:
-            dialog = gtk.MessageDialog(type=gtk.MESSAGE_WARNING, 
-                                       buttons=gtk.BUTTONS_OK_CANCEL)
+        if self.uploading:
+            dialog = gtk.MessageDialog(type=gtk.MESSAGE_WARNING, parent=self.window)
+            dialog.add_buttons(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                               gtk.STOCK_QUIT, gtk.RESPONSE_OK)
             dialog.set_markup('<b>Currently Uploading</b>')
             dialog.format_secondary_text('Photos are still being uploaded. '
                                          'Are you sure you want to quit?')
             response = dialog.run()
+            dialog.destroy()
             if response == gtk.RESPONSE_CANCEL:
-                dialog.destroy()
                 return True
-
+        
         import twisted.internet.reactor
         twisted.internet.reactor.stop()
     
@@ -345,7 +344,7 @@ class Postr (UniqueApp):
 
     def on_upload_activate(self, menuitem):
         """Callback from File->Upload."""
-        if uploading:
+        if self.uploading:
             print "Upload should be disabled, currently uploading"
             return
         
