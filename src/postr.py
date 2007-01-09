@@ -303,11 +303,19 @@ class Postr (UniqueApp):
 
         dialog.destroy()
             
-    def on_quit_activate(self, menuitem):
+    def on_quit_activate(self, widget, *args):
         """Callback from File->Quit."""
         if uploading:
-            # TODO: if there are pending uploads, confirm first
-            print "Uploading, should query user"
+            dialog = gtk.MessageDialog(type=gtk.MESSAGE_WARNING, 
+                                       buttons=gtk.BUTTONS_OK_CANCEL)
+            dialog.set_markup('<b>Currently Uploading</b>')
+            dialog.format_secondary_text('Photos are still being uploaded. '
+                                         'Are you sure you want to quit?')
+            response = dialog.run()
+            if response == gtk.RESPONSE_CANCEL:
+                dialog.destroy()
+                return True
+
         import twisted.internet.reactor
         twisted.internet.reactor.stop()
     
