@@ -505,7 +505,11 @@ class Postr (UniqueApp):
             self.progress_thumbnail.hide()
 
         self.progressbar.set_fraction(float(self.upload_index) / float(self.upload_count))
-        progress_label = _('Uploading %d of %d') % (self.upload_index+1, self.upload_count)
+        # Use named args for i18n
+        progress_label = _('Uploading %(index)d of %(count)d') % {
+            "index": self.upload_index+1,
+            "count": self.upload_count
+            }
         self.progressbar.set_text(progress_label)
 
     def upload(self, response=None):
