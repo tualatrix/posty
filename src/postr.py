@@ -17,17 +17,21 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
-import logging, os, subprocess
+import logging, os
 from urlparse import urlparse
 from os.path import basename
 
 import pygtk; pygtk.require ("2.0")
-import gobject, gtk, gtk.glade, gconf
+import gobject, gtk, gtk.glade
 
-import EXIF
-import iptc as IPTC
+from AboutDialog import AboutDialog
+from AuthenticationDialog import AuthenticationDialog
 
 from flickrest import Flickr
+import EXIF
+import iptc as IPTC
+from util import *
+
 
 try:
     import gtkunique
@@ -66,76 +70,6 @@ except ImportError:
  ROTATED_90_CW,
  ROTATED_90_CCW
  ) = (3, 6, 8)
-
-def greek(size):
-    """Take a quantity (like 1873627) and display it in a human-readable rounded
-    form (like 1.8M)"""
-    _abbrevs = [
-        (1<<50L, 'P'),
-        (1<<40L, 'T'), 
-        (1<<30L, 'G'), 
-        (1<<20L, 'M'), 
-        (1<<10L, 'k'),
-        (1, '')
-        ]
-    for factor, suffix in _abbrevs:
-        if size > factor:
-            break
-    return "%.1f%s" % (float(size)/factor, suffix)
-
-
-def get_glade_widgets (glade, object, widget_names):
-    """Get the widgets in the list widget_names from the GladeXML object glade
-    and set them as attributes on object."""
-    for name in widget_names:
-        widget = glade.get_widget(name)
-        setattr(object, name, widget)
-
-class AboutDialog(gtk.AboutDialog):
-    def __init__(self, parent):
-        gtk.AboutDialog.__init__(self)
-        self.set_transient_for(parent)
-        self.set_name('Flickr Uploader')
-        self.set_copyright(u'Copyright \u00A9 2006 Ross Burton')
-        self.set_authors(('Ross Burton <ross@burtonini.com>',))
-        self.set_website('http://burtonini.com/')
-
-
-def on_url_clicked(button, url):
-    """Global LinkButton handler that starts the default GNOME HTTP handler, or
-    firefox."""
-    client = gconf.client_get_default()
-    browser = client.get_string("/desktop/gnome/url-handlers/http/command") or "firefox %s"
-    browser = browser % url
-    subprocess.Popen(args=browser, shell=True)
-
-class AuthenticationDialog(gtk.Dialog):
-    def __init__(self, parent, url):
-        gtk.Dialog.__init__(self,
-                            title="Flickr Uploader", parent=parent,
-                            flags=gtk.DIALOG_NO_SEPARATOR,
-                            buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                                     "Continue", gtk.RESPONSE_ACCEPT))
-        vbox = gtk.VBox(spacing=8)
-        vbox.set_border_width(8)
-        
-        label = gtk.Label("Postr needs to login to Flickr to upload your photos. "
-                          "Please click on the link below to login to Flickr.")
-        label.set_line_wrap(True)
-        vbox.add(label)
-
-        # gtk.LinkButton is only in 2.10, so use a normal button if it isn't
-        # available.
-        if hasattr(gtk, "LinkButton"):
-            gtk.link_button_set_uri_hook(on_url_clicked)
-            button = gtk.LinkButton(url, "Login to Flickr")
-        else:
-            button = gtk.Button("Login to Flickr")
-            button.connect("clicked", on_url_clicked, url)
-        vbox.add(button)
-        
-        self.vbox.add(vbox)
-        self.show_all()
 
 
 class Postr (UniqueApp):
