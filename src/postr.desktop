@@ -2,7 +2,8 @@
 Encoding=UTF-8
 Name=Flickr Uploader
 Comment=Upload photos to Flickr
-Exec=postr
+TryExec=postr
+Exec=postr %F
 StartupNotify=true
 Terminal=false
 Type=Application
