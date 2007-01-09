@@ -15,10 +15,11 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
-import nautilus
-import os
-import os.path
-import gobject
+import gettext
+gettext.install('postr')
+
+import gobject, nautilus
+import os, os.path
 from urllib import unquote
 
 PROGRAM_NAME = 'postr'
@@ -78,8 +79,8 @@ class PostrExtension(nautilus.MenuProvider):
         #    return
 
         item = nautilus.MenuItem('PostrExtension::upload_files',
-                                 'Upload to Flickr...' ,
-                                 'Upload the selected files into Flickr')
+                                 _('Upload to Flickr...'),
+                                 _('Upload the selected files into Flickr'))
         item.connect('activate', self.upload_files, files)
 
         return item,
