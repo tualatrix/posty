@@ -1,0 +1,132 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Postr\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-01-10 10:04+0000\n"
+"PO-Revision-Date: 2007-01-10 10:10+0000\n"
+"Last-Translator: Emmanuele Bassi <ebassi@gmail.com>\n"
+"Language-Team: Italian <it@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/AboutDialog.py:7 src/AuthenticationDialog.py:16 src/postr.glade:8
+#: src/postr.glade:486
+msgid "Flickr Uploader"
+msgstr ""
+
+#: src/AuthenticationDialog.py:19
+msgid "Continue"
+msgstr "Continua"
+
+#: src/AuthenticationDialog.py:23
+msgid ""
+"Postr needs to login to Flickr to upload your photos. Please click on the "
+"link below to login to Flickr."
+msgstr ""
+"Postr deve poter registrarsi su Flickr per inviare le tue foto. Premi il "
+"link sottostante per registrarti su Flickr"
+
+#: src/AuthenticationDialog.py:32 src/AuthenticationDialog.py:34
+msgid "Login to Flickr"
+msgstr "Login in Flickr"
+
+#: src/postr.py:182
+#, python-format
+msgid "You have %s remaining this month"
+msgstr "Hai %s rimanenti questo mese"
+
+#: src/postr.py:194
+msgid "Add Photos"
+msgstr "Aggiungi foto"
+
+#: src/postr.py:206
+msgid "Images"
+msgstr "Immagini"
+
+#: src/postr.py:212
+msgid "All Files"
+msgstr "Tutti i file"
+
+#: src/postr.py:245
+msgid "<b>Currently Uploading</b>"
+msgstr "<b>Invio corrente</b>"
+
+#: src/postr.py:246
+msgid "Photos are still being uploaded. Are you sure you want to quit?"
+msgstr "Le foto sono in fase di caricamento. Sei sicuro di voler uscire?"
+
+#: src/postr.py:509
+#, python-format
+msgid "Uploading %(index)d of %(count)d"
+msgstr "Invio %(index)d di %(count)d"
+
+#: nautilus/postrExtension.py:82
+msgid "Upload to Flickr..."
+msgstr "Invio su Flickr..."
+
+#: nautilus/postrExtension.py:83
+msgid "Upload the selected files into Flickr"
+msgstr "Invia i file selezionati su Flickr"
+
+#: src/postr.glade:40
+msgid "_File"
+msgstr "_File"
+
+#: src/postr.glade:49
+msgid "_Add Photos..."
+msgstr "_Aggiungi Foto"
+
+#: src/postr.glade:77
+msgid "_Upload"
+msgstr "_Invia"
+
+#: src/postr.glade:117
+msgid "Select"
+msgstr "Seleziona"
+
+#: src/postr.glade:127
+msgid "_Delete"
+msgstr "_Cancella"
+
+#: src/postr.glade:155
+msgid "_Select All"
+msgstr "Seleziona _Tutti"
+
+#: src/postr.glade:177
+msgid "Dese_lect All"
+msgstr "De_seleziona Tutti"
+
+#: src/postr.glade:187
+msgid "_Invert Selection"
+msgstr "_Inverti Selezione"
+
+#: src/postr.glade:200
+msgid "_Help"
+msgstr "_Aiuto"
+
+#: src/postr.glade:209
+msgid "_About"
+msgstr "_Informazioni su"
+
+#: src/postr.glade:272
+msgid "_Title:"
+msgstr "_Titolo:"
+
+#: src/postr.glade:301
+msgid "_Description:"
+msgstr "_Descrizione:"
+
+#: src/postr.glade:330
+msgid "Ta_gs:"
+msgstr "Ta_g:"
+
+#: src/postr.glade:442
+msgid "..."
+msgstr "..."
