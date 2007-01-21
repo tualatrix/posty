@@ -154,7 +154,6 @@ class Flickr:
                               headers=headers, postdata=form)
 
     def authenticate_2(self, state):
-        d = defer.Deferred()
         def gotToken(e):
             # Set the token
             self.token = e.find("auth/token").text
@@ -167,9 +166,8 @@ class Flickr:
             f.write(ElementTree.tostring(e))
             f.close()
             # Callback to the user
-            d.callback(True)
-        self.auth_getToken(frob=state['frob']).addCallbacks(gotToken, d.errback)
-        return d
+            return True
+        return self.auth_getToken(frob=state['frob']).addCallback(gotToken)
 
     def authenticate_1(self):
         """Attempts to log in to Flickr. The return value is a Twisted Deferred
@@ -191,16 +189,14 @@ class Flickr:
                 # TODO: print the exception to stderr?
                 pass
         
-        d = defer.Deferred()
         def gotFrob(xml):
             frob = xml.find("frob").text
             keys = { 'perms': self.perms,
                      'frob': frob }
             self.__sign(keys)
             url = "http://flickr.com/services/auth/?api_key=%(api_key)s&perms=%(perms)s&frob=%(frob)s&api_sig=%(api_sig)s" % keys
-            d.callback({'url': url, 'frob': frob})
-        self.auth_getFrob().addCallbacks(gotFrob, d.errback)
-        return d
+            return {'url': url, 'frob': frob}
+        return self.auth_getFrob().addCallback(gotFrob)
 
     @staticmethod
     def get_photo_url(photo, size=SIZE_MEDIUM):
