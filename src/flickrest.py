@@ -73,25 +73,23 @@ class Flickr:
         return client.getPage(Flickr.endpoint, method="POST",
                               headers={"Content-Type": "application/x-www-form-urlencoded"},
                               postdata=urllib.urlencode(kwargs))
-        
-    def __getattr__(self, method, **kwargs):
+    
+    def __getattr__(self, method):
         method = "flickr." + method.replace("_", ".")
         if not self.__methods.has_key(method):
             def proxy(method=method, **kwargs):
-                d = defer.Deferred()
                 def cb(data):
                     self.logger.info("%s returned" % method)
                     xml = ElementTree.XML(data)
                     if xml.tag == "rsp" and xml.get("stat") == "ok":
-                        d.callback(xml)
+                        return xml
                     elif xml.tag == "rsp" and xml.get("stat") == "fail":
                         err = xml.find("err")
-                        d.errback(Failure(FlickrError(err.get("code"), err.get("msg"))))
+                        raise FlickrError(err.get("code"), err.get("msg"))
                     else:
                         # Fake an error in this case
-                        d.errback(Failure(FlickrError(0, "Invalid response")))
-                self.__call(method, kwargs).addCallbacks(cb, lambda fault: d.errback(fault))
-                return d
+                        raise FlickrError(0, "Invalid response")
+                return self.__call(method, kwargs).addCallback(cb)
             self.__methods[method] = proxy
         return self.__methods[method]
 
@@ -170,7 +168,7 @@ class Flickr:
             f.close()
             # Callback to the user
             d.callback(True)
-        self.auth_getToken(frob=state['frob']).addCallbacks(gotToken, lambda fault: d.errback(fault))
+        self.auth_getToken(frob=state['frob']).addCallbacks(gotToken, d.errback)
         return d
 
     def authenticate_1(self):
@@ -201,7 +199,7 @@ class Flickr:
             self.__sign(keys)
             url = "http://flickr.com/services/auth/?api_key=%(api_key)s&perms=%(perms)s&frob=%(frob)s&api_sig=%(api_sig)s" % keys
             d.callback({'url': url, 'frob': frob})
-        self.auth_getFrob().addCallbacks(gotFrob, lambda fault: d.errback(fault))
+        self.auth_getFrob().addCallbacks(gotFrob, d.errback)
         return d
 
     @staticmethod
