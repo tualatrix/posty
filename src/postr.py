@@ -26,6 +26,7 @@ import gobject, gtk, gtk.glade
 
 from AboutDialog import AboutDialog
 from AuthenticationDialog import AuthenticationDialog
+import ImageStore, ImageList
 
 from flickrest import Flickr
 from twisted.web.client import getPage
@@ -52,21 +53,6 @@ except ImportError:
 # TODO: write a global error handler for passing to flickr methods that displays
 # a dialog
 
-# Constants for the drag handling
-(DRAG_URI,
- DRAG_IMAGE) = range (0, 2)
-
-# Column indexes
-(COL_FILENAME, # The filename of an image (can be None)
- COL_IMAGE, # The image data (if filename is None)
- COL_PREVIEW, # A 512x512 preview of the image
- COL_THUMBNAIL, # A 64x64 thumbnail of the image
- COL_TITLE, # The image title
- COL_DESCRIPTION, # The image description
- COL_TAGS, # A space deliminated list of tags for the image
- COL_SET # An iterator point to the set to put the photo in
- ) = range (0, 8)
-
 # Exif information about image orientation
 (ROTATED_180,
  ROTATED_90_CW,
@@ -86,6 +72,7 @@ class Postr (UniqueApp):
                              secret="7db1b8ef68979779",
                              perms="write")
         
+        gtk.glade.set_custom_handler(self.get_custom_handler)
         glade = gtk.glade.XML(os.path.join (os.path.dirname(__file__), "postr.glade"))
         glade.signal_autoconnect(self)
 
@@ -104,7 +91,7 @@ class Postr (UniqueApp):
                             "progress_filename",
                             "progress_thumbnail")
                            )
-                
+        
         # Just for you, Daniel.
         try:
             if os.getlogin() == "daniels":
@@ -112,36 +99,23 @@ class Postr (UniqueApp):
         except Exception:
             pass
         
-        self.model = gtk.ListStore (gobject.TYPE_STRING, # COL_FILENAME
-                                    gtk.gdk.Pixbuf, # COL_IMAGE
-                                    gtk.gdk.Pixbuf, # COL_PREVIEW
-                                    gtk.gdk.Pixbuf,  #COL_THUMBNAIL
-                                    gobject.TYPE_STRING, # COL_TITLE
-                                    gobject.TYPE_STRING, # COL_DESCRIPTION
-                                    gobject.TYPE_STRING, # COL_TAGS
-                                    gtk.TreeIter) # COL_SET
-        self.current_it = None
+        self.model = ImageStore.ImageStore ()
+        self.iconview.set_model (self.model)
+        self.iconview.connect("drag_data_received", self.on_drag_data_received)
+        self.iconview.connect("selection_changed", self.on_selection_changed)
 
+        self.current_it = None
+        
         # last opened folder
         self.last_folder = None
 
         self.change_signals = []
-        self.change_signals.append((self.title_entry, self.title_entry.connect('changed', self.on_field_changed, COL_TITLE)))
-        self.change_signals.append((self.desc_entry, self.desc_entry.connect('changed', self.on_field_changed, COL_DESCRIPTION)))
-        self.change_signals.append((self.tags_entry, self.tags_entry.connect('changed', self.on_field_changed, COL_TAGS)))
+        self.change_signals.append((self.title_entry, self.title_entry.connect('changed', self.on_field_changed, ImageStore.COL_TITLE)))
+        self.change_signals.append((self.desc_entry, self.desc_entry.connect('changed', self.on_field_changed, ImageStore.COL_DESCRIPTION)))
+        self.change_signals.append((self.tags_entry, self.tags_entry.connect('changed', self.on_field_changed, ImageStore.COL_TAGS)))
         self.thumbnail_image.connect('size-allocate', self.update_thumbnail)
         self.old_thumb_allocation = None
-
-        self.iconview.set_model (self.model)
-        self.iconview.set_text_column (COL_TITLE)
-        self.iconview.set_pixbuf_column (COL_THUMBNAIL)
     
-        self.iconview.drag_dest_set (gtk.DEST_DEFAULT_ALL, (), gtk.gdk.ACTION_COPY)
-        targets = ()
-        targets = gtk.target_list_add_image_targets(targets, DRAG_IMAGE, False)
-        targets = gtk.target_list_add_uri_targets(targets, DRAG_URI)
-        self.iconview.drag_dest_set_target_list(targets)
-
         # The set selector combo
         self.sets = gtk.ListStore (gobject.TYPE_STRING, # ID
                                    gobject.TYPE_STRING, # Name
@@ -165,6 +139,15 @@ class Postr (UniqueApp):
         
         # Connect to flickr, go go go
         self.token = self.flickr.authenticate_1().addCallback(self.auth_open_url)
+
+    def get_custom_handler(self, glade, function_name, widget_name, str1, str2, int1, int2):
+        handler = getattr(self, function_name)
+        return handler(str1, str2, int1, int2)
+
+    def image_list_new (self, *args):
+        view = ImageList.ImageList ()
+        view.show()
+        return view
     
     def on_message(self, app, command, command_data, startup_id, screen, workspace):
         """Callback from UniqueApp, when a message arrives."""
@@ -233,7 +216,7 @@ class Postr (UniqueApp):
         items = self.iconview.get_selected_items()
         for path in items:
             it = self.model.get_iter(path)
-            self.model.set_value (it, COL_SET, set_it)
+            self.model.set_value (it, ImageStore.COL_SET, set_it)
     
     def on_add_photos_activate(self, menuitem):
         """Callback from the File->Add Photos menu item."""
@@ -369,9 +352,9 @@ class Postr (UniqueApp):
             self.old_thumb_allocation = allocation
 
             (image, simage, filename) = self.model.get(self.current_it,
-                                                       COL_IMAGE,
-                                                       COL_PREVIEW,
-                                                       COL_FILENAME)
+                                                       ImageStore.COL_IMAGE,
+                                                       ImageStore.COL_PREVIEW,
+                                                       ImageStore.COL_FILENAME)
 
             tw = allocation.width
             th = allocation.height
@@ -403,10 +386,10 @@ class Postr (UniqueApp):
             # TODO: do something clever with multiple selections
             self.current_it = self.model.get_iter(items[0])
             (title, desc, tags, set_it) = self.model.get(self.current_it,
-                                                      COL_TITLE,
-                                                      COL_DESCRIPTION,
-                                                      COL_TAGS,
-                                                      COL_SET)
+                                                      ImageStore.COL_TITLE,
+                                                      ImageStore.COL_DESCRIPTION,
+                                                      ImageStore.COL_TAGS,
+                                                      ImageStore.COL_SET)
 
             enable_field(self.title_entry, title)
             enable_field(self.desc_entry, desc)
@@ -500,17 +483,17 @@ class Postr (UniqueApp):
         tags = slurp(tag_tags)
         
         self.model.set(self.model.append(),
-                       COL_FILENAME, filename,
-                       COL_IMAGE, None,
-                       COL_PREVIEW, preview,
-                       COL_THUMBNAIL, thumb,
-                       COL_TITLE, title,
-                       COL_DESCRIPTION, desc,
-                       COL_TAGS, tags)
+                       ImageStore.COL_FILENAME, filename,
+                       ImageStore.COL_IMAGE, None,
+                       ImageStore.COL_PREVIEW, preview,
+                       ImageStore.COL_THUMBNAIL, thumb,
+                       ImageStore.COL_TITLE, title,
+                       ImageStore.COL_DESCRIPTION, desc,
+                       ImageStore.COL_TAGS, tags)
     
     def on_drag_data_received(self, widget, context, x, y, selection, targetType, timestamp):
         """Drag and drop callback when data is received."""
-        if targetType == DRAG_IMAGE:
+        if targetType == ImageList.DRAG_IMAGE:
             pixbuf = selection.get_pixbuf()
 
             # TODO: don't scale up if the image is smaller than 512/512
@@ -523,15 +506,15 @@ class Postr (UniqueApp):
             thumb = pixbuf.scale_simple(sizes[0], sizes[1], gtk.gdk.INTERP_BILINEAR)
             
             self.model.set(self.model.append(),
-                           COL_IMAGE, pixbuf,
-                           COL_FILENAME, None,
-                           COL_PREVIEW, preview,
-                           COL_THUMBNAIL, thumb,
-                           COL_TITLE, "",
-                           COL_DESCRIPTION, "",
-                           COL_TAGS, "")
+                           ImageStore.COL_IMAGE, pixbuf,
+                           ImageStore.COL_FILENAME, None,
+                           ImageStore.COL_PREVIEW, preview,
+                           ImageStore.COL_THUMBNAIL, thumb,
+                           ImageStore.COL_TITLE, "",
+                           ImageStore.COL_DESCRIPTION, "",
+                           ImageStore.COL_TAGS, "")
         
-        elif targetType == DRAG_URI:
+        elif targetType == ImageList.DRAG_URI:
             for uri in selection.get_uris():
                 # TODO: use gnome-vfs to handle remote files
                 filename = urlparse(uri)[2]
@@ -592,13 +575,13 @@ class Postr (UniqueApp):
 
         it = self.model.get_iter_from_string(str(self.upload_index))
         (filename, thumb, pixbuf, title, desc, tags, set_it) = self.model.get(it,
-                                                                              COL_FILENAME,
-                                                                              COL_THUMBNAIL,
-                                                                              COL_IMAGE,
-                                                                              COL_TITLE,
-                                                                              COL_DESCRIPTION,
-                                                                              COL_TAGS,
-                                                                              COL_SET)
+                                                                              ImageStore.COL_FILENAME,
+                                                                              ImageStore.COL_THUMBNAIL,
+                                                                              ImageStore.COL_IMAGE,
+                                                                              ImageStore.COL_TITLE,
+                                                                              ImageStore.COL_DESCRIPTION,
+                                                                              ImageStore.COL_TAGS,
+                                                                              ImageStore.COL_SET)
         (set_id,) = self.sets.get (set_it, 0)
         
         self.update_progress(filename, title, thumb)
