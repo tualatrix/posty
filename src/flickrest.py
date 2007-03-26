@@ -3,12 +3,12 @@
 # Copyright (C) 2007 Ross Burton <ross@burtonini.com>
 #
 # This program is free software; you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by the Free Software
-# Foundation; either version 2, or (at your option) any later version.
+# the terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation; either version 2, or (at your option) any later version.
 #
 # This program is distributed in the hope that it will be useful, but WITHOUT
 # ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
 # details.
 #
 # You should have received a copy of the GNU General Public License along with
@@ -77,22 +77,23 @@ class Flickr:
                               headers={"Content-Type": "application/x-www-form-urlencoded"},
                               postdata=urllib.urlencode(kwargs))
     
+    def __cb(self, data, method):
+        self.logger.info("%s returned" % method)
+        xml = ElementTree.XML(data)
+        if xml.tag == "rsp" and xml.get("stat") == "ok":
+            return xml
+        elif xml.tag == "rsp" and xml.get("stat") == "fail":
+            err = xml.find("err")
+            raise FlickrError(err.get("code"), err.get("msg"))
+        else:
+            # Fake an error in this case
+            raise FlickrError(0, "Invalid response")
+    
     def __getattr__(self, method):
         method = "flickr." + method.replace("_", ".")
         if not self.__methods.has_key(method):
             def proxy(method=method, **kwargs):
-                def cb(data):
-                    self.logger.info("%s returned" % method)
-                    xml = ElementTree.XML(data)
-                    if xml.tag == "rsp" and xml.get("stat") == "ok":
-                        return xml
-                    elif xml.tag == "rsp" and xml.get("stat") == "fail":
-                        err = xml.find("err")
-                        raise FlickrError(err.get("code"), err.get("msg"))
-                    else:
-                        # Fake an error in this case
-                        raise FlickrError(0, "Invalid response")
-                return self.__call(method, kwargs).addCallback(cb)
+                return self.__call(method, kwargs).addCallback(self.__cb, method)
             self.__methods[method] = proxy
         return self.__methods[method]
 
@@ -153,8 +154,10 @@ class Flickr:
             "Content-Type": "multipart/form-data; boundary=%s" % boundary,
             "Content-Length": str(len(form))
             }
+
+        self.logger.info("Calling upload")
         return client.getPage("http://api.flickr.com/services/upload/", method="POST",
-                              headers=headers, postdata=form)
+                              headers=headers, postdata=form).addCallback(self.__cb, "upload")
 
     def authenticate_2(self, state):
         def gotToken(e):
