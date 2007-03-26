@@ -139,12 +139,14 @@ class Postr (UniqueApp):
         
         # Connect to flickr, go go go
         self.token = self.flickr.authenticate_1().addCallback(self.auth_open_url)
-
+    
     def get_custom_handler(self, glade, function_name, widget_name, str1, str2, int1, int2):
+        """libglade callback to create custom widgets."""
         handler = getattr(self, function_name)
         return handler(str1, str2, int1, int2)
-
+    
     def image_list_new (self, *args):
+        """Custom widget creation function to make the image list."""
         view = ImageList.ImageList ()
         view.show()
         return view
