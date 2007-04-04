@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='Postr',
-      version='0.4',
+      version='0.5',
       description='Flickr Uploader',
       author='Ross Burton',
       author_email='ross@burtonini.com',
