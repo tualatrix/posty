@@ -8,3 +8,4 @@ class AboutDialog(gtk.AboutDialog):
         self.set_copyright(u'Copyright \u00A9 2006 Ross Burton')
         self.set_authors(('Ross Burton <ross@burtonini.com>',))
         self.set_website('http://burtonini.com/')
+        self.set_logo_icon_name('postr')

@@ -71,7 +71,8 @@ class Postr (UniqueApp):
         self.flickr = Flickr(api_key="c53cebd15ed936073134cec858036f1d",
                              secret="7db1b8ef68979779",
                              perms="write")
-        
+
+        gtk.window_set_default_icon_name("postr")
         gtk.glade.set_custom_handler(self.get_custom_handler)
         glade = gtk.glade.XML(os.path.join (os.path.dirname(__file__), "postr.glade"))
         glade.signal_autoconnect(self)
