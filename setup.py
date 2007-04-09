@@ -24,3 +24,4 @@ setup(name='Postr',
       
       )
 
+# TODO: install translations
