@@ -26,7 +26,7 @@ import gobject, gtk, gtk.glade
 
 from AboutDialog import AboutDialog
 from AuthenticationDialog import AuthenticationDialog
-import ImageStore, ImageList
+import ErrorDialog, ImageStore, ImageList
 
 from flickrest import Flickr
 from twisted.web.client import getPage
@@ -48,10 +48,7 @@ except ImportError:
         def is_running(self):
             return False
 
-#logging.basicConfig(level=logging.DEBUG)
-
-# TODO: write a global error handler for passing to flickr methods that displays
-# a dialog
+logging.basicConfig(level=logging.DEBUG)
 
 # Exif information about image orientation
 (ROTATED_180,
@@ -139,7 +136,7 @@ class Postr (UniqueApp):
         self.upload_menu.set_sensitive(False)
         
         # Connect to flickr, go go go
-        self.token = self.flickr.authenticate_1().addCallback(self.auth_open_url)
+        self.token = self.flickr.authenticate_1().addCallbacks(self.auth_open_url, ErrorDialog.twisted_error)
     
     def get_custom_handler(self, glade, function_name, widget_name, str1, str2, int1, int2):
         """libglade callback to create custom widgets."""
@@ -169,15 +166,15 @@ class Postr (UniqueApp):
         else:
             dialog = AuthenticationDialog(self.window, state['url'])
             if dialog.run() == gtk.RESPONSE_ACCEPT:
-                self.flickr.authenticate_2(state).addCallback(self.connected)
+                self.flickr.authenticate_2(state).addCallbacks(self.connected, ErrorDialog.twisted_error)
             dialog.destroy()
     
     def connected(self, connected):
         """Callback when the Flickr authentication completes."""
         if connected:
             self.upload_menu.set_sensitive(True)
-            self.flickr.people_getUploadStatus().addCallback(self.got_quota)
-            self.flickr.photosets_getList().addCallback(self.got_photosets)
+            self.flickr.people_getUploadStatus().addCallbacks(self.got_quota, ErrorDialog.twisted_error)
+            self.flickr.photosets_getList().addCallbacks(self.got_photosets, ErrorDialog.twisted_error)
 
     def got_quota(self, rsp):
         """Callback for the getUploadStatus call, which updates the remaining
@@ -573,7 +570,7 @@ class Postr (UniqueApp):
             self.progress_dialog.hide()
             self.model.clear()
             self.iconview.set_sensitive(True)
-            self.flickr.people_getUploadStatus().addCallback(self.got_quota)
+            self.flickr.people_getUploadStatus().addCallbacks(self.got_quota, ErrorDialog.twisted_error)
             return
 
         it = self.model.get_iter_from_string(str(self.upload_index))
@@ -595,7 +592,7 @@ class Postr (UniqueApp):
                                title=title, desc=desc,
                                tags=tags)
             d.addCallback(self.add_to_set, set_id)
-            d.addCallback(self.upload)
+            d.addCallbacks(self.upload, ErrorDialog.twisted_error)
         elif pixbuf:
             # This isn't very nice, but might be the best way
             data = []
@@ -604,6 +601,6 @@ class Postr (UniqueApp):
                                 title=title, desc=desc,
                                 tags=tags)
             d.addCallback(self.add_to_set, set_id)
-            d.addCallback(self.upload)
+            d.addCallbacks(self.upload, ErrorDialog.twisted_error)
         else:
             print "No filename or pixbuf stored"
