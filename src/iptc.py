@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # Python IPTC Parser
 # By Jean-Francois Roche <jfroche@jfroche.be>
 # ZPhotoSlides, Zope product
