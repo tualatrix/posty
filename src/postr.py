@@ -1,5 +1,3 @@
-#! /usr/bin/python
-
 # Postr, a Flickr Uploader
 #
 # Copyright (C) 2006 Ross Burton <ross@burtonini.com>
