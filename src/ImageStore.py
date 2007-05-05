@@ -8,8 +8,9 @@ import gobject, gtk
  COL_TITLE, # The image title
  COL_DESCRIPTION, # The image description
  COL_TAGS, # A space deliminated list of tags for the image
+ COL_INFO, # Markup text with complete image info 
  COL_SET # An iterator point to the set to put the photo in
- ) = range (0, 8)
+ ) = range (0, 9)
 
 class ImageStore (gtk.ListStore):
     def __init__(self):
@@ -20,4 +21,5 @@ class ImageStore (gtk.ListStore):
                                gobject.TYPE_STRING, # COL_TITLE
                                gobject.TYPE_STRING, # COL_DESCRIPTION
                                gobject.TYPE_STRING, # COL_TAGS
+                               gobject.TYPE_STRING, # COL_INFO
                                gtk.TreeIter) # COL_SET

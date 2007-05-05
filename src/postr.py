@@ -81,7 +81,7 @@ class Postr (UniqueApp):
                             "desc_entry",
                             "tags_entry",
                             "set_combo",
-                            "iconview",
+                            "thumbview",
                             "progress_dialog",
                             "progressbar",
                             "progress_filename",
@@ -96,9 +96,11 @@ class Postr (UniqueApp):
             pass
         
         self.model = ImageStore.ImageStore ()
-        self.iconview.set_model (self.model)
-        self.iconview.connect("drag_data_received", self.on_drag_data_received)
-        self.iconview.connect("selection_changed", self.on_selection_changed)
+        self.thumbview.set_model(self.model)
+        self.thumbview.connect("drag_data_received", self.on_drag_data_received)
+
+        selection = self.thumbview.get_selection()
+        selection.connect("changed", self.on_selection_changed)
 
         self.current_it = None
         
@@ -203,15 +205,22 @@ class Postr (UniqueApp):
     
     def on_field_changed(self, entry, column):
         """Callback when the entry fields are changed."""
-        items = self.iconview.get_selected_items()
+        selection = self.thumbview.get_selection()
+        (model, items) = selection.get_selected_rows()
         for path in items:
             it = self.model.get_iter(path)
             self.model.set_value (it, column, entry.get_text())
+            (title, desc, tags) = self.model.get(it,
+                                                 ImageStore.COL_TITLE,
+                                                 ImageStore.COL_DESCRIPTION,
+                                                 ImageStore.COL_TAGS)
+            self.model.set_value (it, ImageStore.COL_INFO, self.get_image_info(title, desc, tags))
 
     def on_set_combo_changed(self, combo):
         """Callback when the set combo is changed."""
         set_it = self.set_combo.get_active_iter()
-        items = self.iconview.get_selected_items()
+        selection = self.thumbview.get_selection()
+        (model, items) = selection.get_selected_rows()
         for path in items:
             it = self.model.get_iter(path)
             self.model.set_value (it, ImageStore.COL_SET, set_it)
@@ -282,27 +291,31 @@ class Postr (UniqueApp):
     
     def on_delete_activate(self, menuitem):
         """Callback from Edit->Delete."""
-        selection = self.iconview.get_selected_items()
-        for path in selection:
+        selection = self.thumbview.get_selection()
+        (model, items) = selection.get_selected_rows()
+        for path in items:
             self.model.remove(self.model.get_iter(path))
     
     def on_select_all_activate(self, menuitem):
         """Callback from Edit->Select All."""
-        self.iconview.select_all()
+        selection = self.thumbview.get_selection()
+        selection.select_all()
 
     def on_deselect_all_activate(self, menuitem):
         """Callback from Edit->Deselect All."""
-        self.iconview.unselect_all()
+        selection = self.thumbview.get_selection()
+        selection.unselect_all()
 
     def on_invert_selection_activate(self, menuitem):
         """Callback from Edit->Invert Selection."""
-        selected = self.iconview.get_selected_items()
-        def inverter(model, path, iter, selected):
+        selection = self.thumbview.get_selection()
+        def inverter(model, path, iter, selection):
+            (model, selected) = selection.get_selected_rows()
             if path in selected:
-                self.iconview.unselect_path(path)
+                selection.unselect_iter(iter)
             else:
-                self.iconview.select_path(path)
-        self.model.foreach(inverter, selected)
+                selection.select_iter(iter)
+        self.model.foreach(inverter, selection)
 
     def on_upload_activate(self, menuitem):
         """Callback from File->Upload."""
@@ -317,7 +330,7 @@ class Postr (UniqueApp):
 
         menuitem.set_sensitive(False)
         self.uploading = True
-        self.iconview.set_sensitive(False)
+        self.thumbview.set_sensitive(False)
         self.progress_dialog.show()
 
         self.upload_count = self.model.iter_n_children (None)
@@ -366,19 +379,19 @@ class Postr (UniqueApp):
             thumb = simage.scale_simple(tw, th, gtk.gdk.INTERP_BILINEAR)
             widget.set_from_pixbuf(thumb)
 
-    def on_selection_changed(self, iconview):
+    def on_selection_changed(self, selection):
         """Callback when the selection was changed, to update the entries and
         preview."""
         [obj.handler_block(i) for obj,i in self.change_signals]
         
-        items = iconview.get_selected_items()
-
         def enable_field(field, text):
             field.set_sensitive(True)
             field.set_text(text)
         def disable_field(field):
             field.set_sensitive(False)
             field.set_text("")
+
+        (model, items) = selection.get_selected_rows()
         
         if items:
             # TODO: do something clever with multiple selections
@@ -419,6 +432,19 @@ class Postr (UniqueApp):
             return (dstw, int(dstw/ratio))
         else:
             return (int(dsth*ratio), dsth)
+
+    def get_image_info(self, title, description, tags):
+        if title:
+            info_title = title
+        else:
+            info_title = _("No title")
+
+        if description:
+            info_desc = description
+        else:
+            info_desc = _("No description")
+
+        return "<b><big>%s</big></b>\n%s\n<span color=\"gray\">%s</span>" % (info_title, info_desc, tags)
 
     def add_image_filename(self, filename):
         """Add a file to the image list.  Called by the File->Add Photo and drag
@@ -487,7 +513,8 @@ class Postr (UniqueApp):
                        ImageStore.COL_THUMBNAIL, thumb,
                        ImageStore.COL_TITLE, title,
                        ImageStore.COL_DESCRIPTION, desc,
-                       ImageStore.COL_TAGS, tags)
+                       ImageStore.COL_TAGS, tags,
+                       ImageStore.COL_INFO, self.get_image_info(title, desc, tags))
     
     def on_drag_data_received(self, widget, context, x, y, selection, targetType, timestamp):
         """Drag and drop callback when data is received."""
@@ -510,7 +537,8 @@ class Postr (UniqueApp):
                            ImageStore.COL_THUMBNAIL, thumb,
                            ImageStore.COL_TITLE, "",
                            ImageStore.COL_DESCRIPTION, "",
-                           ImageStore.COL_TAGS, "")
+                           ImageStore.COL_TAGS, "",
+                           ImageStore.COL_INFO, self.get_image_info(None, None, None))
         
         elif targetType == ImageList.DRAG_URI:
             for uri in selection.get_uris():
@@ -567,7 +595,7 @@ class Postr (UniqueApp):
             self.uploading = False
             self.progress_dialog.hide()
             self.model.clear()
-            self.iconview.set_sensitive(True)
+            self.thumbview.set_sensitive(True)
             self.flickr.people_getUploadStatus().addCallbacks(self.got_quota, ErrorDialog.twisted_error)
             return
 
