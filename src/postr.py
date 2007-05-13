@@ -444,8 +444,12 @@ class Postr (UniqueApp):
         else:
             info_desc = _("No description")
 
-        return "<b><big>%s</big></b>\n%s\n<span color=\"gray\">%s</span>" % (info_title, info_desc, tags)
-
+        s = "<b><big>%s</big></b>\n%s" % (info_title, info_desc)
+        if tags:
+            # TODO: don't hard-code grey but use theme disabled colour
+            s = s + "\n<span color='gray'>%s</span>" % (tags)
+        return s
+    
     def add_image_filename(self, filename):
         """Add a file to the image list.  Called by the File->Add Photo and drag
         and drop callbacks."""
