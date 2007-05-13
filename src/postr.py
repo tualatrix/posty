@@ -49,10 +49,11 @@ except ImportError:
 logging.basicConfig(level=logging.DEBUG)
 
 # Exif information about image orientation
-(ROTATED_180,
+(ROTATED_0,
+ ROTATED_180,
  ROTATED_90_CW,
  ROTATED_90_CCW
- ) = (3, 6, 8)
+ ) = (1, 3, 6, 8)
 
 
 class Postr (UniqueApp):
