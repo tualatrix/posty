@@ -476,9 +476,8 @@ class Postr (UniqueApp):
         
         # Rotate the preview if required.  We don't need to manipulate the
         # original data as Flickr will do that for us.
-        rotation = exif.get("Image Orientation", None)
-        if rotation:
-            rotation = rotation.values[0]
+        if "Image Orientation" in exif:
+            rotation = exif["Image Orientation"].values[0]
             if rotation == ROTATED_180:
                 preview = preview.rotate_simple(gtk.gdk.PIXBUF_ROTATE_UPSIDEDOWN)
             elif rotation == ROTATED_90_CW:
