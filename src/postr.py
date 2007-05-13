@@ -447,8 +447,8 @@ class Postr (UniqueApp):
 
         s = "<b><big>%s</big></b>\n%s\n" % (info_title, info_desc)
         if tags:
-            # TODO: don't hard-code grey but use theme disabled colour
-            s = s + "<span color='gray'>%s</span>" % (tags)
+            colour = self.window.style.text[gtk.STATE_INSENSITIVE].pixel
+            s = s + "<span color='#%X'>%s</span>" % (colour, tags)
         return s
     
     def add_image_filename(self, filename):
