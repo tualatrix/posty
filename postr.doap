@@ -34,6 +34,14 @@
   
   <release>
     <Version>
+      <revision>0.6</revision>
+      <created>2007-06-05</created>
+      <file-release rdf:resource="http://burtonini.com/computing/postr-0.6.tar.gz"/>
+    </Version>
+  </release>
+
+  <release>
+    <Version>
       <revision>0.5</revision>
       <created>2007-02-09</created>
       <file-release rdf:resource="http://burtonini.com/computing/postr-0.5.tar.gz"/>

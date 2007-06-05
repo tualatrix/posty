@@ -4,7 +4,7 @@ from distutils.core import setup
 from glob import glob
 
 setup(name='Postr',
-      version='0.5',
+      version='0.6',
       description='Flickr Uploader',
       author='Ross Burton',
       author_email='ross@burtonini.com',
