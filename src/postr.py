@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
-import gettext, logging, os
+import gettext, logging, os, urllib
 from urlparse import urlparse
 from os.path import basename
 
@@ -551,7 +551,7 @@ class Postr (UniqueApp):
         elif targetType == ImageList.DRAG_URI:
             for uri in selection.get_uris():
                 # TODO: use gnome-vfs to handle remote files
-                filename = urlparse(uri)[2]
+                filename = urllib.unquote(urlparse(uri)[2])
                 if os.path.isfile(filename):
                     self.add_image_filename(filename)
                 elif os.path.isdir(filename):
