@@ -29,7 +29,7 @@ import ErrorDialog, ImageStore, ImageList
 from flickrest import Flickr
 from twisted.web.client import getPage
 import EXIF
-import iptc as IPTC
+from iptcinfo import IPTCInfo
 from util import *
 
 
@@ -470,7 +470,7 @@ class Postr (UniqueApp):
         except:
             exif = {}
         try:
-            iptc = IPTC.getiptc(open(filename, 'rb'))
+            iptc = IPTCInfo(open(filename, 'rb')).data
         except:
             iptc = {}
         
@@ -491,19 +491,23 @@ class Postr (UniqueApp):
 
         # Slurp data from the EXIF and IPTC tags
         title_tags = (
-            (iptc, "Caption"),
+            (iptc, "headline"),
             )
         desc_tags = (
             (exif, "Image ImageDescription"),
             (exif, "UserComment"),
+            (iptc, "caption/abstract"),
             )
         tag_tags = (
-            (iptc, "Keywords"),
+            (iptc, "keywords"),
             )
         def slurp(tags, default=""):
             for (data, tag) in tags:
                 if data.has_key(tag):
-                    return data[tag]
+                    value = data[tag]
+                    if isinstance (value, list):
+                        return ' '.join(map (lambda s: '"' + s + '"', value))
+                    return value
             return default
         
         title = slurp(title_tags, os.path.splitext(os.path.basename(filename))[0])
