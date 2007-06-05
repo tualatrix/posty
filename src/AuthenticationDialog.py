@@ -9,6 +9,7 @@ def on_url_clicked(button, url):
     # Because URLs contain & it needs to be quoted
     browser = browser % '"' + url + '"'
     subprocess.Popen(args=browser, shell=True)
+    # TODO: if that didn't work fallback on x-www-browser or something
 
 class AuthenticationDialog(gtk.Dialog):
     def __init__(self, parent, url):
