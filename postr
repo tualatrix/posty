@@ -10,7 +10,8 @@ reactor = gtk2reactor.install()
 # If postr is not installed we can run it from source
 try:
     from postr import postr
-except ImportError:
+except ImportError, e:
+    print e
     from os.path import dirname
     sys.path.insert(0, dirname(__file__))
     from src import postr
