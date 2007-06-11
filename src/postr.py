@@ -616,7 +616,10 @@ class Postr (UniqueApp):
                                                                               ImageStore.COL_DESCRIPTION,
                                                                               ImageStore.COL_TAGS,
                                                                               ImageStore.COL_SET)
-        (set_id,) = self.sets.get (set_it, 0)
+        if set_it:
+            (set_id,) = self.sets.get (set_it, 0)
+        else:
+            set_id = 0
         
         self.update_progress(filename, title, thumb)
         self.upload_index += 1
