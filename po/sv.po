@@ -1,0 +1,131 @@
+# Swedish translation of Postr.
+# Copyright (C) 2007 Free Software Foundation, Inc.
+# This file is distributed under the same license as the postr package.
+# Daniel Nylander <po@danielnylander.se>, 2007.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Postr\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-01-10 10:04+0000\n"
+"PO-Revision-Date: 2007-06-09 14:08+0100\n"
+"Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
+"Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/AboutDialog.py:7
+#: src/AuthenticationDialog.py:16
+#: src/postr.glade:8
+#: src/postr.glade:486
+msgid "Flickr Uploader"
+msgstr "Skicka upp till Flickr"
+
+#: src/AuthenticationDialog.py:19
+msgid "Continue"
+msgstr "Fortsätt"
+
+#: src/AuthenticationDialog.py:23
+msgid "Postr needs to login to Flickr to upload your photos. Please click on the link below to login to Flickr."
+msgstr "Postr behöver logga in på Flickr för att skicka upp dina foton. Klicka på nedanstående länk för att logga in på Flickr."
+
+#: src/AuthenticationDialog.py:32
+#: src/AuthenticationDialog.py:34
+msgid "Login to Flickr"
+msgstr "Logga in på Flickr"
+
+#: src/postr.py:182
+#, python-format
+msgid "You have %s remaining this month"
+msgstr "Du har %s återstående denna månad"
+
+#: src/postr.py:194
+msgid "Add Photos"
+msgstr "Lägg till foton"
+
+#: src/postr.py:206
+msgid "Images"
+msgstr "Bilder"
+
+#: src/postr.py:212
+msgid "All Files"
+msgstr "Alla filer"
+
+#: src/postr.py:245
+msgid "<b>Currently Uploading</b>"
+msgstr "<b>Skickar upp</b>"
+
+#: src/postr.py:246
+msgid "Photos are still being uploaded. Are you sure you want to quit?"
+msgstr "Foton håller på att skickas. Är du säker på att du vill avsluta?"
+
+#: src/postr.py:509
+#, python-format
+msgid "Uploading %(index)d of %(count)d"
+msgstr "Skickar upp %(index)d av %(count)d"
+
+#: nautilus/postrExtension.py:82
+msgid "Upload to Flickr..."
+msgstr "Skicka upp till Flickr..."
+
+#: nautilus/postrExtension.py:83
+msgid "Upload the selected files into Flickr"
+msgstr "Skicka upp markerade filer till Flickr"
+
+#: src/postr.glade:40
+msgid "_File"
+msgstr "_Arkiv"
+
+#: src/postr.glade:49
+msgid "_Add Photos..."
+msgstr "_Lägg till foton..."
+
+#: src/postr.glade:77
+msgid "_Upload"
+msgstr "Skicka _upp"
+
+#: src/postr.glade:117
+msgid "Select"
+msgstr "Markera"
+
+#: src/postr.glade:127
+msgid "_Delete"
+msgstr "_Ta bort"
+
+#: src/postr.glade:155
+msgid "_Select All"
+msgstr "_Markera allt"
+
+#: src/postr.glade:177
+msgid "Dese_lect All"
+msgstr "Avmark_era allt"
+
+#: src/postr.glade:187
+msgid "_Invert Selection"
+msgstr "_Invertera markering"
+
+#: src/postr.glade:200
+msgid "_Help"
+msgstr "_Hjälp"
+
+#: src/postr.glade:209
+msgid "_About"
+msgstr "_Om"
+
+#: src/postr.glade:272
+msgid "_Title:"
+msgstr "_Titel:"
+
+#: src/postr.glade:301
+msgid "_Description:"
+msgstr "_Beskrivning:"
+
+#: src/postr.glade:330
+msgid "Ta_gs:"
+msgstr "Ta_ggar:"
+
+#: src/postr.glade:442
+msgid "..."
+msgstr "..."
+
