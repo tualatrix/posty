@@ -435,6 +435,7 @@ class Postr (UniqueApp):
             return (int(dsth*ratio), dsth)
 
     def get_image_info(self, title, description, tags):
+        from xml.sax.saxutils import escape
         if title:
             info_title = title
         else:
@@ -445,10 +446,10 @@ class Postr (UniqueApp):
         else:
             info_desc = _("No description")
 
-        s = "<b><big>%s</big></b>\n%s\n" % (info_title, info_desc)
+        s = "<b><big>%s</big></b>\n%s\n" % (escape (info_title), escape (info_desc))
         if tags:
             colour = self.window.style.text[gtk.STATE_INSENSITIVE].pixel
-            s = s + "<span color='#%X'>%s</span>" % (colour, tags)
+            s = s + "<span color='#%X'>%s</span>" % (colour, escape (tags))
         return s
     
     def add_image_filename(self, filename):
