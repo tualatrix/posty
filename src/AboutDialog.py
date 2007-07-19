@@ -8,3 +8,10 @@ class AboutDialog(gtk.AboutDialog):
         self.set_authors(('Ross Burton <ross@burtonini.com>',))
         self.set_website('http://burtonini.com/')
         self.set_logo_icon_name('postr')
+
+
+if __name__ == "__main__":
+    import gettext; gettext.install('postr')
+    
+    AboutDialog().show()
+    gtk.main()
