@@ -308,8 +308,13 @@ class Postr (UniqueApp):
         """Callback from Edit->Delete."""
         selection = self.thumbview.get_selection()
         (model, items) = selection.get_selected_rows()
+
+        # Remove the items
         for path in items:
             self.model.remove(self.model.get_iter(path))
+
+        # TODO: select a new row
+        
         self.update_statusbar()
         
     def on_select_all_activate(self, menuitem):
