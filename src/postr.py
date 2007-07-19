@@ -24,6 +24,7 @@ import gobject, gtk, gtk.glade
 
 from AboutDialog import AboutDialog
 from AuthenticationDialog import AuthenticationDialog
+from ProgressDialog import ProgressDialog
 import ErrorDialog, ImageStore, ImageList
 
 from flickrest import Flickr
@@ -82,11 +83,7 @@ class Postr (UniqueApp):
                             "desc_entry",
                             "tags_entry",
                             "set_combo",
-                            "thumbview",
-                            "progress_dialog",
-                            "progressbar",
-                            "progress_filename",
-                            "progress_thumbnail")
+                            "thumbview")
                            )
         
         # Just for you, Daniel.
@@ -132,6 +129,7 @@ class Postr (UniqueApp):
         
         # The upload progress dialog
         self.uploading = False
+        self.progress_dialog = ProgressDialog()
         self.progress_dialog.set_transient_for(self.window)
         # Disable the Upload menu until the user has authenticated
         self.upload_menu.set_sensitive(False)
@@ -580,16 +578,16 @@ class Postr (UniqueApp):
     def update_progress(self, title, filename, thumb):
         """Update the progress bar whilst uploading."""
         label = '<b>%s</b>\n<i>%s</i>' % (title, basename(filename))
-        self.progress_filename.set_label(label)
+        self.progress_dialog.label.set_label(label)
 
         try:
-            self.progress_thumbnail.set_from_pixbuf(thumb)
-            self.progress_thumbnail.show()
+            self.progress_dialog.thumbnail.set_from_pixbuf(thumb)
+            self.progress_dialog.thumbnail.show()
         except:
-            self.progress_thumbnail.set_from_pixbuf(None)
-            self.progress_thumbnail.hide()
+            self.progress_dialog.thumbnail.set_from_pixbuf(None)
+            self.progress_dialog.thumbnail.hide()
 
-        self.progressbar.set_fraction(float(self.upload_index) / float(self.upload_count))
+        self.progress_dialog.progress.set_fraction(float(self.upload_index) / float(self.upload_count))
 
         # Use named args for i18n
         data = {
@@ -597,7 +595,7 @@ class Postr (UniqueApp):
             "count": self.upload_count
             }
         progress_label = _('Uploading %(index)d of %(count)d') % data
-        self.progressbar.set_text(progress_label)
+        self.progress_dialog.label.set_text(progress_label)
 
         self.window.set_title(_('Flickr Uploader (%(index)d/%(count)d)') % data)
 
