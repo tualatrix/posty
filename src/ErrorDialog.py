@@ -15,8 +15,6 @@ class ErrorDialog(gtk.MessageDialog):
 
 
 def twisted_error (failure, parent=None):
-    # TODO: find out why parent is passed as a GtkWindow but appears here as a
-    # GtkVBox.
     dialog = ErrorDialog (parent)
     dialog.set_from_failure (failure)
     dialog.show_all ()
