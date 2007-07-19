@@ -517,6 +517,7 @@ class Postr (UniqueApp):
         
         self.model.set(self.model.append(),
                        ImageStore.COL_FILENAME, filename,
+                       ImageStore.COL_SIZE, os.path.getsize(filename),
                        ImageStore.COL_IMAGE, None,
                        ImageStore.COL_PREVIEW, preview,
                        ImageStore.COL_THUMBNAIL, thumb,
@@ -538,9 +539,15 @@ class Postr (UniqueApp):
             # Now scale to a thumbnail
             sizes = self.get_thumb_size (pixbuf.get_width(), pixbuf.get_height(), 64, 64)
             thumb = pixbuf.scale_simple(sizes[0], sizes[1], gtk.gdk.INTERP_BILINEAR)
+
+            # TODO: Either this or the matching code in add_image_filename() is
+            # wrong. Does the Flickr quota work on compressed image size, or raw
+            # image data size?
+            size = pixbuf.get_width() * pixbuf.get_height() * pixbuf.get_n_channels()
             
             self.model.set(self.model.append(),
                            ImageStore.COL_IMAGE, pixbuf,
+                           ImageStore.COL_SIZE, size,
                            ImageStore.COL_FILENAME, None,
                            ImageStore.COL_PREVIEW, preview,
                            ImageStore.COL_THUMBNAIL, thumb,
