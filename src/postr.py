@@ -582,12 +582,16 @@ class Postr (UniqueApp):
             self.progress_thumbnail.hide()
 
         self.progressbar.set_fraction(float(self.upload_index) / float(self.upload_count))
+
         # Use named args for i18n
-        progress_label = _('Uploading %(index)d of %(count)d') % {
+        data = {
             "index": self.upload_index+1,
             "count": self.upload_count
             }
+        progress_label = _('Uploading %(index)d of %(count)d') % data
         self.progressbar.set_text(progress_label)
+
+        self.window.set_title(_('Flickr Uploader (%(index)d/%(count)d)') % data)
 
     def add_to_set(self, rsp, set):
         """Callback from the upload method to add the picture to a set."""
@@ -600,6 +604,7 @@ class Postr (UniqueApp):
         """Upload worker function, called by the File->Upload callback.  As this
         calls itself in the deferred callback, it takes a response argument."""
         if self.upload_index >= self.upload_count:
+            self.window.set_title(_("Flickr Uploader"))
             self.upload_menu.set_sensitive(True)
             self.uploading = False
             self.progress_dialog.hide()
