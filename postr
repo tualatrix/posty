@@ -7,14 +7,12 @@ import sys
 from twisted.internet import gtk2reactor
 reactor = gtk2reactor.install()
 
-# If postr is not installed we can run it from source
+# Import from src first so that we can run directly from the source tree for
+# development.
 try:
-    from postr import postr
-except ImportError, e:
-    print e
-    from os.path import dirname
-    sys.path.insert(0, dirname(__file__))
     from src import postr
+except ImportError, e:
+    from postr import postr
 
 p = postr.Postr()
 if p.is_running():
