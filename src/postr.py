@@ -340,7 +340,8 @@ class Postr (UniqueApp):
         
     def on_about_activate(self, menuitem):
         """Callback from Help->About."""
-        dialog = AboutDialog(self.window)
+        dialog = AboutDialog()
+        dialog.set_transient_for(self.window)
         dialog.run()
         dialog.destroy()
 
