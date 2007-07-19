@@ -181,18 +181,17 @@ class Postr (UniqueApp):
 
     def update_statusbar(self):
         # Update the amount to upload
-        upload_size = [0]
-        def update(model, path, iter):
-            upload_size[0] += model.get(iter, ImageStore.COL_SIZE)[0]
-        self.model.foreach(update)
+        size = 0
+        for row in self.model:
+            size += row[ImageStore.COL_SIZE]
 
         context = self.statusbar.get_context_id("quota")
         self.statusbar.pop(context)
         if self.upload_quota:
             self.statusbar.push(context, _("You have %s remaining this month (%s to upload)") %
-                                (greek(self.upload_quota), greek(upload_size[0])))
+                                (greek(self.upload_quota), greek(size)))
         else:
-            self.statusbar.push(context, _("%s to upload") % greek(upload_size[0]))
+            self.statusbar.push(context, _("%s to upload") % greek(size))
 
     def got_quota(self, rsp):
         """Callback for the getUploadStatus call, which updates the remaining
@@ -330,13 +329,12 @@ class Postr (UniqueApp):
     def on_invert_selection_activate(self, menuitem):
         """Callback from Edit->Invert Selection."""
         selection = self.thumbview.get_selection()
-        def inverter(model, path, iter, selection):
-            (model, selected) = selection.get_selected_rows()
-            if path in selected:
-                selection.unselect_iter(iter)
+        selected = selection.get_selected_rows()[1]
+        for row in self.model:
+            if row.path in selected:
+                selection.unselect_iter(row.iter)
             else:
-                selection.select_iter(iter)
-        self.model.foreach(inverter, selection)
+                selection.select_iter(row.iter)
 
     def on_upload_activate(self, menuitem):
         """Callback from File->Upload."""
