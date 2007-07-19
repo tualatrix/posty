@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
-import gettext, logging, os, urllib
+import logging, os, urllib
 from urlparse import urlparse
 from os.path import basename
 
@@ -104,7 +104,8 @@ class Postr (UniqueApp):
         
         # last opened folder
         self.last_folder = None
-
+        self.upload_quota = None
+        
         self.change_signals = []
         self.change_signals.append((self.title_entry, self.title_entry.connect('changed', self.on_field_changed, ImageStore.COL_TITLE)))
         self.change_signals.append((self.desc_entry, self.desc_entry.connect('changed', self.on_field_changed, ImageStore.COL_DESCRIPTION)))
@@ -178,15 +179,27 @@ class Postr (UniqueApp):
             self.flickr.people_getUploadStatus().addCallbacks(self.got_quota, self.twisted_error)
             self.flickr.photosets_getList().addCallbacks(self.got_photosets, self.twisted_error)
 
+    def update_statusbar(self):
+        # Update the amount to upload
+        upload_size = [0]
+        def update(model, path, iter):
+            upload_size[0] += model.get(iter, ImageStore.COL_SIZE)[0]
+        self.model.foreach(update)
+
+        context = self.statusbar.get_context_id("quota")
+        self.statusbar.pop(context)
+        if self.upload_quota:
+            self.statusbar.push(context, _("You have %s remaining this month (%s to upload)") %
+                                (greek(self.upload_quota), greek(upload_size[0])))
+        else:
+            self.statusbar.push(context, _("%s to upload") % greek(upload_size[0]))
+
     def got_quota(self, rsp):
         """Callback for the getUploadStatus call, which updates the remaining
         quota in the status bar."""
-        bandwidth = rsp.find("user/bandwidth").get("remainingbytes")
-        context = self.statusbar.get_context_id("quota")
-        self.statusbar.pop(context)
-        self.statusbar.push(context, _("You have %s remaining this month") %
-                            greek(int(bandwidth)))
-
+        self.upload_quota = int(rsp.find("user/bandwidth").get("remainingbytes"))
+        self.update_statusbar();
+        
     def got_set_thumb(self, page, it):
         loader = gtk.gdk.PixbufLoader()
         loader.set_size (32, 32)
@@ -297,7 +310,8 @@ class Postr (UniqueApp):
         (model, items) = selection.get_selected_rows()
         for path in items:
             self.model.remove(self.model.get_iter(path))
-    
+        self.update_statusbar()
+        
     def on_select_all_activate(self, menuitem):
         """Callback from Edit->Select All."""
         selection = self.thumbview.get_selection()
@@ -527,6 +541,8 @@ class Postr (UniqueApp):
                        ImageStore.COL_DESCRIPTION, desc,
                        ImageStore.COL_TAGS, tags,
                        ImageStore.COL_INFO, self.get_image_info(title, desc, tags))
+
+        self.update_statusbar()
     
     def on_drag_data_received(self, widget, context, x, y, selection, targetType, timestamp):
         """Drag and drop callback when data is received."""
@@ -575,7 +591,8 @@ class Postr (UniqueApp):
                     
         else:
             print "Unhandled target type %d" % targetType
-        
+
+        self.update_statusbar()
         context.finish(True, True, timestamp)
 
     def update_progress(self, title, filename, thumb):
