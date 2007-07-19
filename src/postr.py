@@ -135,7 +135,10 @@ class Postr (UniqueApp):
         self.upload_menu.set_sensitive(False)
         
         # Connect to flickr, go go go
-        self.token = self.flickr.authenticate_1().addCallbacks(self.auth_open_url, ErrorDialog.twisted_error)
+        self.flickr.authenticate_1().addCallbacks(self.auth_open_url, self.twisted_error)
+
+    def twisted_error(self, failure):
+        ErrorDialog.twisted_error (failure, self.window)
     
     def get_custom_handler(self, glade, function_name, widget_name, str1, str2, int1, int2):
         """libglade callback to create custom widgets."""
@@ -165,15 +168,15 @@ class Postr (UniqueApp):
         else:
             dialog = AuthenticationDialog(self.window, state['url'])
             if dialog.run() == gtk.RESPONSE_ACCEPT:
-                self.flickr.authenticate_2(state).addCallbacks(self.connected, ErrorDialog.twisted_error)
+                self.flickr.authenticate_2(state).addCallbacks(self.connected, self.twisted_error)
             dialog.destroy()
     
     def connected(self, connected):
         """Callback when the Flickr authentication completes."""
         if connected:
             self.upload_menu.set_sensitive(True)
-            self.flickr.people_getUploadStatus().addCallbacks(self.got_quota, ErrorDialog.twisted_error)
-            self.flickr.photosets_getList().addCallbacks(self.got_photosets, ErrorDialog.twisted_error)
+            self.flickr.people_getUploadStatus().addCallbacks(self.got_quota, self.twisted_error)
+            self.flickr.photosets_getList().addCallbacks(self.got_photosets, self.twisted_error)
 
     def got_quota(self, rsp):
         """Callback for the getUploadStatus call, which updates the remaining
@@ -200,7 +203,7 @@ class Postr (UniqueApp):
                            1, photoset.find("title").text)
 
             url = "http://static.flickr.com/%s/%s_%s%s.jpg" % (photoset.get("server"), photoset.get("primary"), photoset.get("secret"), "_s")
-            getPage (url).addCallback (self.got_set_thumb, it)
+            getPage (url).addCallback (self.got_set_thumb, it).addErrback(self.twisted_error)
     
     def on_field_changed(self, entry, column):
         """Callback when the entry fields are changed."""
@@ -616,7 +619,7 @@ class Postr (UniqueApp):
             self.progress_dialog.hide()
             self.model.clear()
             self.thumbview.set_sensitive(True)
-            self.flickr.people_getUploadStatus().addCallbacks(self.got_quota, ErrorDialog.twisted_error)
+            self.flickr.people_getUploadStatus().addCallbacks(self.got_quota, self.twisted_error)
             return
 
         it = self.model.get_iter_from_string(str(self.upload_index))
@@ -641,7 +644,7 @@ class Postr (UniqueApp):
                                title=title, desc=desc,
                                tags=tags)
             d.addCallback(self.add_to_set, set_id)
-            d.addCallbacks(self.upload, ErrorDialog.twisted_error)
+            d.addCallbacks(self.upload, self.twisted_error)
         elif pixbuf:
             # This isn't very nice, but might be the best way
             data = []
@@ -650,6 +653,6 @@ class Postr (UniqueApp):
                                 title=title, desc=desc,
                                 tags=tags)
             d.addCallback(self.add_to_set, set_id)
-            d.addCallbacks(self.upload, ErrorDialog.twisted_error)
+            d.addCallbacks(self.upload, self.twisted_error)
         else:
             print "No filename or pixbuf stored"
