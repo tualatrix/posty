@@ -47,7 +47,7 @@ except ImportError:
         def is_running(self):
             return False
 
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
 
 # Exif information about image orientation
 (ROTATED_0,
