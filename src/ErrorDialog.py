@@ -33,8 +33,3 @@ class ErrorDialog(gtk.MessageDialog):
     def set_from_exception (self, exception):
         # TODO: format nicer
         self.format_secondary_text (str (exception))
-
-def twisted_error (failure, parent=None):
-    dialog = ErrorDialog (parent)
-    dialog.set_from_failure (failure)
-    dialog.show_all ()

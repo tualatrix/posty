@@ -25,7 +25,8 @@ import gobject, gtk, gtk.glade
 from AboutDialog import AboutDialog
 from AuthenticationDialog import AuthenticationDialog
 from ProgressDialog import ProgressDialog
-import ErrorDialog, ImageStore, ImageList
+from ErrorDialog import ErrorDialog
+import ImageStore, ImageList
 
 from flickrest import Flickr
 from twisted.web.client import getPage
@@ -131,7 +132,9 @@ class Postr (UniqueApp):
         self.flickr.authenticate_1().addCallbacks(self.auth_open_url, self.twisted_error)
 
     def twisted_error(self, failure):
-        ErrorDialog.twisted_error (failure, self.window)
+        dialog = ErrorDialog (self.window)
+        dialog.set_from_failure (failure)
+        dialog.show_all ()
     
     def get_custom_handler(self, glade, function_name, widget_name, str1, str2, int1, int2):
         """libglade callback to create custom widgets."""
@@ -481,7 +484,7 @@ class Postr (UniqueApp):
         try:
             preview = gtk.gdk.pixbuf_new_from_file_at_size(filename, 512, 512)
         except Exception, e:
-            d = ErrorDialog.ErrorDialog(self.window)
+            d = ErrorDialog(self.window)
             d.set_from_exception(e)
             d.show_all()
             return
