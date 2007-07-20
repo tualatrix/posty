@@ -132,9 +132,9 @@ class Postr (UniqueApp):
         self.flickr.authenticate_1().addCallbacks(self.auth_open_url, self.twisted_error)
 
     def twisted_error(self, failure):
-        dialog = ErrorDialog (self.window)
-        dialog.set_from_failure (failure)
-        dialog.show_all ()
+        dialog = ErrorDialog(self.window)
+        dialog.set_from_failure(failure)
+        dialog.show()
     
     def get_custom_handler(self, glade, function_name, widget_name, str1, str2, int1, int2):
         """libglade callback to create custom widgets."""
