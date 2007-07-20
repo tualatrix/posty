@@ -25,7 +25,7 @@ class StatusBar(gtk.Statusbar):
         self.context = self.get_context_id("quota")
         self.flickr = flickr
         self.quota = None
-        self.to_upload = 0
+        self.to_upload = None
 
     def __update(self):
         self.pop(self.context)
@@ -33,20 +33,27 @@ class StatusBar(gtk.Statusbar):
             message = _("You have %(quota)s remaining this month (%(to_upload)s to upload)") % self.__dict__
         elif self.quota:
             message = _("You have %(quota)s remaining this month") % self.__dict__
-        else:
+        elif self.to_upload:
             message = _("%(to_upload)s to upload") % self.__dict__
+        else:
+            message = ""
         self.push(self.context, message)
     
     def update_quota(self):
+        """Call Flickr to get the current upload quota, and update the status bar."""
         def got_quota(rsp):
             self.quota = greek(int(rsp.find("user/bandwidth").get("remainingbytes")))
-            self.__update
+            self.__update()
         def error(failure):
             dialog = ErrorDialog(self.get_toplevel())
             dialog.set_from_failure(failure)
-            dialog.show_all()
+            dialog.show()
         self.flickr.people_getUploadStatus().addCallbacks(got_quota, error)
 
     def set_upload(self, to_upload):
-        self.to_upload = greek(to_upload)
+        """Set the amount of data to be uploaded, and update the status bar."""
+        if to_upload:
+            self.to_upload = greek(to_upload)
+        else:
+            self.to_upload = None
         self.__update()
