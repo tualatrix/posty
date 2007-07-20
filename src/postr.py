@@ -180,7 +180,7 @@ class Postr (UniqueApp):
             self.flickr.photosets_getList().addCallbacks(self.got_photosets, self.twisted_error)
 
     def update_statusbar(self):
-        # Update the amount to upload
+        """Recalculate how much is to be uploaded, and update the status bar."""
         size = 0
         for row in self.model:
             size += row[ImageStore.COL_SIZE]
