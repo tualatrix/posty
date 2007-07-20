@@ -246,9 +246,7 @@ class Postr (UniqueApp):
         # Add filters for all reasonable image types
         filters = gtk.FileFilter()
         filters.set_name(_("Images"))
-        filters.add_mime_type("image/png")
-        filters.add_mime_type("image/jpeg")
-        filters.add_mime_type("image/gif")
+        filters.add_mime_type("image/*")
         dialog.add_filter(filters)
         filters = gtk.FileFilter()
         filters.set_name(_("All Files"))
@@ -271,11 +269,9 @@ class Postr (UniqueApp):
         
         if dialog.run() == gtk.RESPONSE_OK:
             dialog.hide()
+            self.last_folder = dialog.get_current_folder()
             for f in dialog.get_filenames():
                 self.add_image_filename(f)
-            
-            self.last_folder = dialog.get_current_folder()
-
         dialog.destroy()
             
     def on_quit_activate(self, widget, *args):
@@ -482,7 +478,13 @@ class Postr (UniqueApp):
         # and IPTC parsers that are incremental.
         
         # First we load the image scaled to 512x512 for the preview.
-        preview = gtk.gdk.pixbuf_new_from_file_at_size(filename, 512, 512)
+        try:
+            preview = gtk.gdk.pixbuf_new_from_file_at_size(filename, 512, 512)
+        except Exception, e:
+            d = ErrorDialog.ErrorDialog(self.window)
+            d.set_from_exception(e)
+            d.show_all()
+            return
         
         # On a file that doesn't contain EXIF, like a PNG, this just returns an
         # empty set.
