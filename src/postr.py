@@ -299,12 +299,21 @@ class Postr (UniqueApp):
         """Callback from Edit->Delete."""
         selection = self.thumbview.get_selection()
         (model, items) = selection.get_selected_rows()
-
+        
         # Remove the items
         for path in items:
             self.model.remove(self.model.get_iter(path))
 
-        # TODO: select a new row
+        # Select a new row
+        try:
+            self.thumbview.set_cursor(self.model[items[0]].path)
+        except IndexError:
+            # TODO: It appears that the ability to simply do
+            # gtk_tree_path_previous() is missing in PyGTK.
+            path = list(items[-1])
+            if path[0]:
+                path[0] -= 1
+                self.thumbview.set_cursor(self.model[tuple(path)].path)
         
         self.update_statusbar()
         
