@@ -39,3 +39,12 @@ def get_glade_widgets (glade, object, widget_names):
         widget = glade.get_widget(name)
         setattr(object, name, widget)
 
+
+def get_thumb_size(srcw, srch, dstw, dsth):
+    """Scale scrw x srch to an dimensions with the same ratio that fits as
+    closely as possible to dstw x dsth."""
+    ratio = srcw/float(srch)
+    if srcw > srch:
+        return (dstw, int(dstw/ratio))
+    else:
+        return (int(dsth*ratio), dsth)

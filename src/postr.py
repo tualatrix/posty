@@ -392,7 +392,7 @@ class Postr (UniqueApp):
             # Clamp the size to 512
             if tw > 512: tw = 512
             if th > 512: th = 512
-            (tw, th) = self.get_thumb_size(simage.get_width(),
+            (tw, th) = get_thumb_size(simage.get_width(),
                                            simage.get_height(),
                                            tw, th)
 
@@ -442,16 +442,6 @@ class Postr (UniqueApp):
             self.thumbnail_image.set_from_pixbuf(None)
 
         [obj.handler_unblock(i) for obj,i in self.change_signals]
-
-    @staticmethod
-    def get_thumb_size(srcw, srch, dstw, dsth):
-        """Scale scrw x srch to an dimensions with the same ratio that fits as
-        closely as possible to dstw x dsth."""
-        ratio = srcw/float(srch)
-        if srcw > srch:
-            return (dstw, int(dstw/ratio))
-        else:
-            return (int(dsth*ratio), dsth)
 
     def get_image_info(self, title, description, tags):
         from xml.sax.saxutils import escape
@@ -512,7 +502,7 @@ class Postr (UniqueApp):
                 preview = preview.rotate_simple(gtk.gdk.PIXBUF_ROTATE_COUNTERCLOCKWISE)
         
         # Now scale the preview to a thumbnail
-        sizes = self.get_thumb_size(preview.get_width(), preview.get_height(), 64, 64)
+        sizes = get_thumb_size(preview.get_width(), preview.get_height(), 64, 64)
         thumb = preview.scale_simple(sizes[0], sizes[1], gtk.gdk.INTERP_BILINEAR)
 
         # Slurp data from the EXIF and IPTC tags
@@ -561,10 +551,10 @@ class Postr (UniqueApp):
             # TODO: don't scale up if the image is smaller than 512/512
             
             # Scale the pixbuf to a preview
-            sizes = self.get_thumb_size (pixbuf.get_width(), pixbuf.get_height(), 512, 512)
+            sizes = get_thumb_size (pixbuf.get_width(), pixbuf.get_height(), 512, 512)
             preview = pixbuf.scale_simple(sizes[0], sizes[1], gtk.gdk.INTERP_BILINEAR)
             # Now scale to a thumbnail
-            sizes = self.get_thumb_size (pixbuf.get_width(), pixbuf.get_height(), 64, 64)
+            sizes = get_thumb_size (pixbuf.get_width(), pixbuf.get_height(), 64, 64)
             thumb = pixbuf.scale_simple(sizes[0], sizes[1], gtk.gdk.INTERP_BILINEAR)
 
             # TODO: Either this or the matching code in add_image_filename() is
