@@ -295,8 +295,8 @@ class Postr (UniqueApp):
         import twisted.internet.reactor
         twisted.internet.reactor.stop()
     
-    def on_delete_activate(self, menuitem):
-        """Callback from Edit->Delete."""
+    def on_remove_activate(self, menuitem):
+        """Callback from File->Remove."""
         selection = self.thumbview.get_selection()
         (model, items) = selection.get_selected_rows()
         
