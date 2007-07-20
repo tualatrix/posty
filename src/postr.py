@@ -26,7 +26,7 @@ from AboutDialog import AboutDialog
 from AuthenticationDialog import AuthenticationDialog
 from ProgressDialog import ProgressDialog
 from ErrorDialog import ErrorDialog
-import ImageStore, ImageList
+import ImageStore, ImageList, StatusBar
 
 from flickrest import Flickr
 from twisted.web.client import getPage
@@ -146,6 +146,11 @@ class Postr (UniqueApp):
         view = ImageList.ImageList ()
         view.show()
         return view
+
+    def status_bar_new (self, *args):
+        bar = StatusBar.StatusBar(self.flickr)
+        bar.show()
+        return bar
     
     def on_message(self, app, command, command_data, startup_id, screen, workspace):
         """Callback from UniqueApp, when a message arrives."""
@@ -171,7 +176,7 @@ class Postr (UniqueApp):
         """Callback when the Flickr authentication completes."""
         if connected:
             self.upload_menu.set_sensitive(True)
-            self.flickr.people_getUploadStatus().addCallbacks(self.got_quota, self.twisted_error)
+            self.statusbar.update_quota()
             self.flickr.photosets_getList().addCallbacks(self.got_photosets, self.twisted_error)
 
     def update_statusbar(self):
@@ -179,21 +184,8 @@ class Postr (UniqueApp):
         size = 0
         for row in self.model:
             size += row[ImageStore.COL_SIZE]
-
-        context = self.statusbar.get_context_id("quota")
-        self.statusbar.pop(context)
-        if self.upload_quota:
-            self.statusbar.push(context, _("You have %s remaining this month (%s to upload)") %
-                                (greek(self.upload_quota), greek(size)))
-        else:
-            self.statusbar.push(context, _("%s to upload") % greek(size))
-
-    def got_quota(self, rsp):
-        """Callback for the getUploadStatus call, which updates the remaining
-        quota in the status bar."""
-        self.upload_quota = int(rsp.find("user/bandwidth").get("remainingbytes"))
-        self.update_statusbar();
-        
+        self.statusbar.set_upload(size)
+    
     def got_set_thumb(self, page, it):
         loader = gtk.gdk.PixbufLoader()
         loader.set_size (32, 32)

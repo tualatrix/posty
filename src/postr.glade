@@ -509,9 +509,12 @@
       </child>
 
       <child>
-	<widget class="GtkStatusbar" id="statusbar">
+	<widget class="Custom" id="statusbar">
 	  <property name="visible">True</property>
-	  <property name="has_resize_grip">True</property>
+	  <property name="creation_function">status_bar_new</property>
+	  <property name="int1">0</property>
+	  <property name="int2">0</property>
+	  <property name="last_modification_time">Fri, 20 Jul 2007 11:32:53 GMT</property>
 	</widget>
 	<packing>
 	  <property name="padding">0</property>
