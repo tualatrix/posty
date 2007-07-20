@@ -16,6 +16,7 @@
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
 import gtk
+from ErrorDialog import ErrorDialog
 from util import greek
 
 class StatusBar(gtk.Statusbar):
@@ -40,8 +41,11 @@ class StatusBar(gtk.Statusbar):
         def got_quota(rsp):
             self.quota = greek(int(rsp.find("user/bandwidth").get("remainingbytes")))
             self.__update
-        # TODO: error handler
-        self.flickr.people_getUploadStatus().addCallback(got_quota)
+        def error(failure):
+            dialog = ErrorDialog(self.get_toplevel())
+            dialog.set_from_failure(failure)
+            dialog.show_all()
+        self.flickr.people_getUploadStatus().addCallbacks(got_quota, error)
 
     def set_upload(self, to_upload):
         self.to_upload = greek(to_upload)
