@@ -627,7 +627,7 @@ class Postr (UniqueApp):
             self.progress_dialog.hide()
             self.model.clear()
             self.thumbview.set_sensitive(True)
-            self.flickr.people_getUploadStatus().addCallbacks(self.got_quota, self.twisted_error)
+            self.statusbar.update_quota()
             return
 
         it = self.model.get_iter_from_string(str(self.upload_index))
