@@ -616,7 +616,17 @@ class Postr (UniqueApp):
             self.flickr.photosets_addPhoto(photoset_id=set,
                                            photo_id=rsp.find("photoid").text)
             return rsp
-    
+
+    def upload_error(self, failure):
+        self.twisted_error(failure)
+        # TODO: nasty duplicate of the code in upload()
+        self.window.set_title(_("Flickr Uploader"))
+        self.upload_menu.set_sensitive(True)
+        self.uploading = False
+        self.progress_dialog.hide()
+        self.thumbview.set_sensitive(True)
+        self.statusbar.update_quota()
+
     def upload(self, response=None):
         """Upload worker function, called by the File->Upload callback.  As this
         calls itself in the deferred callback, it takes a response argument."""
@@ -630,6 +640,8 @@ class Postr (UniqueApp):
             self.statusbar.update_quota()
             return
 
+        # TODO: remove completed uploads
+        
         it = self.model.get_iter_from_string(str(self.upload_index))
         (filename, thumb, pixbuf, title, desc, tags, set_it) = self.model.get(it,
                                                                               ImageStore.COL_FILENAME,
@@ -652,7 +664,7 @@ class Postr (UniqueApp):
                                title=title, desc=desc,
                                tags=tags)
             d.addCallback(self.add_to_set, set_id)
-            d.addCallbacks(self.upload, self.twisted_error)
+            d.addCallbacks(self.upload, self.upload_error)
         elif pixbuf:
             # This isn't very nice, but might be the best way
             data = []
@@ -661,6 +673,6 @@ class Postr (UniqueApp):
                                 title=title, desc=desc,
                                 tags=tags)
             d.addCallback(self.add_to_set, set_id)
-            d.addCallbacks(self.upload, self.twisted_error)
+            d.addCallbacks(self.upload, self.upload_error)
         else:
             print "No filename or pixbuf stored"
