@@ -98,6 +98,7 @@ class Postr (UniqueApp):
         # last opened folder
         self.last_folder = None
         self.upload_quota = None
+        self.current_upload_it = None
         
         self.change_signals = []
         self.change_signals.append((self.title_entry, self.title_entry.connect('changed', self.on_field_changed, ImageStore.COL_TITLE)))
@@ -629,19 +630,22 @@ class Postr (UniqueApp):
     def upload(self, response=None):
         """Upload worker function, called by the File->Upload callback.  As this
         calls itself in the deferred callback, it takes a response argument."""
-        if self.upload_index >= self.upload_count:
+
+        # Remove the uploaded image from the store
+        if self.current_upload_it:
+            self.model.remove(self.current_upload_it)
+            self.current_upload_it = None
+        
+        it = self.model.get_iter_first()
+        if it is None:
             self.window.set_title(_("Flickr Uploader"))
             self.upload_menu.set_sensitive(True)
             self.uploading = False
             self.progress_dialog.hide()
-            self.model.clear()
             self.thumbview.set_sensitive(True)
             self.statusbar.update_quota()
             return
 
-        # TODO: remove completed uploads
-        
-        it = self.model.get_iter_from_string(str(self.upload_index))
         (filename, thumb, pixbuf, title, desc, tags, set_it) = self.model.get(it,
                                                                               ImageStore.COL_FILENAME,
                                                                               ImageStore.COL_THUMBNAIL,
@@ -650,6 +654,7 @@ class Postr (UniqueApp):
                                                                               ImageStore.COL_DESCRIPTION,
                                                                               ImageStore.COL_TAGS,
                                                                               ImageStore.COL_SET)
+        # Lookup the set ID from the iterator
         if set_it:
             (set_id,) = self.sets.get (set_it, 0)
         else:
@@ -657,7 +662,8 @@ class Postr (UniqueApp):
         
         self.update_progress(filename, title, thumb)
         self.upload_index += 1
-
+        self.current_upload_it = it
+        
         if filename:
             d = self.flickr.upload(filename=filename,
                                title=title, desc=desc,
