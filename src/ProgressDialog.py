@@ -34,7 +34,7 @@ class ProgressDialog(gtk.Dialog):
         hbox.pack_start (self.thumbnail, False, False, 0)
 
         self.label = gtk.Label()
-        self.label.set_alignment (0.0, 0.5)
+        self.label.set_alignment (0.0, 0.0)
         hbox.pack_start (self.label, True, True, 0)
         
         self.progress = gtk.ProgressBar()
