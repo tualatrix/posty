@@ -94,11 +94,8 @@ class Postr (UniqueApp):
         selection.connect("changed", self.on_selection_changed)
 
         self.current_it = None
-        
-        # last opened folder
         self.last_folder = None
         self.upload_quota = None
-        self.current_upload_it = None
         
         self.change_signals = []
         self.change_signals.append((self.title_entry, self.title_entry.connect('changed', self.on_field_changed, ImageStore.COL_TITLE)))
@@ -124,7 +121,11 @@ class Postr (UniqueApp):
         
         # The upload progress dialog
         self.uploading = False
-        self.progress_dialog = ProgressDialog()
+        self.current_upload_it = None
+        self.cancel_upload = False
+        def cancel():
+            self.cancel_upload = True
+        self.progress_dialog = ProgressDialog(cancel)
         self.progress_dialog.set_transient_for(self.window)
         # Disable the Upload menu until the user has authenticated
         self.upload_menu.set_sensitive(False)
@@ -620,6 +621,7 @@ class Postr (UniqueApp):
     def upload_error(self, failure):
         self.twisted_error(failure)
         # TODO: nasty duplicate of the code in upload()
+        self.cancel_upload = False
         self.window.set_title(_("Flickr Uploader"))
         self.upload_menu.set_sensitive(True)
         self.uploading = False
@@ -637,7 +639,8 @@ class Postr (UniqueApp):
             self.current_upload_it = None
         
         it = self.model.get_iter_first()
-        if it is None:
+        if self.cancel_upload or it is None:
+            self.cancel_upload = False
             self.window.set_title(_("Flickr Uploader"))
             self.upload_menu.set_sensitive(True)
             self.uploading = False

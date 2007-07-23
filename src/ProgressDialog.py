@@ -18,11 +18,14 @@
 import gtk
 
 class ProgressDialog(gtk.Dialog):
-    def __init__(self):
+    def __init__(self, cancel_cb):
         gtk.Dialog.__init__(self, title="", flags=gtk.DIALOG_NO_SEPARATOR)
+        self.cancel_cb = cancel_cb
+        
         self.set_resizable(False)
         self.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
-
+        self.connect("response", self.on_response)
+        
         vbox = gtk.VBox(False, 8)
         vbox.set_border_width(8)
         self.vbox.add(vbox)
@@ -41,7 +44,11 @@ class ProgressDialog(gtk.Dialog):
         vbox.add(self.progress)
 
         vbox.show_all()
-        
+
+    def on_response(self, dialog, response):
+        if response == gtk.RESPONSE_CANCEL or response == gtk.RESPONSE_DELETE_EVENT:
+            self.cancel_cb()
+    
 if __name__ == "__main__":
     import gobject
     d = ProgressDialog()
