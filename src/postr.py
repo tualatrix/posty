@@ -612,10 +612,9 @@ class Postr (UniqueApp):
 
     def add_to_set(self, rsp, set):
         """Callback from the upload method to add the picture to a set."""
-        if set:
-            self.flickr.photosets_addPhoto(photoset_id=set,
-                                           photo_id=rsp.find("photoid").text)
-            return rsp
+        self.flickr.photosets_addPhoto(photoset_id=set,
+                                       photo_id=rsp.find("photoid").text)
+        return rsp
 
     def upload_error(self, failure):
         self.twisted_error(failure)
@@ -663,7 +662,8 @@ class Postr (UniqueApp):
             d = self.flickr.upload(filename=filename,
                                title=title, desc=desc,
                                tags=tags)
-            d.addCallback(self.add_to_set, set_id)
+            if set_id:
+                d.addCallback(self.add_to_set, set_id)
             d.addCallbacks(self.upload, self.upload_error)
         elif pixbuf:
             # This isn't very nice, but might be the best way
@@ -672,7 +672,8 @@ class Postr (UniqueApp):
             d = self.flickr.upload(imageData=''.join(data),
                                 title=title, desc=desc,
                                 tags=tags)
-            d.addCallback(self.add_to_set, set_id)
+            if set_id:
+                d.addCallback(self.add_to_set, set_id)
             d.addCallbacks(self.upload, self.upload_error)
         else:
             print "No filename or pixbuf stored"
