@@ -5,7 +5,8 @@ Upload progress bar needs work:
 - Cancel
 - A real progress bar instead of activity
 
-Let user add photos to sets and groups
+Let user add photos to multiple sets and groups.  Custom combo, when popped down
+shows textual list of selected items, when opened shows a menu with check boxes.
 
 Set privacy options
 
