@@ -2,9 +2,10 @@
 
 from distutils.core import setup
 from glob import glob
+from src.version import __version__
 
 setup(name='Postr',
-      version='0.8',
+      version=__version__,
       description='Flickr Uploader',
       author='Ross Burton',
       author_email='ross@burtonini.com',

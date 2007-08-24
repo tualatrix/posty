@@ -16,6 +16,7 @@
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
 import gtk
+from version import __version__
 
 class AboutDialog(gtk.AboutDialog):
     def __init__(self):
@@ -25,6 +26,7 @@ class AboutDialog(gtk.AboutDialog):
         self.set_authors(('Ross Burton <ross@burtonini.com>',))
         self.set_website('http://burtonini.com/')
         self.set_logo_icon_name('postr')
+        self.set_version (__version__)
 
 
 if __name__ == "__main__":
