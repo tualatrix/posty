@@ -517,7 +517,10 @@ class Postr (UniqueApp):
                     value = data[tag]
                     if isinstance (value, list):
                         return ' '.join(map (lambda s: '"' + s + '"', value))
-                    return value
+                    elif not isinstance (value, str):
+                        value = str(value)
+                    if value:
+                        return value
             return default
         
         title = slurp(title_tags, os.path.splitext(os.path.basename(filename))[0])
