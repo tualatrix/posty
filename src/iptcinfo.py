@@ -927,7 +927,8 @@ class IPTCInfo(object):
       try: value = unicode(value, encoding=self.inp_charset, errors='strict')
       except:
         self.log('Data "%s" is not in encoding %s!' % (value, self.inp_charset))
-        value = unicode(value, encoding=self.inp_charset, errors='replace')
+        #value = unicode(value, encoding=self.inp_charset, errors='replace')
+        value = unicode(value, encoding="iso-8859-1", errors='replace')
 
       # try to extract first into _listdata (keywords, categories)
       # and, if unsuccessful, into _data. Tags which are not in the
