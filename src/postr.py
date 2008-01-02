@@ -70,6 +70,7 @@ class Postr (UniqueApp):
         get_glade_widgets (glade, self,
                            ("window",
                             "upload_menu",
+                            "upload_button",
                             "statusbar",
                             "thumbnail_image",
                             "title_entry",
@@ -129,6 +130,7 @@ class Postr (UniqueApp):
         self.progress_dialog.set_transient_for(self.window)
         # Disable the Upload menu until the user has authenticated
         self.upload_menu.set_sensitive(False)
+        self.upload_button.set_sensitive(False)
         
         # Connect to flickr, go go go
         self.flickr.authenticate_1().addCallbacks(self.auth_open_url, self.twisted_error)
@@ -177,7 +179,9 @@ class Postr (UniqueApp):
     def connected(self, connected):
         """Callback when the Flickr authentication completes."""
         if connected:
+            # TODO: only set sensitive if there are images to upload
             self.upload_menu.set_sensitive(True)
+            self.upload_button.set_sensitive(True)
             self.statusbar.update_quota()
             self.flickr.photosets_getList().addCallbacks(self.got_photosets, self.twisted_error)
 
@@ -341,7 +345,8 @@ class Postr (UniqueApp):
             print "Upload should be disabled, no photos"
             return
 
-        menuitem.set_sensitive(False)
+        self.upload_menu.set_sensitive(False)
+        self.upload_button.set_sensitive(False)
         self.uploading = True
         self.thumbview.set_sensitive(False)
         self.progress_dialog.show()
@@ -627,6 +632,7 @@ class Postr (UniqueApp):
         self.cancel_upload = False
         self.window.set_title(_("Flickr Uploader"))
         self.upload_menu.set_sensitive(True)
+        self.upload_button.set_sensitive(True)
         self.uploading = False
         self.progress_dialog.hide()
         self.thumbview.set_sensitive(True)
@@ -646,6 +652,7 @@ class Postr (UniqueApp):
             self.cancel_upload = False
             self.window.set_title(_("Flickr Uploader"))
             self.upload_menu.set_sensitive(True)
+            self.upload_button.set_sensitive(True)
             self.uploading = False
             self.progress_dialog.hide()
             self.thumbview.set_sensitive(True)
