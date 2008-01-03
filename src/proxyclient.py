@@ -396,11 +396,12 @@ def getPage(url, contextFactory=None, proxy=None, *args, **kwargs):
 
     See HTTPClientFactory to see what extra args can be passed.
     """
-    scheme, host, port, path = _parse(url)
     if proxy:
-        host, port = proxy.split(':')
-        port = int(port)
+        scheme, host, port, path = _parse(proxy)
         kwargs['proxy'] = proxy
+    else:
+        scheme, host, port, path = _parse(url)
+    
     factory = HTTPClientFactory(url, *args, **kwargs)
     if scheme == 'https':
         from twisted.internet import ssl
