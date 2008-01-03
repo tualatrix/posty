@@ -50,6 +50,10 @@ class Flickr:
         self.perms = perms
         self.token = None
         self.logger = logging.getLogger('flickrest')
+        self.set_proxy(os.environ.get("http_proxy", None))
+    
+    def set_proxy(self, proxy):
+        self.proxy = proxy
     
     def __repr__(self):
         return "<FlickREST>"
@@ -80,7 +84,7 @@ class Flickr:
         kwargs["method"] = method
         self.__sign(kwargs)
         self.logger.info("Calling %s" % method)
-        return client.getPage(Flickr.endpoint, method="POST",
+        return client.getPage(Flickr.endpoint, proxy=self.proxy, method="POST",
                               headers={"Content-Type": "application/x-www-form-urlencoded"},
                               postdata=urllib.urlencode(kwargs))
     
@@ -163,7 +167,8 @@ class Flickr:
             }
 
         self.logger.info("Calling upload")
-        return client.getPage("http://api.flickr.com/services/upload/", method="POST",
+        return client.getPage("http://api.flickr.com/services/upload/",
+                              proxy=self.proxy, method="POST",
                               headers=headers, postdata=form).addCallback(self.__cb, "upload")
 
     def authenticate_2(self, state):
