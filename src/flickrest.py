@@ -18,7 +18,8 @@
 import logging, md5, os, mimetools, urllib
 from twisted.internet import defer
 from twisted.python.failure import Failure
-from twisted.web import client
+import proxyclient as client
+
 try:
     from xml.etree import ElementTree
 except ImportError:
