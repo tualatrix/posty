@@ -53,6 +53,9 @@ class Flickr:
         self.set_proxy(os.environ.get("http_proxy", None))
     
     def set_proxy(self, proxy):
+        # TODO: change proxyclient to take URLs, and remove this crap
+        if proxy and proxy.startswith("http://"):
+            proxy = proxy[7:]
         self.proxy = proxy
     
     def __repr__(self):
