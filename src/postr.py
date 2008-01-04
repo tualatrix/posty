@@ -493,6 +493,14 @@ class Postr (UniqueApp):
         and drop callbacks."""
         # TODO: MIME type check
 
+        # Check the file size
+        filesize = os.path.getsize(filename)
+        if filesize > 10 * 1024 * 1024:
+            d = ErrorDialog(self.window)
+            d.set_from_string("Image %s is too large, images must be no larger than 10MB in size." % filename)
+            d.show_all()
+            return
+        
         # TODO: we open the file three times now, which is madness, especially
         # if gnome-vfs is used to read remote files.  Need to find/write EXIF
         # and IPTC parsers that are incremental.
@@ -562,7 +570,7 @@ class Postr (UniqueApp):
         
         self.model.set(self.model.append(),
                        ImageStore.COL_FILENAME, filename,
-                       ImageStore.COL_SIZE, os.path.getsize(filename),
+                       ImageStore.COL_SIZE, filesize,
                        ImageStore.COL_IMAGE, None,
                        ImageStore.COL_PREVIEW, preview,
                        ImageStore.COL_THUMBNAIL, thumb,
