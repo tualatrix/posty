@@ -20,7 +20,7 @@ from urlparse import urlparse
 from os.path import basename
 
 import pygtk; pygtk.require ("2.0")
-import gobject, gtk, gtk.glade
+import gobject, gtk, gtk.glade, gconf
 
 from AboutDialog import AboutDialog
 from AuthenticationDialog import AuthenticationDialog
@@ -131,6 +131,12 @@ class Postr (UniqueApp):
         # Disable the Upload menu until the user has authenticated
         self.upload_menu.set_sensitive(False)
         self.upload_button.set_sensitive(False)
+
+        # Update the proxy configuration
+        client = gconf.client_get_default()
+        client.add_dir("/system/http_proxy", gconf.CLIENT_PRELOAD_RECURSIVE)
+        client.notify_add("/system/http_proxy", self.proxy_changed)
+        self.proxy_changed(client, 0, None, None)
         
         # Connect to flickr, go go go
         self.flickr.authenticate_1().addCallbacks(self.auth_open_url, self.twisted_error)
@@ -139,6 +145,28 @@ class Postr (UniqueApp):
         dialog = ErrorDialog(self.window)
         dialog.set_from_failure(failure)
         dialog.show()
+
+    def proxy_changed(self, client, cnxn_id, entry, something):
+        if client.get_bool("/system/http_proxy/use_http_proxy"):
+            host = client.get_string("/system/http_proxy/host")
+            port = client.get_int("/system/http_proxy/port")
+            if host is None or host == "" or port == 0:
+                self.flickr.set_proxy(None)
+                return
+            
+            if client.get_bool("/system/http_proxy/use_authentication"):
+                user = client.get_string("/system/http_proxy/authentication_user")
+                password = client.get_string("/system/http_proxy/authentication_password")
+                if user and user != "":
+                    url = "http://%s:%s@%s:%d" % (user, password, host, port)
+                else:
+                    url = "http://%s:%d" % (host, port)
+            else:
+                url = "http://%s:%d" % (host, port)
+
+            self.flickr.set_proxy(url)
+        else:
+            self.flickr.set_proxy(None)
     
     def get_custom_handler(self, glade, function_name, widget_name, str1, str2, int1, int2):
         """libglade callback to create custom widgets."""
