@@ -33,3 +33,7 @@ class ErrorDialog(gtk.MessageDialog):
     def set_from_exception (self, exception):
         # TODO: format nicer
         self.format_secondary_text (str (exception))
+
+    def set_from_string(self, message):
+        # TODO: format nicer
+        self.format_secondary_text (message)
