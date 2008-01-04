@@ -47,7 +47,7 @@ class StatusBar(gtk.Statusbar):
         def error(failure):
             dialog = ErrorDialog(self.get_toplevel())
             dialog.set_from_failure(failure)
-            dialog.show()
+            dialog.show_all()
         self.flickr.people_getUploadStatus().addCallbacks(got_quota, error)
 
     def set_upload(self, to_upload):

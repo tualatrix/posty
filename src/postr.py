@@ -144,7 +144,7 @@ class Postr (UniqueApp):
     def twisted_error(self, failure):
         dialog = ErrorDialog(self.window)
         dialog.set_from_failure(failure)
-        dialog.show()
+        dialog.show_all()
 
     def proxy_changed(self, client, cnxn_id, entry, something):
         if client.get_bool("/system/http_proxy/use_http_proxy"):
