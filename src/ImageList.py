@@ -51,7 +51,7 @@ class ImageList(gtk.TreeView):
 
         # Setup the drag and drop
         self.drag_dest_set (gtk.DEST_DEFAULT_ALL, (), gtk.gdk.ACTION_COPY)
-        targets = ()
+        targets = self.drag_dest_get_target_list()
         targets = gtk.target_list_add_image_targets (targets, DRAG_IMAGE, False)
         targets = gtk.target_list_add_uri_targets (targets, DRAG_URI)
         self.drag_dest_set_target_list (targets)
