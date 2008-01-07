@@ -74,7 +74,7 @@ class Postr (UniqueApp):
                             "statusbar",
                             "thumbnail_image",
                             "title_entry",
-                            "desc_entry",
+                            "desc_view",
                             "tags_entry",
                             "set_combo",
                             "thumbview")
@@ -102,11 +102,11 @@ class Postr (UniqueApp):
         
         self.change_signals = []
         self.change_signals.append((self.title_entry, self.title_entry.connect('changed', self.on_field_changed, ImageStore.COL_TITLE)))
-        self.change_signals.append((self.desc_entry, self.desc_entry.connect('changed', self.on_field_changed, ImageStore.COL_DESCRIPTION)))
+        self.change_signals.append((self.desc_view.get_buffer(), self.desc_view.get_buffer().connect('changed', self.on_field_changed, ImageStore.COL_DESCRIPTION)))
         self.change_signals.append((self.tags_entry, self.tags_entry.connect('changed', self.on_field_changed, ImageStore.COL_TAGS)))
         self.thumbnail_image.connect('size-allocate', self.update_thumbnail)
         self.old_thumb_allocation = None
-    
+
         # The set selector combo
         self.sets = gtk.ListStore (gobject.TYPE_STRING, # ID
                                    gobject.TYPE_STRING, # Name
@@ -240,13 +240,15 @@ class Postr (UniqueApp):
             url = "http://static.flickr.com/%s/%s_%s%s.jpg" % (photoset.get("server"), photoset.get("primary"), photoset.get("secret"), "_s")
             getPage (url).addCallback (self.got_set_thumb, it).addErrback(self.twisted_error)
     
-    def on_field_changed(self, entry, column):
+    def on_field_changed(self, widget, column):
         """Callback when the entry fields are changed."""
+        text = widget.get_property("text")
+        
         selection = self.thumbview.get_selection()
         (model, items) = selection.get_selected_rows()
         for path in items:
             it = self.model.get_iter(path)
-            self.model.set_value (it, column, entry.get_text())
+            self.model.set_value (it, column, text)
             (title, desc, tags) = self.model.get(it,
                                                  ImageStore.COL_TITLE,
                                                  ImageStore.COL_DESCRIPTION,
@@ -435,10 +437,16 @@ class Postr (UniqueApp):
         
         def enable_field(field, text):
             field.set_sensitive(True)
-            field.set_text(text)
+            if isinstance(field, gtk.Entry):
+                field.set_text(text)
+            elif isinstance(field, gtk.TextView):
+                field.get_buffer().set_text (text)
         def disable_field(field):
             field.set_sensitive(False)
-            field.set_text("")
+            if isinstance(field, gtk.Entry):
+                field.set_text("")
+            elif isinstance(field, gtk.TextView):
+                field.get_buffer().set_text ("")
 
         (model, items) = selection.get_selected_rows()
         
@@ -452,7 +460,7 @@ class Postr (UniqueApp):
                                                       ImageStore.COL_SET)
 
             enable_field(self.title_entry, title)
-            enable_field(self.desc_entry, desc)
+            enable_field(self.desc_view, desc)
             enable_field(self.tags_entry, tags)
             self.set_combo.set_sensitive(True)
             if (set_it):
@@ -463,7 +471,7 @@ class Postr (UniqueApp):
         else:
             self.current_it = None
             disable_field(self.title_entry)
-            disable_field(self.desc_entry)
+            disable_field(self.desc_view)
             disable_field(self.tags_entry)
             self.set_combo.set_sensitive(False)
             self.set_combo.set_active(-1)
