@@ -97,6 +97,8 @@ class Postr (UniqueApp):
         self.current_it = None
         self.last_folder = None
         self.upload_quota = None
+
+        self.thumbnail_image.clear()
         
         self.change_signals = []
         self.change_signals.append((self.title_entry, self.title_entry.connect('changed', self.on_field_changed, ImageStore.COL_TITLE)))
