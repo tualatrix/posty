@@ -688,9 +688,7 @@ class Postr (UniqueApp):
                                        photo_id=rsp.find("photoid").text)
         return rsp
 
-    def upload_error(self, failure):
-        self.twisted_error(failure)
-        # TODO: nasty duplicate of the code in upload()
+    def upload_done(self):
         self.cancel_upload = False
         self.window.set_title(_("Flickr Uploader"))
         self.upload_menu.set_sensitive(True)
@@ -700,6 +698,10 @@ class Postr (UniqueApp):
         self.thumbview.set_sensitive(True)
         self.statusbar.update_quota()
 
+    def upload_error(self, failure):
+        self.twisted_error(failure)
+        self.upload_done()
+        
     def upload(self, response=None):
         """Upload worker function, called by the File->Upload callback.  As this
         calls itself in the deferred callback, it takes a response argument."""
@@ -711,14 +713,7 @@ class Postr (UniqueApp):
         
         it = self.model.get_iter_first()
         if self.cancel_upload or it is None:
-            self.cancel_upload = False
-            self.window.set_title(_("Flickr Uploader"))
-            self.upload_menu.set_sensitive(True)
-            self.upload_button.set_sensitive(True)
-            self.uploading = False
-            self.progress_dialog.hide()
-            self.thumbview.set_sensitive(True)
-            self.statusbar.update_quota()
+            self.upload_done()
             return
 
         (filename, thumb, pixbuf, title, desc, tags, set_it) = self.model.get(it,
