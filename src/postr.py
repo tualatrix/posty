@@ -222,7 +222,6 @@ class Postr (UniqueApp):
         """Callback when the Flickr authentication completes."""
         self.is_connected = connected
         if connected:
-            # TODO: only set sensitive if there are images to upload
             self.update_upload()
             self.statusbar.update_quota()
             self.flickr.photosets_getList().addCallbacks(self.got_photosets, self.twisted_error)
@@ -623,9 +622,8 @@ class Postr (UniqueApp):
             sizes = get_thumb_size (pixbuf.get_width(), pixbuf.get_height(), 64, 64)
             thumb = pixbuf.scale_simple(sizes[0], sizes[1], gtk.gdk.INTERP_BILINEAR)
 
-            # TODO: Either this or the matching code in add_image_filename() is
-            # wrong. Does the Flickr quota work on compressed image size, or raw
-            # image data size?
+            # TODO: This is wrong, and should generate a PNG here and use the
+            # size of the PNG
             size = pixbuf.get_width() * pixbuf.get_height() * pixbuf.get_n_channels()
             
             self.model.set(self.model.append(),
