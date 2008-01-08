@@ -70,6 +70,7 @@ class Flickr:
         token = self.__getTokenFile()
         if os.path.exists(token):
             os.remove(token)
+        self.token = None
     
     def __sign(self, kwargs):
         kwargs['api_key'] = self.api_key
@@ -190,6 +191,17 @@ class Flickr:
             return True
         return self.auth_getToken(frob=state['frob']).addCallback(gotToken)
 
+    def __get_frob(self):
+        """Make the getFrob() call."""
+        def gotFrob(xml):
+            frob = xml.find("frob").text
+            keys = { 'perms': self.perms,
+                     'frob': frob }
+            self.__sign(keys)
+            url = "http://flickr.com/services/auth/?api_key=%(api_key)s&perms=%(perms)s&frob=%(frob)s&api_sig=%(api_sig)s" % keys
+            return {'url': url, 'frob': frob}
+        return self.auth_getFrob().addCallback(gotFrob)
+
     def authenticate_1(self):
         """Attempts to log in to Flickr. The return value is a Twisted Deferred
         object that callbacks when the first part of the authentication is
@@ -205,20 +217,19 @@ class Flickr:
             try:
                 e = ElementTree.parse(filename).getroot()
                 self.token = e.find("auth/token").text
-                return defer.succeed(None)
+                def reply(xml):
+                    return defer.succeed(None)
+                def failed(failure):
+                    # If checkToken() failed, we need to re-authenticate
+                    self.clear_cached()
+                    return self.__get_frob()
+                return self.auth_checkToken().addCallbacks(reply, failed)
             except:
                 # TODO: print the exception to stderr?
                 pass
-        
-        def gotFrob(xml):
-            frob = xml.find("frob").text
-            keys = { 'perms': self.perms,
-                     'frob': frob }
-            self.__sign(keys)
-            url = "http://flickr.com/services/auth/?api_key=%(api_key)s&perms=%(perms)s&frob=%(frob)s&api_sig=%(api_sig)s" % keys
-            return {'url': url, 'frob': frob}
-        return self.auth_getFrob().addCallback(gotFrob)
-
+            
+        return self.__get_frob()
+    
     @staticmethod
     def get_photo_url(photo, size=SIZE_MEDIUM):
         if photo is None:
