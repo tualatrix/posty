@@ -37,6 +37,7 @@ def get_glade_widgets (glade, object, widget_names):
     and set them as attributes on object."""
     for name in widget_names:
         widget = glade.get_widget(name)
+        if widget is None: raise "Cannot find widget %s" % name
         setattr(object, name, widget)
 
 
