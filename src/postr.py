@@ -424,11 +424,8 @@ class Postr (UniqueApp):
 
             self.old_thumb_allocation = allocation
 
-            (image, simage, filename) = self.model.get(self.current_it,
-                                                       ImageStore.COL_IMAGE,
-                                                       ImageStore.COL_PREVIEW,
-                                                       ImageStore.COL_FILENAME)
-
+            (simage,) = self.model.get(self.current_it, ImageStore.COL_PREVIEW)
+            
             tw = allocation.width
             th = allocation.height
             # Clamp the size to 512
