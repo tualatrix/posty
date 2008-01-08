@@ -265,11 +265,6 @@ class Postr (UniqueApp):
         for path in items:
             it = self.model.get_iter(path)
             self.model.set_value (it, column, text)
-            (title, desc, tags) = self.model.get(it,
-                                                 ImageStore.COL_TITLE,
-                                                 ImageStore.COL_DESCRIPTION,
-                                                 ImageStore.COL_TAGS)
-            self.model.set_value (it, ImageStore.COL_INFO, self.get_image_info(title, desc, tags))
 
     def on_set_combo_changed(self, combo):
         """Callback when the set combo is changed."""
@@ -496,24 +491,6 @@ class Postr (UniqueApp):
 
         [obj.handler_unblock(i) for obj,i in self.change_signals]
 
-    def get_image_info(self, title, description, tags):
-        from xml.sax.saxutils import escape
-        if title:
-            info_title = title
-        else:
-            info_title = _("No title")
-
-        if description:
-            info_desc = description
-        else:
-            info_desc = _("No description")
-
-        s = "<b><big>%s</big></b>\n%s\n" % (escape (info_title), escape (info_desc))
-        if tags:
-            colour = self.window.style.text[gtk.STATE_INSENSITIVE].pixel
-            s = s + "<span color='#%X'>%s</span>" % (colour, escape (tags))
-        return s
-    
     def add_image_filename(self, filename):
         """Add a file to the image list.  Called by the File->Add Photo and drag
         and drop callbacks."""
@@ -602,8 +579,7 @@ class Postr (UniqueApp):
                        ImageStore.COL_THUMBNAIL, thumb,
                        ImageStore.COL_TITLE, title,
                        ImageStore.COL_DESCRIPTION, desc,
-                       ImageStore.COL_TAGS, tags,
-                       ImageStore.COL_INFO, self.get_image_info(title, desc, tags))
+                       ImageStore.COL_TAGS, tags)
 
         self.update_statusbar()
         self.update_upload()
@@ -634,8 +610,7 @@ class Postr (UniqueApp):
                            ImageStore.COL_THUMBNAIL, thumb,
                            ImageStore.COL_TITLE, "",
                            ImageStore.COL_DESCRIPTION, "",
-                           ImageStore.COL_TAGS, "",
-                           ImageStore.COL_INFO, self.get_image_info(None, None, None))
+                           ImageStore.COL_TAGS, "")
         
         elif targetType == ImageList.DRAG_URI:
             for uri in selection.get_uris():
