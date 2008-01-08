@@ -57,6 +57,8 @@ class Postr (UniqueApp):
             self.connect("message", self.on_message)
         except AttributeError:
             pass
+
+        self.is_connected = False
         
         self.flickr = Flickr(api_key="c53cebd15ed936073134cec858036f1d",
                              secret="7db1b8ef68979779",
@@ -88,6 +90,9 @@ class Postr (UniqueApp):
             pass
         
         self.model = ImageStore.ImageStore ()
+        self.model.connect("row-inserted", self.on_model_changed)
+        self.model.connect("row-deleted", self.on_model_changed)
+        
         self.thumbview.set_model(self.model)
         self.thumbview.connect("drag_data_received", self.on_drag_data_received)
 
@@ -131,8 +136,7 @@ class Postr (UniqueApp):
         self.progress_dialog = ProgressDialog(cancel)
         self.progress_dialog.set_transient_for(self.window)
         # Disable the Upload menu until the user has authenticated
-        self.upload_menu.set_sensitive(False)
-        self.upload_button.set_sensitive(False)
+        self.update_upload()
 
         # Update the proxy configuration
         client = gconf.client_get_default()
@@ -142,8 +146,10 @@ class Postr (UniqueApp):
         
         # Connect to flickr, go go go
         self.flickr.authenticate_1().addCallbacks(self.auth_open_url, self.twisted_error)
-
+    
     def twisted_error(self, failure):
+        self.update_upload()
+        
         dialog = ErrorDialog(self.window)
         dialog.set_from_failure(failure)
         dialog.show_all()
@@ -194,11 +200,17 @@ class Postr (UniqueApp):
         else:
             return gtkunique.RESPONSE_ABORT
 
+    def on_model_changed(self, *args):
+        # We don't care about the arguments, because we just want to know when
+        # the model was changed, not what was changed.
+        self.update_upload()
+    
     def auth_open_url(self, state):
         """Callback from midway through Flickr authentication.  At this point we
         either have cached tokens so can carry on, or need to open a web browser
         to authenticate the user."""
         if state is None:
+            # TODO: if cached tokens, verify the token
             self.connected(True)
         else:
             dialog = AuthenticationDialog(self.window, state['url'])
@@ -208,12 +220,17 @@ class Postr (UniqueApp):
     
     def connected(self, connected):
         """Callback when the Flickr authentication completes."""
+        self.is_connected = connected
         if connected:
             # TODO: only set sensitive if there are images to upload
-            self.upload_menu.set_sensitive(True)
-            self.upload_button.set_sensitive(True)
+            self.update_upload()
             self.statusbar.update_quota()
             self.flickr.photosets_getList().addCallbacks(self.got_photosets, self.twisted_error)
+
+    def update_upload(self):
+        connected = self.is_connected and self.model.iter_n_children(None) > 0
+        self.upload_menu.set_sensitive(connected)
+        self.upload_button.set_sensitive(connected)
 
     def update_statusbar(self):
         """Recalculate how much is to be uploaded, and update the status bar."""
@@ -590,6 +607,7 @@ class Postr (UniqueApp):
                        ImageStore.COL_INFO, self.get_image_info(title, desc, tags))
 
         self.update_statusbar()
+        self.update_upload()
     
     def on_drag_data_received(self, widget, context, x, y, selection, targetType, timestamp):
         """Drag and drop callback when data is received."""
