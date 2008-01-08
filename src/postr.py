@@ -104,6 +104,7 @@ class Postr (UniqueApp):
         self.upload_quota = None
 
         self.thumbnail_image.clear()
+        self.thumbnail_image.set_size_request(1, 1)
         
         self.change_signals = []
         self.change_signals.append((self.title_entry, self.title_entry.connect('changed', self.on_field_changed, ImageStore.COL_TITLE)))
@@ -210,7 +211,6 @@ class Postr (UniqueApp):
         either have cached tokens so can carry on, or need to open a web browser
         to authenticate the user."""
         if state is None:
-            # TODO: if cached tokens, verify the token
             self.connected(True)
         else:
             dialog = AuthenticationDialog(self.window, state['url'])
