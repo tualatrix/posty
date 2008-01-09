@@ -15,6 +15,8 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
+import gtk
+
 def greek(size):
     """Take a quantity (like 1873627) and display it in a human-readable rounded
     form (like 1.8M)"""
@@ -32,13 +34,16 @@ def greek(size):
     return "%.1f%s" % (float(size)/factor, suffix)
 
 
+def get_widget_checked(glade, name):
+    widget = glade.get_widget(name)
+    if widget is None: raise "Cannot find widget %s" % name
+    return widget
+
 def get_glade_widgets (glade, object, widget_names):
     """Get the widgets in the list widget_names from the GladeXML object glade
     and set them as attributes on object."""
     for name in widget_names:
-        widget = glade.get_widget(name)
-        if widget is None: raise "Cannot find widget %s" % name
-        setattr(object, name, widget)
+        setattr(object, name, get_widget_checked(glade, name))
 
 
 def get_thumb_size(srcw, srch, dstw, dsth):
@@ -48,3 +53,8 @@ def get_thumb_size(srcw, srch, dstw, dsth):
     scaleh = dsth/float(srch)
     scale = min(scalew, scaleh)
     return (int(srcw * scale), int(srch * scale))
+
+def align_labels(glade, names):
+    group = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
+    widget = [group.add_widget(get_widget_checked(glade, name)) for name in names]
+    
