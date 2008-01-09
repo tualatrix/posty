@@ -35,6 +35,8 @@ def greek(size):
 
 
 def get_widget_checked(glade, name):
+    """Get widget name from glade, and if it doesn't exist raise an exception
+    instead of returning None."""
     widget = glade.get_widget(name)
     if widget is None: raise "Cannot find widget %s" % name
     return widget
@@ -55,6 +57,7 @@ def get_thumb_size(srcw, srch, dstw, dsth):
     return (int(srcw * scale), int(srch * scale))
 
 def align_labels(glade, names):
+    """Add the list of widgets identified by names in glade to a horizontal
+    sizegroup."""
     group = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
     widget = [group.add_widget(get_widget_checked(glade, name)) for name in names]
-    
