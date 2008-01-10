@@ -127,7 +127,9 @@ class Postr (UniqueApp):
         self.sets.set (self.sets.append(), 0, None, 1, "None")
         self.set_combo.set_model (self.sets)
         self.set_combo.set_active (-1)
-        
+
+        self.on_selection_changed(selection)
+
         renderer = gtk.CellRendererPixbuf()
         self.set_combo.pack_start (renderer, expand=False)
         self.set_combo.set_attributes(renderer, pixbuf=2)
