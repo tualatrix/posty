@@ -114,6 +114,8 @@ class Postr (UniqueApp):
         self.change_signals.append((self.title_entry, self.title_entry.connect('changed', self.on_field_changed, ImageStore.COL_TITLE)))
         self.change_signals.append((self.desc_view.get_buffer(), self.desc_view.get_buffer().connect('changed', self.on_field_changed, ImageStore.COL_DESCRIPTION)))
         self.change_signals.append((self.tags_entry, self.tags_entry.connect('changed', self.on_field_changed, ImageStore.COL_TAGS)))
+        self.change_signals.append((self.visible_check, self.visible_check.connect('toggled', self.on_field_changed, ImageStore.COL_VISIBLE)))
+        
         self.thumbnail_image.connect('size-allocate', self.update_thumbnail)
         self.old_thumb_allocation = None
 
@@ -267,13 +269,18 @@ class Postr (UniqueApp):
     
     def on_field_changed(self, widget, column):
         """Callback when the entry fields are changed."""
-        text = widget.get_property("text")
+        if isinstance(widget, gtk.Entry) or isinstance(widget, gtk.TextBuffer):
+            value = widget.get_property("text")
+        elif isinstance(widget, gtk.ToggleButton):
+            value = widget.get_active()
+        else:
+            raise "Unhandled widget type %s" % widget
         
         selection = self.thumbview.get_selection()
         (model, items) = selection.get_selected_rows()
         for path in items:
             it = self.model.get_iter(path)
-            self.model.set_value (it, column, text)
+            self.model.set_value (it, column, value)
 
     def on_set_combo_changed(self, combo):
         """Callback when the set combo is changed."""
@@ -452,33 +459,43 @@ class Postr (UniqueApp):
         preview."""
         [obj.handler_block(i) for obj,i in self.change_signals]
         
-        def enable_field(field, text):
+        def enable_field(field, value):
             field.set_sensitive(True)
             if isinstance(field, gtk.Entry):
-                field.set_text(text)
+                field.set_text(value)
             elif isinstance(field, gtk.TextView):
-                field.get_buffer().set_text (text)
+                field.get_buffer().set_text (value)
+            elif isinstance(field, gtk.ToggleButton):
+                field.set_active(value)
+            else:
+                raise "Unhandled widget type %s" % field
         def disable_field(field):
             field.set_sensitive(False)
             if isinstance(field, gtk.Entry):
                 field.set_text("")
             elif isinstance(field, gtk.TextView):
                 field.get_buffer().set_text ("")
+            elif isinstance(field, gtk.ToggleButton):
+                field.set_active(True)
+            else:
+                raise "Unhandled widget type %s" % field
 
         (model, items) = selection.get_selected_rows()
         
         if items:
             # TODO: do something clever with multiple selections
             self.current_it = self.model.get_iter(items[0])
-            (title, desc, tags, set_it) = self.model.get(self.current_it,
-                                                      ImageStore.COL_TITLE,
-                                                      ImageStore.COL_DESCRIPTION,
-                                                      ImageStore.COL_TAGS,
-                                                      ImageStore.COL_SET)
+            (title, desc, tags, set_it, visible) = self.model.get(self.current_it,
+                                                                  ImageStore.COL_TITLE,
+                                                                  ImageStore.COL_DESCRIPTION,
+                                                                  ImageStore.COL_TAGS,
+                                                                  ImageStore.COL_SET,
+                                                                  ImageStore.COL_VISIBLE)
 
             enable_field(self.title_entry, title)
             enable_field(self.desc_view, desc)
             enable_field(self.tags_entry, tags)
+            enable_field(self.visible_check, visible)
             self.set_combo.set_sensitive(True)
             if (set_it):
                 self.set_combo.set_active_iter(set_it)
@@ -492,6 +509,7 @@ class Postr (UniqueApp):
             disable_field(self.tags_entry)
             self.set_combo.set_sensitive(False)
             self.set_combo.set_active(-1)
+            disable_field(self.visible_check)
 
             self.thumbnail_image.set_from_pixbuf(None)
 
@@ -585,7 +603,8 @@ class Postr (UniqueApp):
                        ImageStore.COL_THUMBNAIL, thumb,
                        ImageStore.COL_TITLE, title,
                        ImageStore.COL_DESCRIPTION, desc,
-                       ImageStore.COL_TAGS, tags)
+                       ImageStore.COL_TAGS, tags,
+                       ImageStore.COL_VISIBLE, True)
 
         self.update_statusbar()
         self.update_upload()
@@ -616,7 +635,9 @@ class Postr (UniqueApp):
                            ImageStore.COL_THUMBNAIL, thumb,
                            ImageStore.COL_TITLE, "",
                            ImageStore.COL_DESCRIPTION, "",
-                           ImageStore.COL_TAGS, "")
+                           ImageStore.COL_TAGS, "",
+                           ImageStore.COL_VISIBLE, True)
+
         
         elif targetType == ImageList.DRAG_URI:
             for uri in selection.get_uris():
@@ -697,14 +718,15 @@ class Postr (UniqueApp):
             self.upload_done()
             return
 
-        (filename, thumb, pixbuf, title, desc, tags, set_it) = self.model.get(it,
-                                                                              ImageStore.COL_FILENAME,
-                                                                              ImageStore.COL_THUMBNAIL,
-                                                                              ImageStore.COL_IMAGE,
-                                                                              ImageStore.COL_TITLE,
-                                                                              ImageStore.COL_DESCRIPTION,
-                                                                              ImageStore.COL_TAGS,
-                                                                              ImageStore.COL_SET)
+        (filename, thumb, pixbuf, title, desc, tags, set_it, visible) = self.model.get(it,
+                                                                                       ImageStore.COL_FILENAME,
+                                                                                       ImageStore.COL_THUMBNAIL,
+                                                                                       ImageStore.COL_IMAGE,
+                                                                                       ImageStore.COL_TITLE,
+                                                                                       ImageStore.COL_DESCRIPTION,
+                                                                                       ImageStore.COL_TAGS,
+                                                                                       ImageStore.COL_SET,
+                                                                                       ImageStore.COL_VISIBLE)
         # Lookup the set ID from the iterator
         if set_it:
             (set_id,) = self.sets.get (set_it, 0)
@@ -718,7 +740,7 @@ class Postr (UniqueApp):
         if filename:
             d = self.flickr.upload(filename=filename,
                                title=title, desc=desc,
-                               tags=tags)
+                               tags=tags, search_hidden=not visible)
             if set_id:
                 d.addCallback(self.add_to_set, set_id)
             d.addCallbacks(self.upload, self.upload_error)
@@ -728,7 +750,7 @@ class Postr (UniqueApp):
             pixbuf.save_to_callback(lambda d: data.append(d), "png", {})
             d = self.flickr.upload(imageData=''.join(data),
                                 title=title, desc=desc,
-                                tags=tags)
+                                tags=tags, search_hidden=not visible)
             if set_id:
                 d.addCallback(self.add_to_set, set_id)
             d.addCallbacks(self.upload, self.upload_error)
