@@ -33,7 +33,9 @@ class SafetyCombo(gtk.ComboBox):
         self.pack_start(cell)
         self.add_attribute(cell, "text", 0)
 
-    def get_active_safety(self):
-        it = self.get_active_iter()
+    def get_safety_for_iter(self, it):
         if it is None: return None
         return self.model.get_value(it, 1)
+
+    def get_active_safety(self):
+        return self.get_safety_for_iter(self.get_active_iter())
