@@ -27,8 +27,9 @@ import gobject, gtk
  COL_DESCRIPTION, # The image description
  COL_TAGS, # A space deliminated list of tags for the image
  COL_SET, # An iterator point to the set to put the photo in
+ COL_PRIVACY, # Iterator containing privacy rules
  COL_VISIBLE # If the image is searchable
- ) = range (0, 10)
+ ) = range (0, 11)
 
 class ImageStore (gtk.ListStore):
     def __init__(self):
@@ -41,4 +42,5 @@ class ImageStore (gtk.ListStore):
                                gobject.TYPE_STRING, # COL_DESCRIPTION
                                gobject.TYPE_STRING, # COL_TAGS
                                gtk.TreeIter, # COL_SET
+                               gtk.TreeIter, # COL_PRIVACY
                                gobject.TYPE_BOOLEAN) # COL_VISIBLE
