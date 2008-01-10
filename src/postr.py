@@ -467,6 +467,12 @@ class Postr (UniqueApp):
                 field.get_buffer().set_text (value)
             elif isinstance(field, gtk.ToggleButton):
                 field.set_active(value)
+            elif isinstance(field, gtk.ComboBox):
+                if value:
+                    field.set_active_iter(value)
+                else:
+                    # This means the default value is always the first
+                    field.set_active(0)
             else:
                 raise "Unhandled widget type %s" % field
         def disable_field(field):
@@ -477,6 +483,8 @@ class Postr (UniqueApp):
                 field.get_buffer().set_text ("")
             elif isinstance(field, gtk.ToggleButton):
                 field.set_active(True)
+            elif isinstance(field, gtk.ComboBox):
+                field.set_active(-1)
             else:
                 raise "Unhandled widget type %s" % field
 
@@ -496,19 +504,14 @@ class Postr (UniqueApp):
             enable_field(self.desc_view, desc)
             enable_field(self.tags_entry, tags)
             enable_field(self.visible_check, visible)
-            self.set_combo.set_sensitive(True)
-            if (set_it):
-                self.set_combo.set_active_iter(set_it)
-            else:
-                self.set_combo.set_active(0)
+            enable_field(self.set_combo, set_it)
             self.update_thumbnail(self.thumbnail_image)
         else:
             self.current_it = None
             disable_field(self.title_entry)
             disable_field(self.desc_view)
             disable_field(self.tags_entry)
-            self.set_combo.set_sensitive(False)
-            self.set_combo.set_active(-1)
+            disable_field(self.set_combo)
             disable_field(self.visible_check)
 
             self.thumbnail_image.set_from_pixbuf(None)
