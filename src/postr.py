@@ -26,7 +26,7 @@ from AboutDialog import AboutDialog
 from AuthenticationDialog import AuthenticationDialog
 from ProgressDialog import ProgressDialog
 from ErrorDialog import ErrorDialog
-import ImageStore, ImageList, StatusBar
+import ImageStore, ImageList, StatusBar, PrivacyCombo, SafetyCombo
 
 from flickrest import Flickr
 from twisted.web.client import getPage
@@ -79,8 +79,12 @@ class Postr (UniqueApp):
                             "desc_view",
                             "tags_entry",
                             "set_combo",
+                            "privacy_combo",
+                            "safety_combo",
+                            "visible_check",
                             "thumbview")
                            )
+        align_labels(glade, ("title_label", "desc_label", "tags_label", "set_label", "privacy_label", "safety_label"))
         
         # Just for you, Daniel.
         try:
@@ -179,8 +183,13 @@ class Postr (UniqueApp):
     
     def get_custom_handler(self, glade, function_name, widget_name, str1, str2, int1, int2):
         """libglade callback to create custom widgets."""
-        handler = getattr(self, function_name)
-        return handler(str1, str2, int1, int2)
+        try:
+            handler = getattr(self, function_name)
+            return handler(str1, str2, int1, int2)
+        except:
+            widget = eval(function_name)
+            widget.show()
+            return widget
     
     def image_list_new (self, *args):
         """Custom widget creation function to make the image list."""
