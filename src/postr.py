@@ -755,8 +755,7 @@ class Postr (UniqueApp):
         if privacy_it:
             (is_public, is_family, is_friend) = self.privacy_combo.get_acls_for_iter(privacy_it)
         else:
-            is_public = True
-            is_family = is_friend = False
+            is_public = is_family = is_friend = None
 
         if safety_it:
             safety = self.safety_combo.get_safety_for_iter(safety_it)
