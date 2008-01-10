@@ -115,6 +115,7 @@ class Postr (UniqueApp):
         self.change_signals.append((self.desc_view.get_buffer(), self.desc_view.get_buffer().connect('changed', self.on_field_changed, ImageStore.COL_DESCRIPTION)))
         self.change_signals.append((self.tags_entry, self.tags_entry.connect('changed', self.on_field_changed, ImageStore.COL_TAGS)))
         self.change_signals.append((self.privacy_combo, self.privacy_combo.connect('changed', self.on_field_changed, ImageStore.COL_PRIVACY)))
+        self.change_signals.append((self.safety_combo, self.safety_combo.connect('changed', self.on_field_changed, ImageStore.COL_SAFETY)))
         self.change_signals.append((self.visible_check, self.visible_check.connect('toggled', self.on_field_changed, ImageStore.COL_VISIBLE)))
         
         self.thumbnail_image.connect('size-allocate', self.update_thumbnail)
@@ -499,19 +500,21 @@ class Postr (UniqueApp):
         if items:
             # TODO: do something clever with multiple selections
             self.current_it = self.model.get_iter(items[0])
-            (title, desc, tags, set_it, privacy_it, visible) = self.model.get(self.current_it,
-                                                                              ImageStore.COL_TITLE,
-                                                                              ImageStore.COL_DESCRIPTION,
-                                                                              ImageStore.COL_TAGS,
-                                                                              ImageStore.COL_SET,
-                                                                              ImageStore.COL_PRIVACY,
-                                                                              ImageStore.COL_VISIBLE)
-
+            (title, desc, tags, set_it, privacy_it, safety_it, visible) = self.model.get(self.current_it,
+                                                                                         ImageStore.COL_TITLE,
+                                                                                         ImageStore.COL_DESCRIPTION,
+                                                                                         ImageStore.COL_TAGS,
+                                                                                         ImageStore.COL_SET,
+                                                                                         ImageStore.COL_PRIVACY,
+                                                                                         ImageStore.COL_SAFETY,
+                                                                                         ImageStore.COL_VISIBLE)
+            
             enable_field(self.title_entry, title)
             enable_field(self.desc_view, desc)
             enable_field(self.tags_entry, tags)
             enable_field(self.set_combo, set_it)
             enable_field(self.privacy_combo, privacy_it)
+            enable_field(self.safety_combo, safety_it)
             enable_field(self.visible_check, visible)
             
             self.update_thumbnail(self.thumbnail_image)
@@ -522,6 +525,7 @@ class Postr (UniqueApp):
             disable_field(self.tags_entry)
             disable_field(self.set_combo)
             disable_field(self.privacy_combo)
+            disable_field(self.safety_combo)
             disable_field(self.visible_check)
 
             self.thumbnail_image.set_from_pixbuf(None)
@@ -731,7 +735,7 @@ class Postr (UniqueApp):
             self.upload_done()
             return
 
-        (filename, thumb, pixbuf, title, desc, tags, set_it, privacy_it, visible) = self.model.get(it,
+        (filename, thumb, pixbuf, title, desc, tags, set_it, privacy_it, safety_it, visible) = self.model.get(it,
                                                                                                    ImageStore.COL_FILENAME,
                                                                                                    ImageStore.COL_THUMBNAIL,
                                                                                                    ImageStore.COL_IMAGE,
@@ -740,6 +744,7 @@ class Postr (UniqueApp):
                                                                                                    ImageStore.COL_TAGS,
                                                                                                    ImageStore.COL_SET,
                                                                                                    ImageStore.COL_PRIVACY,
+                                                                                                   ImageStore.COL_SAFETY,
                                                                                                    ImageStore.COL_VISIBLE)
         # Lookup the set ID from the iterator
         if set_it:
@@ -752,7 +757,12 @@ class Postr (UniqueApp):
         else:
             is_public = True
             is_family = is_friend = False
-        
+
+        if safety_it:
+            safety = self.safety_combo.get_safety_for_iter(safety_it)
+        else:
+            safety = None
+
         self.update_progress(filename, title, thumb)
         self.upload_index += 1
         self.current_upload_it = it
@@ -760,7 +770,7 @@ class Postr (UniqueApp):
         if filename:
             d = self.flickr.upload(filename=filename,
                                    title=title, desc=desc,
-                                   tags=tags, search_hidden=not visible,
+                                   tags=tags, search_hidden=not visible, safety=safety,
                                    is_public=is_public, is_family=is_family, is_friend=is_friend)
             if set_id:
                 d.addCallback(self.add_to_set, set_id)
@@ -770,8 +780,8 @@ class Postr (UniqueApp):
             data = []
             pixbuf.save_to_callback(lambda d: data.append(d), "png", {})
             d = self.flickr.upload(imageData=''.join(data),
-                                   title=title, desc=desc,
-                                   tags=tags, search_hidden=not visible,
+                                   title=title, desc=desc, tags=tags,
+                                   search_hidden=not visible, safety=safety,
                                    is_public=is_public, is_family=is_family, is_friend=is_friend)
             if set_id:
                 d.addCallback(self.add_to_set, set_id)
