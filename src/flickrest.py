@@ -144,8 +144,8 @@ class Flickr:
     
     def upload(self, filename=None, imageData=None,
                title=None, desc=None, tags=None,
-               is_public=True, is_family=False, is_friend=False,
-               safety=None, search_hidden=False):
+               is_public=None, is_family=None, is_friend=None,
+               safety=None, search_hidden=None):
         # Sanity check the arguments
         if filename is None and imageData is None:
             raise ValueError("Need to pass either filename or imageData")
@@ -159,12 +159,16 @@ class Flickr:
             kwargs['description'] = desc
         if tags:
             kwargs['tags'] = tags
-        kwargs['is_public'] = is_public and 1 or 0
-        kwargs['is_family'] = is_family and 1 or 0
-        kwargs['is_friend'] = is_friend and 1 or 0
+        if is_public:
+            kwargs['is_public'] = is_public and 1 or 0
+        if is_family:
+            kwargs['is_family'] = is_family and 1 or 0
+        if is_friend:
+            kwargs['is_friend'] = is_friend and 1 or 0
         if safety:
             kwargs['safety_level'] = safety
-        kwargs['hidden'] = search_hidden and 2 or 1 # Why Flickr, why?
+        if search_hidden:
+            kwargs['hidden'] = search_hidden and 2 or 1 # Why Flickr, why?
         self.__sign(kwargs)
         
         if imageData:
