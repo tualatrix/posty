@@ -114,6 +114,7 @@ class Postr (UniqueApp):
         self.change_signals.append((self.title_entry, self.title_entry.connect('changed', self.on_field_changed, ImageStore.COL_TITLE)))
         self.change_signals.append((self.desc_view.get_buffer(), self.desc_view.get_buffer().connect('changed', self.on_field_changed, ImageStore.COL_DESCRIPTION)))
         self.change_signals.append((self.tags_entry, self.tags_entry.connect('changed', self.on_field_changed, ImageStore.COL_TAGS)))
+        self.change_signals.append((self.privacy_combo, self.privacy_combo.connect('changed', self.on_field_changed, ImageStore.COL_PRIVACY)))
         self.change_signals.append((self.visible_check, self.visible_check.connect('toggled', self.on_field_changed, ImageStore.COL_VISIBLE)))
         
         self.thumbnail_image.connect('size-allocate', self.update_thumbnail)
@@ -273,6 +274,8 @@ class Postr (UniqueApp):
             value = widget.get_property("text")
         elif isinstance(widget, gtk.ToggleButton):
             value = widget.get_active()
+        elif isinstance(widget, gtk.ComboBox):
+            value = widget.get_active_iter()
         else:
             raise "Unhandled widget type %s" % widget
         
@@ -282,6 +285,7 @@ class Postr (UniqueApp):
             it = self.model.get_iter(path)
             self.model.set_value (it, column, value)
 
+    # TODO: remove this and use the field-changed logic
     def on_set_combo_changed(self, combo):
         """Callback when the set combo is changed."""
         set_it = self.set_combo.get_active_iter()
@@ -493,18 +497,21 @@ class Postr (UniqueApp):
         if items:
             # TODO: do something clever with multiple selections
             self.current_it = self.model.get_iter(items[0])
-            (title, desc, tags, set_it, visible) = self.model.get(self.current_it,
-                                                                  ImageStore.COL_TITLE,
-                                                                  ImageStore.COL_DESCRIPTION,
-                                                                  ImageStore.COL_TAGS,
-                                                                  ImageStore.COL_SET,
-                                                                  ImageStore.COL_VISIBLE)
+            (title, desc, tags, set_it, privacy_it, visible) = self.model.get(self.current_it,
+                                                                              ImageStore.COL_TITLE,
+                                                                              ImageStore.COL_DESCRIPTION,
+                                                                              ImageStore.COL_TAGS,
+                                                                              ImageStore.COL_SET,
+                                                                              ImageStore.COL_PRIVACY,
+                                                                              ImageStore.COL_VISIBLE)
 
             enable_field(self.title_entry, title)
             enable_field(self.desc_view, desc)
             enable_field(self.tags_entry, tags)
-            enable_field(self.visible_check, visible)
             enable_field(self.set_combo, set_it)
+            enable_field(self.privacy_combo, privacy_it)
+            enable_field(self.visible_check, visible)
+            
             self.update_thumbnail(self.thumbnail_image)
         else:
             self.current_it = None
@@ -512,6 +519,7 @@ class Postr (UniqueApp):
             disable_field(self.desc_view)
             disable_field(self.tags_entry)
             disable_field(self.set_combo)
+            disable_field(self.privacy_combo)
             disable_field(self.visible_check)
 
             self.thumbnail_image.set_from_pixbuf(None)
@@ -721,20 +729,27 @@ class Postr (UniqueApp):
             self.upload_done()
             return
 
-        (filename, thumb, pixbuf, title, desc, tags, set_it, visible) = self.model.get(it,
-                                                                                       ImageStore.COL_FILENAME,
-                                                                                       ImageStore.COL_THUMBNAIL,
-                                                                                       ImageStore.COL_IMAGE,
-                                                                                       ImageStore.COL_TITLE,
-                                                                                       ImageStore.COL_DESCRIPTION,
-                                                                                       ImageStore.COL_TAGS,
-                                                                                       ImageStore.COL_SET,
-                                                                                       ImageStore.COL_VISIBLE)
+        (filename, thumb, pixbuf, title, desc, tags, set_it, privacy_it, visible) = self.model.get(it,
+                                                                                                   ImageStore.COL_FILENAME,
+                                                                                                   ImageStore.COL_THUMBNAIL,
+                                                                                                   ImageStore.COL_IMAGE,
+                                                                                                   ImageStore.COL_TITLE,
+                                                                                                   ImageStore.COL_DESCRIPTION,
+                                                                                                   ImageStore.COL_TAGS,
+                                                                                                   ImageStore.COL_SET,
+                                                                                                   ImageStore.COL_PRIVACY,
+                                                                                                   ImageStore.COL_VISIBLE)
         # Lookup the set ID from the iterator
         if set_it:
             (set_id,) = self.sets.get (set_it, 0)
         else:
             set_id = 0
+
+        if privacy_it:
+            (is_public, is_family, is_friend) = self.privacy_combo.get_acls_for_iter(privacy_it)
+        else:
+            is_public = True
+            is_family = is_friend = False
         
         self.update_progress(filename, title, thumb)
         self.upload_index += 1
@@ -742,8 +757,9 @@ class Postr (UniqueApp):
         
         if filename:
             d = self.flickr.upload(filename=filename,
-                               title=title, desc=desc,
-                               tags=tags, search_hidden=not visible)
+                                   title=title, desc=desc,
+                                   tags=tags, search_hidden=not visible,
+                                   is_public=is_public, is_family=is_family, is_friend=is_friend)
             if set_id:
                 d.addCallback(self.add_to_set, set_id)
             d.addCallbacks(self.upload, self.upload_error)
@@ -752,8 +768,9 @@ class Postr (UniqueApp):
             data = []
             pixbuf.save_to_callback(lambda d: data.append(d), "png", {})
             d = self.flickr.upload(imageData=''.join(data),
-                                title=title, desc=desc,
-                                tags=tags, search_hidden=not visible)
+                                   title=title, desc=desc,
+                                   tags=tags, search_hidden=not visible,
+                                   is_public=is_public, is_family=is_family, is_friend=is_friend)
             if set_id:
                 d.addCallback(self.add_to_set, set_id)
             d.addCallbacks(self.upload, self.upload_error)
