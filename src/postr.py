@@ -108,7 +108,7 @@ class Postr (UniqueApp):
         self.upload_quota = None
 
         self.thumbnail_image.clear()
-        self.thumbnail_image.set_size_request(1, 1)
+        self.thumbnail_image.set_size_request(128, 128)
         
         self.change_signals = []
         self.change_signals.append((self.title_entry, self.title_entry.connect('changed', self.on_field_changed, ImageStore.COL_TITLE)))
