@@ -34,11 +34,11 @@ class PrivacyCombo(gtk.ComboBox):
         self.pack_start(cell)
         self.add_attribute(cell, "text", 0)
 
+    # (is_public, is_family, is_friend)
     def get_active_acls(self):
-        it = self.get_active_iter()
+        return self.get_acls_for_iter(self.get_active_iter())
+
+    # (is_public, is_family, is_friend)
+    def get_acls_for_iter(self, it):
         if it is None: return None
-        return {
-            "is_public": self.model.get_value(it, 1),
-            "is_family": self.model.get_value(it, 2),
-            "is_friends": self.model.get_value(it, 3)
-            }
+        return self.model.get(it, 1, 2, 3)
