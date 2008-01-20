@@ -67,6 +67,7 @@ def get_buddyicon(flickr, data):
     
     def got_thumb(page):
         loader = gtk.gdk.PixbufLoader()
+        # TODO: parameterise this I guess
         loader.set_size (32, 32)
         loader.write(page)
         loader.close()
