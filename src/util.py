@@ -15,7 +15,7 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
-import gtk
+import gtk, os
 
 def greek(size):
     """Take a quantity (like 1873627) and display it in a human-readable rounded
@@ -78,3 +78,6 @@ def get_buddyicon(flickr, data):
         url = "http://www.flickr.com/images/buddyicon.jpg"
     # TODO: cache the loaded images and return images from the cache
     return getPage(url).addCallback(got_thumb)
+
+def get_cache_path():
+    return os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache/"))
