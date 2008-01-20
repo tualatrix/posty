@@ -62,13 +62,12 @@ def align_labels(glade, names):
     group = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
     widget = [group.add_widget(get_widget_checked(glade, name)) for name in names]
 
-def get_buddyicon(flickr, data):
+def get_buddyicon(flickr, data, size=48):
     from twisted.web.client import getPage
     
-    def got_thumb(page):
+    def got_thumb(page, size):
         loader = gtk.gdk.PixbufLoader()
-        # TODO: parameterise this I guess
-        loader.set_size (32, 32)
+        loader.set_size (size, size)
         loader.write(page)
         loader.close()
         return loader.get_pixbuf()
@@ -78,7 +77,7 @@ def get_buddyicon(flickr, data):
     else:
         url = "http://www.flickr.com/images/buddyicon.jpg"
     # TODO: cache the loaded images and return images from the cache
-    return getPage(url).addCallback(got_thumb)
+    return getPage(url).addCallback(got_thumb, size)
 
 def get_cache_path():
     return os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache/"))

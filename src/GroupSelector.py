@@ -34,7 +34,7 @@ class GroupSelector(gtk.TreeView):
             self.model.set (it, 0, group.get("name"))
             def got_thumb(thumb, it):
                 self.model.set (it, 1, thumb)
-            util.get_buddyicon(self.flickr, group).addCallback(got_thumb, it)
+            util.get_buddyicon(self.flickr, group, 24).addCallback(got_thumb, it)
         
     def twisted_error(self, failure):
         dialog = ErrorDialog(self.window)
