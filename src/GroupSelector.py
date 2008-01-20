@@ -10,7 +10,10 @@ import util
 class GroupSelector(gtk.TreeView):
     def __init__(self, flickr):
         self.flickr = flickr
-        self.model = gtk.ListStore(gobject.TYPE_BOOLEAN, gobject.TYPE_STRING, gobject.TYPE_STRING, gtk.gdk.Pixbuf)
+        self.model = gtk.ListStore(gobject.TYPE_BOOLEAN,
+                                   gobject.TYPE_STRING,
+                                   gobject.TYPE_STRING,
+                                   gtk.gdk.Pixbuf)
         gtk.TreeView.__init__(self, self.model)
         self.set_headers_visible(False)
         
@@ -31,7 +34,7 @@ class GroupSelector(gtk.TreeView):
         renderer =  gtk.CellRendererText()
         column.pack_start(renderer, True)
         column.add_attribute(renderer, "text", COL_NAME)
-
+    
     def update(self):
         self.flickr.groups_pools_getGroups().addCallbacks(self.got_groups, self.twisted_error)
     
