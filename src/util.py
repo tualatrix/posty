@@ -1,6 +1,6 @@
 # Postr, a Flickr Uploader
 #
-# Copyright (C) 2006-2007 Ross Burton <ross@burtonini.com>
+# Copyright (C) 2006-2008 Ross Burton <ross@burtonini.com>
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -15,7 +15,8 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
-import gtk
+import gtk, os
+
 
 def greek(size):
     """Take a quantity (like 1873627) and display it in a human-readable rounded
@@ -41,6 +42,7 @@ def get_widget_checked(glade, name):
     if widget is None: raise "Cannot find widget %s" % name
     return widget
 
+
 def get_glade_widgets (glade, object, widget_names):
     """Get the widgets in the list widget_names from the GladeXML object glade
     and set them as attributes on object."""
@@ -56,25 +58,52 @@ def get_thumb_size(srcw, srch, dstw, dsth):
     scale = min(scalew, scaleh)
     return (int(srcw * scale), int(srch * scale))
 
+
 def align_labels(glade, names):
     """Add the list of widgets identified by names in glade to a horizontal
     sizegroup."""
     group = gtk.SizeGroup(gtk.SIZE_GROUP_HORIZONTAL)
     widget = [group.add_widget(get_widget_checked(glade, name)) for name in names]
 
-def get_buddyicon(flickr, data):
+
+__buddy_cache = None
+def get_buddyicon(flickr, data, size=48):
+    """Lookup the buddyicon from the data in @data using @flickr and resize it
+    to @size pixels."""
     from twisted.web.client import getPage
+    import dbhash
+
+    global __buddy_cache
+    if __buddy_cache is None:
+        folder = os.path.join (get_cache_path(), "postr")
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        path = os.path.join (folder, "buddyicons")
+        __buddy_cache = dbhash.open(path, "c")
     
-    def got_thumb(page):
+    def load_thumb(page, size):
         loader = gtk.gdk.PixbufLoader()
-        loader.set_size (32, 32)
+        loader.set_size (size, size)
         loader.write(page)
         loader.close()
         return loader.get_pixbuf()
+
+    def got_data(page, url, size):
+        __buddy_cache[url] = page
+        return load_thumb(page, size)
     
     if int(data.get("iconfarm")) > 0:
         url = "http://farm%s.static.flickr.com/%s/buddyicons/%s.jpg" % (data.get("iconfarm"), data.get("iconserver"), data.get("nsid"))
     else:
         url = "http://www.flickr.com/images/buddyicon.jpg"
-    # TODO: cache the loaded images and return images from the cache
-    return getPage(url).addCallback(got_thumb)
+
+    if __buddy_cache.has_key(url):
+        from twisted.internet import defer
+        return defer.succeed(load_thumb(__buddy_cache[url], size))
+    else:
+        return getPage(url).addCallback(got_data, url, size)
+
+
+def get_cache_path():
+    """Return the location of the XDG cache directory."""
+    return os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache/"))
