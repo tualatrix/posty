@@ -26,7 +26,7 @@ from AboutDialog import AboutDialog
 from AuthenticationDialog import AuthenticationDialog
 from ProgressDialog import ProgressDialog
 from ErrorDialog import ErrorDialog
-import ImageStore, ImageList, StatusBar, PrivacyCombo, SafetyCombo
+import ImageStore, ImageList, StatusBar, PrivacyCombo, SafetyCombo, GroupSelector
 
 from flickrest import Flickr
 from twisted.web.client import getPage
@@ -79,6 +79,7 @@ class Postr (UniqueApp):
                             "desc_view",
                             "tags_entry",
                             "set_combo",
+                            "group_selector",
                             "privacy_combo",
                             "safety_combo",
                             "visible_check",
@@ -189,13 +190,18 @@ class Postr (UniqueApp):
     
     def get_custom_handler(self, glade, function_name, widget_name, str1, str2, int1, int2):
         """libglade callback to create custom widgets."""
-        try:
-            handler = getattr(self, function_name)
+        handler = getattr(self, function_name, None)
+        if handler:
             return handler(str1, str2, int1, int2)
-        except:
+        else:
             widget = eval(function_name)
             widget.show()
             return widget
+
+    def group_selector_new (self, *args):
+        w = GroupSelector.GroupSelector(self.flickr)
+        w.show()
+        return w
     
     def image_list_new (self, *args):
         """Custom widget creation function to make the image list."""
@@ -239,6 +245,7 @@ class Postr (UniqueApp):
         if connected:
             self.update_upload()
             self.statusbar.update_quota()
+            self.group_selector.update()
             self.flickr.photosets_getList().addCallbacks(self.got_photosets, self.twisted_error)
 
     def update_upload(self):
