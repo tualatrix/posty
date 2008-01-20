@@ -25,12 +25,19 @@ import util
  COL_ICON) = range(0, 4)
 
 class GroupSelector(gtk.TreeView):
+
+    __gsignals__ = {
+        'changed' : (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ())
+        }
+    
     def __init__(self, flickr):
         self.flickr = flickr
         self.model = gtk.ListStore(gobject.TYPE_BOOLEAN,
                                    gobject.TYPE_STRING,
                                    gobject.TYPE_STRING,
                                    gtk.gdk.Pixbuf)
+        self.model.connect("row-changed", lambda model, path, iter: self.emit("changed"))
+        
         gtk.TreeView.__init__(self, self.model)
         
         column = gtk.TreeViewColumn('')
@@ -57,6 +64,7 @@ class GroupSelector(gtk.TreeView):
         # TODO: enable case insensitive substring searching
     
     def update(self):
+        # TODO: block changed signals
         self.flickr.groups_pools_getGroups().addCallbacks(self.got_groups, self.twisted_error)
     
     def got_groups(self, rsp):
@@ -79,5 +87,7 @@ class GroupSelector(gtk.TreeView):
         return [row[COL_ID] for row in self.model if row[COL_SELECTED]]
 
     def set_selected_groups(self, groups):
+        # Handle groups being None */
+        if groups is None: groups = ()
         for row in self.model:
             row[COL_SELECTED] = row[COL_ID] in groups
