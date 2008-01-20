@@ -720,8 +720,15 @@ class Postr (UniqueApp):
 
     def add_to_set(self, rsp, set):
         """Callback from the upload method to add the picture to a set."""
-        self.flickr.photosets_addPhoto(photoset_id=set,
-                                       photo_id=rsp.find("photoid").text)
+        photo_id=rsp.find("photoid").text
+        self.flickr.photosets_addPhoto(photo_id=photo_id, photoset_id=set).addErrback(self.twisted_error)
+        return rsp
+
+    def add_to_groups(self, rsp, groups):
+        """Callback from the upload method to add the picture to a groups."""
+        photo_id=rsp.find("photoid").text
+        for group in groups:
+            self.flickr.groups_pools_add(photo_id=photo_id, group_id=group).addErrback(self.twisted_error)
         return rsp
 
     def upload_done(self):
@@ -752,17 +759,18 @@ class Postr (UniqueApp):
             self.upload_done()
             return
 
-        (filename, thumb, pixbuf, title, desc, tags, set_it, privacy_it, safety_it, visible) = self.model.get(it,
-                                                                                                   ImageStore.COL_FILENAME,
-                                                                                                   ImageStore.COL_THUMBNAIL,
-                                                                                                   ImageStore.COL_IMAGE,
-                                                                                                   ImageStore.COL_TITLE,
-                                                                                                   ImageStore.COL_DESCRIPTION,
-                                                                                                   ImageStore.COL_TAGS,
-                                                                                                   ImageStore.COL_SET,
-                                                                                                   ImageStore.COL_PRIVACY,
-                                                                                                   ImageStore.COL_SAFETY,
-                                                                                                   ImageStore.COL_VISIBLE)
+        (filename, thumb, pixbuf, title, desc, tags, set_it, groups, privacy_it, safety_it, visible) = self.model.get(it,
+                                                                                                                      ImageStore.COL_FILENAME,
+                                                                                                                      ImageStore.COL_THUMBNAIL,
+                                                                                                                      ImageStore.COL_IMAGE,
+                                                                                                                      ImageStore.COL_TITLE,
+                                                                                                                      ImageStore.COL_DESCRIPTION,
+                                                                                                                      ImageStore.COL_TAGS,
+                                                                                                                      ImageStore.COL_SET,
+                                                                                                                      ImageStore.COL_GROUPS,
+                                                                                                                      ImageStore.COL_PRIVACY,
+                                                                                                                      ImageStore.COL_SAFETY,
+                                                                                                                      ImageStore.COL_VISIBLE)
         # Lookup the set ID from the iterator
         if set_it:
             (set_id,) = self.sets.get (set_it, 0)
@@ -788,9 +796,6 @@ class Postr (UniqueApp):
                                    title=title, desc=desc,
                                    tags=tags, search_hidden=not visible, safety=safety,
                                    is_public=is_public, is_family=is_family, is_friend=is_friend)
-            if set_id:
-                d.addCallback(self.add_to_set, set_id)
-            d.addCallbacks(self.upload, self.upload_error)
         elif pixbuf:
             # This isn't very nice, but might be the best way
             data = []
@@ -799,8 +804,11 @@ class Postr (UniqueApp):
                                    title=title, desc=desc, tags=tags,
                                    search_hidden=not visible, safety=safety,
                                    is_public=is_public, is_family=is_family, is_friend=is_friend)
-            if set_id:
-                d.addCallback(self.add_to_set, set_id)
-            d.addCallbacks(self.upload, self.upload_error)
         else:
             print "No filename or pixbuf stored"
+
+        if set_id:
+            d.addCallback(self.add_to_set, set_id)
+        if groups:
+            d.addCallback(self.add_to_groups, groups)
+        d.addCallbacks(self.upload, self.upload_error)
