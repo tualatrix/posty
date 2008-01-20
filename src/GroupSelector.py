@@ -69,8 +69,15 @@ class GroupSelector(gtk.TreeView):
             def got_thumb(thumb, it):
                 self.model.set (it, COL_ICON, thumb)
             util.get_buddyicon(self.flickr, group, 24).addCallback(got_thumb, it)
-        
+    
     def twisted_error(self, failure):
         dialog = ErrorDialog(self.window)
         dialog.set_from_failure(failure)
         dialog.show_all()
+
+    def get_selected_groups(self):
+        return [row[COL_ID] for row in self.model if row[COL_SELECTED]]
+
+    def set_selected_groups(self, groups):
+        for row in self.model:
+            row[COL_SELECTED] = row[COL_ID] in groups
