@@ -111,7 +111,7 @@ class Postr (UniqueApp):
         self.thumbnail_image.clear()
         self.thumbnail_image.set_size_request(128, 128)
         
-        self.change_signals = []
+        self.change_signals = [] # List of (widget, signal ID) tuples
         self.change_signals.append((self.title_entry, self.title_entry.connect('changed', self.on_field_changed, ImageStore.COL_TITLE)))
         self.change_signals.append((self.desc_view.get_buffer(), self.desc_view.get_buffer().connect('changed', self.on_field_changed, ImageStore.COL_DESCRIPTION)))
         self.change_signals.append((self.tags_entry, self.tags_entry.connect('changed', self.on_field_changed, ImageStore.COL_TAGS)))
