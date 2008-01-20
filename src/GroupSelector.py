@@ -3,13 +3,14 @@ from ErrorDialog import ErrorDialog
 import util
 
 (COL_SELECTED,
+ COL_ID,
  COL_NAME,
- COL_ICON) = range(0, 3)
+ COL_ICON) = range(0, 4)
 
 class GroupSelector(gtk.TreeView):
     def __init__(self, flickr):
         self.flickr = flickr
-        self.model = gtk.ListStore(gobject.TYPE_BOOLEAN, gobject.TYPE_STRING, gtk.gdk.Pixbuf)
+        self.model = gtk.ListStore(gobject.TYPE_BOOLEAN, gobject.TYPE_STRING, gobject.TYPE_STRING, gtk.gdk.Pixbuf)
         gtk.TreeView.__init__(self, self.model)
         self.set_headers_visible(False)
         
@@ -34,7 +35,9 @@ class GroupSelector(gtk.TreeView):
         from elementtree.ElementTree import dump
         for group in rsp.findall("groups/group"):
             it = self.model.append()
-            self.model.set (it, COL_NAME, group.get("name"))
+            self.model.set (it,
+                            COL_ID, group.get("id"),
+                            COL_NAME, group.get("name"))
             def got_thumb(thumb, it):
                 self.model.set (it, COL_ICON, thumb)
             util.get_buddyicon(self.flickr, group, 24).addCallback(got_thumb, it)
