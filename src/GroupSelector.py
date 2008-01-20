@@ -18,7 +18,11 @@ class GroupSelector(gtk.TreeView):
         self.append_column(column)
         
         renderer =  gtk.CellRendererToggle()
+        def toggled(r, path):
+            self.model[path][COL_SELECTED] = not r.get_active()
+        renderer.connect("toggled", toggled)
         column.pack_start(renderer, False)
+        column.add_attribute(renderer, "active", COL_SELECTED)
         
         renderer =  gtk.CellRendererPixbuf()
         column.pack_start(renderer, False)
