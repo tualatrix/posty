@@ -159,17 +159,18 @@ class Flickr:
             kwargs['description'] = desc
         if tags:
             kwargs['tags'] = tags
-        if is_public:
+        if is_public is not None:
             kwargs['is_public'] = is_public and 1 or 0
-        if is_family:
+        if is_family is not None:
             kwargs['is_family'] = is_family and 1 or 0
-        if is_friend:
+        if is_friend is not None:
             kwargs['is_friend'] = is_friend and 1 or 0
         if safety:
             kwargs['safety_level'] = safety
-        if search_hidden:
+        if search_hidden is not None:
             kwargs['hidden'] = search_hidden and 2 or 1 # Why Flickr, why?
         self.__sign(kwargs)
+        self.logger.info("Upload args %s" % kwargs)
         
         if imageData:
             kwargs['photo'] = imageData
