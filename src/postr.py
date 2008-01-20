@@ -104,6 +104,7 @@ class Postr (UniqueApp):
         selection = self.thumbview.get_selection()
         selection.connect("changed", self.on_selection_changed)
 
+        # TODO: remove this
         self.current_it = None
         self.last_folder = None
         self.upload_quota = None
