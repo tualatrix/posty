@@ -32,9 +32,9 @@ class GroupSelector(gtk.TreeView):
                                    gobject.TYPE_STRING,
                                    gtk.gdk.Pixbuf)
         gtk.TreeView.__init__(self, self.model)
-        self.set_headers_visible(False)
         
         column = gtk.TreeViewColumn('')
+        column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
         self.append_column(column)
         
         renderer =  gtk.CellRendererToggle()
@@ -51,6 +51,10 @@ class GroupSelector(gtk.TreeView):
         renderer =  gtk.CellRendererText()
         column.pack_start(renderer, True)
         column.add_attribute(renderer, "text", COL_NAME)
+        
+        self.set_fixed_height_mode(True)
+        self.set_headers_visible(False)
+        # TODO: enable case insensitive substring searching
     
     def update(self):
         self.flickr.groups_pools_getGroups().addCallbacks(self.got_groups, self.twisted_error)
