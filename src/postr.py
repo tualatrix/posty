@@ -115,6 +115,7 @@ class Postr (UniqueApp):
         self.change_signals.append((self.title_entry, self.title_entry.connect('changed', self.on_field_changed, ImageStore.COL_TITLE)))
         self.change_signals.append((self.desc_view.get_buffer(), self.desc_view.get_buffer().connect('changed', self.on_field_changed, ImageStore.COL_DESCRIPTION)))
         self.change_signals.append((self.tags_entry, self.tags_entry.connect('changed', self.on_field_changed, ImageStore.COL_TAGS)))
+        self.change_signals.append((self.group_selector, self.group_selector.connect('changed', self.on_field_changed, ImageStore.COL_GROUPS)))
         self.change_signals.append((self.privacy_combo, self.privacy_combo.connect('changed', self.on_field_changed, ImageStore.COL_PRIVACY)))
         self.change_signals.append((self.safety_combo, self.safety_combo.connect('changed', self.on_field_changed, ImageStore.COL_SAFETY)))
         self.change_signals.append((self.visible_check, self.visible_check.connect('toggled', self.on_field_changed, ImageStore.COL_VISIBLE)))
@@ -286,6 +287,8 @@ class Postr (UniqueApp):
             value = widget.get_active()
         elif isinstance(widget, gtk.ComboBox):
             value = widget.get_active_iter()
+        elif isinstance(widget, GroupSelector.GroupSelector):
+            value = widget.get_selected_groups()
         else:
             raise "Unhandled widget type %s" % widget
         
@@ -487,6 +490,8 @@ class Postr (UniqueApp):
                 else:
                     # This means the default value is always the first
                     field.set_active(0)
+            elif isinstance(field, GroupSelector.GroupSelector):
+                field.set_selected_groups(value)
             else:
                 raise "Unhandled widget type %s" % field
         def disable_field(field):
@@ -499,6 +504,8 @@ class Postr (UniqueApp):
                 field.set_active(True)
             elif isinstance(field, gtk.ComboBox):
                 field.set_active(-1)
+            elif isinstance(field, GroupSelector.GroupSelector):
+                field.set_selected_groups(())
             else:
                 raise "Unhandled widget type %s" % field
 
@@ -507,19 +514,21 @@ class Postr (UniqueApp):
         if items:
             # TODO: do something clever with multiple selections
             self.current_it = self.model.get_iter(items[0])
-            (title, desc, tags, set_it, privacy_it, safety_it, visible) = self.model.get(self.current_it,
-                                                                                         ImageStore.COL_TITLE,
-                                                                                         ImageStore.COL_DESCRIPTION,
-                                                                                         ImageStore.COL_TAGS,
-                                                                                         ImageStore.COL_SET,
-                                                                                         ImageStore.COL_PRIVACY,
-                                                                                         ImageStore.COL_SAFETY,
-                                                                                         ImageStore.COL_VISIBLE)
+            (title, desc, tags, set_it, groups, privacy_it, safety_it, visible) = self.model.get(self.current_it,
+                                                                                                 ImageStore.COL_TITLE,
+                                                                                                 ImageStore.COL_DESCRIPTION,
+                                                                                                 ImageStore.COL_TAGS,
+                                                                                                 ImageStore.COL_SET,
+                                                                                                 ImageStore.COL_GROUPS,
+                                                                                                 ImageStore.COL_PRIVACY,
+                                                                                                 ImageStore.COL_SAFETY,
+                                                                                                 ImageStore.COL_VISIBLE)
             
             enable_field(self.title_entry, title)
             enable_field(self.desc_view, desc)
             enable_field(self.tags_entry, tags)
             enable_field(self.set_combo, set_it)
+            enable_field(self.group_selector, groups)
             enable_field(self.privacy_combo, privacy_it)
             enable_field(self.safety_combo, safety_it)
             enable_field(self.visible_check, visible)
@@ -531,6 +540,7 @@ class Postr (UniqueApp):
             disable_field(self.desc_view)
             disable_field(self.tags_entry)
             disable_field(self.set_combo)
+            disable_field(self.group_selector)
             disable_field(self.privacy_combo)
             disable_field(self.safety_combo)
             disable_field(self.visible_check)
