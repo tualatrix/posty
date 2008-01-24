@@ -51,7 +51,19 @@ class Flickr:
         self.token = None
         self.logger = logging.getLogger('flickrest')
         self.set_proxy(os.environ.get("http_proxy", None))
-    
+        self.fullname = None
+        self.username = None
+        self.nsid = None
+
+    def get_fullname(self):
+        return self.fullname
+
+    def get_username(self):
+        return self.username
+
+    def get_nsid(self):
+        return self.nsid
+
     def set_proxy(self, proxy):
         # Handle proxies which are not URLs
         if proxy and "://" not in proxy:
@@ -67,6 +79,9 @@ class Flickr:
 
     def clear_cached(self):
         """Remove any cached information on disk."""
+        self.fullname = None
+        self.username = None
+        self.nsid = None
         token = self.__getTokenFile()
         if os.path.exists(token):
             os.remove(token)
@@ -192,6 +207,14 @@ class Flickr:
         def gotToken(e):
             # Set the token
             self.token = e.find("auth/token").text
+
+            # Pulling out the user information
+            user = e.find("auth/user")
+            # Setting the user variables
+            self.fullname = user.get("fullname")
+            self.username = user.get("username")
+            self.nsid = user.get("nsid")
+
             # Cache the authentication
             filename = self.__getTokenFile()
             path = os.path.dirname(filename)
@@ -200,6 +223,7 @@ class Flickr:
             f = file(filename, "w")
             f.write(ElementTree.tostring(e))
             f.close()
+
             # Callback to the user
             return True
         return self.auth_getToken(frob=state['frob']).addCallback(gotToken)
@@ -230,6 +254,12 @@ class Flickr:
             try:
                 e = ElementTree.parse(filename).getroot()
                 self.token = e.find("auth/token").text
+                
+                user = e.find("auth/user")
+                self.fullname = user.get("fullname")
+                self.username = user.get("username")
+                self.nsid = user.get("nsid")
+
                 def reply(xml):
                     return defer.succeed(None)
                 def failed(failure):
