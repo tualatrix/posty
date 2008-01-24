@@ -37,6 +37,10 @@ class StatusBar(gtk.Statusbar):
             message = _("%(to_upload)s to upload") % self.__dict__
         else:
             message = ""
+
+        if self.flickr.get_username():
+            message = message + " - logged in as " + self.flickr.get_username()
+        
         self.push(self.context, message)
     
     def update_quota(self):
