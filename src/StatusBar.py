@@ -39,7 +39,7 @@ class StatusBar(gtk.Statusbar):
             message = ""
 
         if self.flickr.get_username():
-            message = message + " - logged in as " + self.flickr.get_username()
+            message = message + " - logged in as " + self.flickr.get_fullname() or self.flickr.get_username()
         
         self.push(self.context, message)
     
