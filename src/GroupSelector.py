@@ -61,6 +61,7 @@ class GroupSelector(gtk.TreeView):
         
         self.set_fixed_height_mode(True)
         self.set_headers_visible(False)
+        self.set_search_column(COL_NAME)
         # TODO: enable case insensitive substring searching
     
     def update(self):
