@@ -71,7 +71,7 @@ def get_buddyicon(flickr, data, size=48):
     """Lookup the buddyicon from the data in @data using @flickr and resize it
     to @size pixels."""
     from twisted.web.client import getPage
-    import dbhash
+    import dbhash, bsddb
 
     global __buddy_cache
     if __buddy_cache is None:
@@ -79,7 +79,12 @@ def get_buddyicon(flickr, data, size=48):
         if not os.path.exists(folder):
             os.makedirs(folder)
         path = os.path.join (folder, "buddyicons")
-        __buddy_cache = dbhash.open(path, "c")
+        try:
+            __buddy_cache = dbhash.open(path, "c")
+        except bsddb.db.DBInvalidArgError:
+            # The database needs upgrading, so delete it
+            os.remove(path)
+            __buddy_cache = dbhash.open(path, "c")
     
     def load_thumb(page, size):
         loader = gtk.gdk.PixbufLoader()
