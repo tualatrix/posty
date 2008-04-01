@@ -66,7 +66,7 @@ class GroupSelector(gtk.TreeView):
         def search_func(model, column, key, iter):
             s = model.get_value(iter, column)
             # This API is braindead, false=matches
-            return key not in s
+            return key.lower() not in s.lower()
         self.set_search_equal_func(search_func)
         # TODO: enable case insensitive substring searching
     
