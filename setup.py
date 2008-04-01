@@ -27,3 +27,4 @@ setup(name='Postr',
       )
 
 # TODO: install translations
+# TODO: update icon cache
