@@ -59,6 +59,7 @@ class GroupSelector(gtk.TreeView):
         column.pack_start(renderer, True)
         column.add_attribute(renderer, "text", COL_NAME)
         
+        self.set_size_request(-1, 24 * 3 + self.style_get_property("vertical-separator") * 6)
         self.set_fixed_height_mode(True)
         self.set_headers_visible(False)
         self.set_search_column(COL_NAME)
