@@ -75,7 +75,6 @@ class GroupSelector(gtk.TreeView):
         self.flickr.groups_pools_getGroups().addCallbacks(self.got_groups, self.twisted_error)
     
     def got_groups(self, rsp):
-        from elementtree.ElementTree import dump
         for group in rsp.findall("groups/group"):
             it = self.model.append()
             self.model.set (it,
