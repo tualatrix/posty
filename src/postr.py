@@ -411,6 +411,11 @@ class Postr (UniqueApp):
             else:
                 selection.select_iter(row.iter)
 
+    def on_switch_activate(self, menuitem):
+        """Callback from File->Switch User."""
+        self.flickr.clear_cached()
+        self.flickr.authenticate_1().addCallbacks(self.auth_open_url, self.twisted_error)
+    
     def on_upload_activate(self, menuitem):
         """Callback from File->Upload."""
         if self.uploading:
