@@ -365,7 +365,19 @@ class Postr (UniqueApp):
             dialog.destroy()
             if response == gtk.RESPONSE_CANCEL:
                 return True
-        
+        elif self.is_connected and self.model.iter_n_children(None) > 0:
+            dialog = gtk.MessageDialog(type=gtk.MESSAGE_WARNING, parent=self.window)
+            dialog.add_buttons(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                               gtk.STOCK_QUIT, gtk.RESPONSE_OK)
+            dialog.set_markup(_('<b>Photos to be uploaded</b>'))
+            dialog.format_secondary_text(_('There are photos pending to '
+                                         'be uploaded. '
+                                         'Are you sure you want to quit?'))
+            response = dialog.run()
+            dialog.destroy()
+            if response == gtk.RESPONSE_CANCEL:
+                return True
+
         import twisted.internet.reactor
         twisted.internet.reactor.stop()
     
