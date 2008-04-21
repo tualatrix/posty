@@ -746,7 +746,11 @@ class Postr (UniqueApp):
         """Callback from the upload method to add the picture to a groups."""
         photo_id=rsp.find("photoid").text
         for group in groups:
-            self.flickr.groups_pools_add(photo_id=photo_id, group_id=group).addErrback(self.twisted_error)
+            def error(failure):
+                # Code 6 means "moderated", which isn't an error
+                if failure.value.code != 6:
+                    twisted_error(self, failure)
+            self.flickr.groups_pools_add(photo_id=photo_id, group_id=group).addErrback(error)
         return rsp
 
     def upload_done(self):
