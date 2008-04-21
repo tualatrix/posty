@@ -745,6 +745,7 @@ class Postr (UniqueApp):
         self.uploading = False
         self.progress_dialog.hide()
         self.thumbview.set_sensitive(True)
+        self.update_statusbar()
         self.statusbar.update_quota()
 
     def upload_error(self, failure):
