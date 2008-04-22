@@ -40,8 +40,7 @@ class GroupSelector(gtk.TreeView):
         
         gtk.TreeView.__init__(self, self.model)
         
-        column = gtk.TreeViewColumn('')
-        column.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+        column = gtk.TreeViewColumn('Selected')
         self.append_column(column)
         
         renderer =  gtk.CellRendererToggle()
@@ -51,6 +50,9 @@ class GroupSelector(gtk.TreeView):
         column.pack_start(renderer, False)
         column.add_attribute(renderer, "active", COL_SELECTED)
         
+        column = gtk.TreeViewColumn('Group')
+        self.append_column(column)
+
         renderer =  gtk.CellRendererPixbuf()
         column.pack_start(renderer, False)
         column.add_attribute(renderer, "pixbuf", COL_ICON)
@@ -60,7 +62,6 @@ class GroupSelector(gtk.TreeView):
         column.add_attribute(renderer, "text", COL_NAME)
         
         self.set_size_request(-1, 24 * 3 + self.style_get_property("vertical-separator") * 6)
-        self.set_fixed_height_mode(True)
         self.set_headers_visible(False)
         self.set_search_column(COL_NAME)
         def search_func(model, column, key, iter):
