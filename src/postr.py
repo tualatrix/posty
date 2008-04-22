@@ -309,8 +309,8 @@ class Postr (UniqueApp):
             it = self.model.get_iter(path)
             self.model.set_value (it, ImageStore.COL_SET, set_it)
     
-    def on_add_photos_activate(self, menuitem):
-        """Callback from the File->Add Photos menu item."""
+    def on_add_photos_activate(self, widget):
+        """Callback from the File->Add Photos menu item or Add button."""
         dialog = gtk.FileChooserDialog(title=_("Add Photos"), parent=self.window,
                                        action=gtk.FILE_CHOOSER_ACTION_OPEN,
                                        buttons=(gtk.STOCK_CANCEL,
@@ -381,8 +381,8 @@ class Postr (UniqueApp):
         import twisted.internet.reactor
         twisted.internet.reactor.stop()
     
-    def on_remove_activate(self, menuitem):
-        """Callback from File->Remove."""
+    def on_remove_activate(self, widget):
+        """Callback from File->Remove or Remove button."""
         selection = self.thumbview.get_selection()
         (model, items) = selection.get_selected_rows()
         
