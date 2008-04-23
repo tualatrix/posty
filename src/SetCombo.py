@@ -39,7 +39,7 @@ class SetCombo(gtk.ComboBox):
 
     def twisted_error(self, failure):
         from ErrorDialog import ErrorDialog
-        dialog = ErrorDialog(self.window)
+        dialog = ErrorDialog()
         dialog.set_from_failure(failure)
         dialog.show_all()
 
@@ -59,10 +59,10 @@ class SetCombo(gtk.ComboBox):
                            1, photoset.find("title").text)
 
             url = "http://static.flickr.com/%s/%s_%s%s.jpg" % (photoset.get("server"), photoset.get("primary"), photoset.get("secret"), "_s")
-            getPage (url).addCallback (self.__got_set_thumb, it).addErrback(self.twisted_error)
+            getPage (url).addCallback(self.__got_set_thumb, it).addErrback(self.twisted_error)
 
     def update(self):
-        self.flickr.photosets_getList().addCallback(self.__got_photosets), self.twisted_error)
+        self.flickr.photosets_getList().addCallbacks(self.__got_photosets, self.twisted_error)
 
     def get_id_for_iter(self, it):
         if it is None: return None
