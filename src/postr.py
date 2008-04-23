@@ -64,6 +64,8 @@ class Postr (UniqueApp):
                              secret="7db1b8ef68979779",
                              perms="write")
 
+        self.logo_icon_size = gtk.icon_size_register("logo", 128, 128)
+        
         gtk.window_set_default_icon_name("postr")
         gtk.glade.set_custom_handler(self.get_custom_handler)
         glade = gtk.glade.XML(os.path.join (os.path.dirname(__file__), "postr.glade"))
@@ -565,7 +567,7 @@ class Postr (UniqueApp):
             disable_field(self.safety_combo)
             disable_field(self.visible_check)
 
-            self.thumbnail_image.set_from_pixbuf(None)
+            self.thumbnail_image.set_from_icon_name("postr", self.logo_icon_size)
 
         [obj.handler_unblock(i) for obj,i in self.change_signals]
 
