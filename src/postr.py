@@ -726,7 +726,7 @@ class Postr (UniqueApp):
             def error(failure):
                 # Code 6 means "moderated", which isn't an error
                 if failure.value.code != 6:
-                    twisted_error(self, failure)
+                    self.twisted_error(failure)
             self.flickr.groups_pools_add(photo_id=photo_id, group_id=group).addErrback(error)
         return rsp
 
