@@ -26,7 +26,7 @@ from AboutDialog import AboutDialog
 from AuthenticationDialog import AuthenticationDialog
 from ProgressDialog import ProgressDialog
 from ErrorDialog import ErrorDialog
-import ImageStore, ImageList, StatusBar, PrivacyCombo, SafetyCombo, SetCombo, GroupSelector
+import ImageStore, ImageList, StatusBar, PrivacyCombo, SafetyCombo, GroupSelector
 
 from flickrest import Flickr
 import EXIF
@@ -194,6 +194,7 @@ class Postr(UniqueApp):
         return w
 
     def set_combo_new(self, *args):
+        import SetCombo
         w = SetCombo.SetCombo(self.flickr)
         w.show()
         return w
