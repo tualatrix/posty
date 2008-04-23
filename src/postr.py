@@ -361,6 +361,7 @@ class Postr (UniqueApp):
             dialog.set_markup(_('<b>Currently Uploading</b>'))
             dialog.format_secondary_text(_('Photos are still being uploaded. '
                                          'Are you sure you want to quit?'))
+            dialog.set_default_response(gtk.RESPONSE_OK)
             response = dialog.run()
             dialog.destroy()
             if response == gtk.RESPONSE_CANCEL:
@@ -373,6 +374,7 @@ class Postr (UniqueApp):
             dialog.format_secondary_text(_('There are photos pending to '
                                          'be uploaded. '
                                          'Are you sure you want to quit?'))
+            dialog.set_default_response(gtk.RESPONSE_OK)
             response = dialog.run()
             dialog.destroy()
             if response == gtk.RESPONSE_CANCEL:
