@@ -49,7 +49,7 @@ except ImportError:
  ) = (1, 3, 6, 8)
 
 
-class Postr (UniqueApp):
+class Postr(UniqueApp):
     def __init__(self):
         UniqueApp.__init__(self, 'com.burtonini.Postr')
         try:
@@ -67,10 +67,10 @@ class Postr (UniqueApp):
         
         gtk.window_set_default_icon_name("postr")
         gtk.glade.set_custom_handler(self.get_custom_handler)
-        glade = gtk.glade.XML(os.path.join (os.path.dirname(__file__), "postr.glade"))
+        glade = gtk.glade.XML(os.path.join(os.path.dirname(__file__), "postr.glade"))
         glade.signal_autoconnect(self)
 
-        get_glade_widgets (glade, self,
+        get_glade_widgets(glade, self,
                            ("window",
                             "upload_menu",
                             "upload_button",
@@ -95,7 +95,7 @@ class Postr (UniqueApp):
         except Exception:
             pass
         
-        self.model = ImageStore.ImageStore ()
+        self.model = ImageStore.ImageStore()
         self.model.connect("row-inserted", self.on_model_changed)
         self.model.connect("row-deleted", self.on_model_changed)
         
@@ -188,23 +188,23 @@ class Postr (UniqueApp):
             widget.show()
             return widget
 
-    def group_selector_new (self, *args):
+    def group_selector_new(self, *args):
         w = GroupSelector.GroupSelector(self.flickr)
         w.show()
         return w
 
-    def set_combo_new (self, *args):
+    def set_combo_new(self, *args):
         w = SetCombo.SetCombo(self.flickr)
         w.show()
         return w
     
-    def image_list_new (self, *args):
+    def image_list_new(self, *args):
         """Custom widget creation function to make the image list."""
-        view = ImageList.ImageList ()
+        view = ImageList.ImageList()
         view.show()
         return view
 
-    def status_bar_new (self, *args):
+    def status_bar_new(self, *args):
         bar = StatusBar.StatusBar(self.flickr)
         bar.show()
         return bar
@@ -272,7 +272,7 @@ class Postr (UniqueApp):
         (model, items) = selection.get_selected_rows()
         for path in items:
             it = self.model.get_iter(path)
-            self.model.set_value (it, column, value)
+            self.model.set_value(it, column, value)
 
     # TODO: remove this and use the field-changed logic
     def on_set_combo_changed(self, combo):
@@ -282,7 +282,7 @@ class Postr (UniqueApp):
         (model, items) = selection.get_selected_rows()
         for path in items:
             it = self.model.get_iter(path)
-            self.model.set_value (it, ImageStore.COL_SET, set_it)
+            self.model.set_value(it, ImageStore.COL_SET, set_it)
     
     def on_add_photos_activate(self, widget):
         """Callback from the File->Add Photos menu item or Add button."""
@@ -422,7 +422,7 @@ class Postr (UniqueApp):
         self.thumbview.set_sensitive(False)
         self.progress_dialog.show()
 
-        self.upload_count = self.model.iter_n_children (None)
+        self.upload_count = self.model.iter_n_children(None)
         self.upload_index = 0
         self.upload()
         
@@ -475,7 +475,7 @@ class Postr (UniqueApp):
             if isinstance(field, gtk.Entry):
                 field.set_text(value)
             elif isinstance(field, gtk.TextView):
-                field.get_buffer().set_text (value)
+                field.get_buffer().set_text(value)
             elif isinstance(field, gtk.ToggleButton):
                 field.set_active(value)
             elif isinstance(field, gtk.ComboBox):
@@ -493,7 +493,7 @@ class Postr (UniqueApp):
             if isinstance(field, gtk.Entry):
                 field.set_text("")
             elif isinstance(field, gtk.TextView):
-                field.get_buffer().set_text ("")
+                field.get_buffer().set_text("")
             elif isinstance(field, gtk.ToggleButton):
                 field.set_active(True)
             elif isinstance(field, gtk.ComboBox):
@@ -611,9 +611,9 @@ class Postr (UniqueApp):
             for (data, tag) in tags:
                 if data.has_key(tag):
                     value = data[tag]
-                    if isinstance (value, list):
-                        return ' '.join(map (lambda s: '"' + s + '"', value))
-                    elif not isinstance (value, str):
+                    if isinstance(value, list):
+                        return ' '.join(map(lambda s: '"' + s + '"', value))
+                    elif not isinstance(value, str):
                         value = str(value)
                     if value:
                         return value
@@ -645,10 +645,10 @@ class Postr (UniqueApp):
             # TODO: don't scale up if the image is smaller than 512/512
             
             # Scale the pixbuf to a preview
-            sizes = get_thumb_size (pixbuf.get_width(), pixbuf.get_height(), 512, 512)
+            sizes = get_thumb_size(pixbuf.get_width(), pixbuf.get_height(), 512, 512)
             preview = pixbuf.scale_simple(sizes[0], sizes[1], gtk.gdk.INTERP_BILINEAR)
             # Now scale to a thumbnail
-            sizes = get_thumb_size (pixbuf.get_width(), pixbuf.get_height(), 64, 64)
+            sizes = get_thumb_size(pixbuf.get_width(), pixbuf.get_height(), 64, 64)
             thumb = pixbuf.scale_simple(sizes[0], sizes[1], gtk.gdk.INTERP_BILINEAR)
 
             # TODO: This is wrong, and should generate a PNG here and use the
@@ -678,7 +678,7 @@ class Postr (UniqueApp):
                         for f in files:
                             # TODO: handle symlinks to directories as they are
                             # in files
-                            self.add_image_filename (os.path.join(root, f))
+                            self.add_image_filename(os.path.join(root, f))
                 else:
                     print "Unhandled file %s" % filename
                     
