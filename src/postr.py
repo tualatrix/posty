@@ -26,10 +26,9 @@ from AboutDialog import AboutDialog
 from AuthenticationDialog import AuthenticationDialog
 from ProgressDialog import ProgressDialog
 from ErrorDialog import ErrorDialog
-import ImageStore, ImageList, StatusBar, PrivacyCombo, SafetyCombo, GroupSelector
+import ImageStore, ImageList, StatusBar, PrivacyCombo, SafetyCombo, SetCombo, GroupSelector
 
 from flickrest import Flickr
-from twisted.web.client import getPage
 import EXIF
 from iptcinfo import IPTCInfo
 from util import *
@@ -103,6 +102,8 @@ class Postr (UniqueApp):
         self.thumbview.set_model(self.model)
         self.thumbview.connect("drag_data_received", self.on_drag_data_received)
 
+        self.set_combo.connect("changed", self.on_set_combo_changed)
+        
         selection = self.thumbview.get_selection()
         selection.connect("changed", self.on_selection_changed)
 
@@ -126,22 +127,7 @@ class Postr (UniqueApp):
         self.thumbnail_image.connect('size-allocate', self.update_thumbnail)
         self.old_thumb_allocation = None
 
-        # The set selector combo
-        self.sets = gtk.ListStore (gobject.TYPE_STRING, # ID
-                                   gobject.TYPE_STRING, # Name
-                                   gtk.gdk.Pixbuf) # Thumbnail
-        self.sets.set (self.sets.append(), 0, None, 1, "None")
-        self.set_combo.set_model (self.sets)
-        self.set_combo.set_active (-1)
-
         self.on_selection_changed(selection)
-
-        renderer = gtk.CellRendererPixbuf()
-        self.set_combo.pack_start (renderer, expand=False)
-        self.set_combo.set_attributes(renderer, pixbuf=2)
-        renderer = gtk.CellRendererText()
-        self.set_combo.pack_start (renderer, expand=False)
-        self.set_combo.set_attributes(renderer, text=1)
         
         # The upload progress dialog
         self.uploading = False
@@ -206,6 +192,11 @@ class Postr (UniqueApp):
         w = GroupSelector.GroupSelector(self.flickr)
         w.show()
         return w
+
+    def set_combo_new (self, *args):
+        w = SetCombo.SetCombo(self.flickr)
+        w.show()
+        return w
     
     def image_list_new (self, *args):
         """Custom widget creation function to make the image list."""
@@ -250,7 +241,7 @@ class Postr (UniqueApp):
             self.update_upload()
             self.statusbar.update_quota()
             self.group_selector.update()
-            self.flickr.photosets_getList().addCallbacks(self.got_photosets, self.twisted_error)
+            self.set_combo.update()
 
     def update_upload(self):
         connected = self.is_connected and self.model.iter_n_children(None) > 0
@@ -263,24 +254,6 @@ class Postr (UniqueApp):
         for row in self.model:
             size += row[ImageStore.COL_SIZE]
         self.statusbar.set_upload(size)
-    
-    def got_set_thumb(self, page, it):
-        loader = gtk.gdk.PixbufLoader()
-        loader.set_size (32, 32)
-        loader.write(page)
-        loader.close()
-        self.sets.set (it, 2, loader.get_pixbuf())
-    
-    def got_photosets(self, rsp):
-        """Callback for the photosets.getList call"""
-        for photoset in rsp.findall("photosets/photoset"):
-            it = self.sets.append()
-            self.sets.set (it,
-                           0, photoset.get("id"),
-                           1, photoset.find("title").text)
-
-            url = "http://static.flickr.com/%s/%s_%s%s.jpg" % (photoset.get("server"), photoset.get("primary"), photoset.get("secret"), "_s")
-            getPage (url).addCallback (self.got_set_thumb, it).addErrback(self.twisted_error)
     
     def on_field_changed(self, widget, column):
         """Callback when the entry fields are changed."""
@@ -800,7 +773,7 @@ class Postr (UniqueApp):
                                                                                                                       ImageStore.COL_VISIBLE)
         # Lookup the set ID from the iterator
         if set_it:
-            (set_id,) = self.sets.get (set_it, 0)
+            (set_id,) = self.set_combo.get_id_for_iter(set_it)
         else:
             set_id = 0
 
