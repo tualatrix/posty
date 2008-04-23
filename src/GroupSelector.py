@@ -86,7 +86,7 @@ class GroupSelector(gtk.TreeView):
             util.get_buddyicon(self.flickr, group, 24).addCallback(got_thumb, it)
     
     def twisted_error(self, failure):
-        dialog = ErrorDialog(self.window)
+        dialog = ErrorDialog()
         dialog.set_from_failure(failure)
         dialog.show_all()
 
