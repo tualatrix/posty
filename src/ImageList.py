@@ -69,7 +69,7 @@ class ImageList(gtk.TreeView):
             # TODO: Clip at 20 characters, or the first line.
             info_desc = description[:20]
         else:
-            info_desc = _("No description")
+            info_desc = ""
 
         s = "<b><big>%s</big></b>\n%s\n" % (escape (info_title), escape (info_desc))
         if tags:
