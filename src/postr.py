@@ -247,6 +247,13 @@ class Postr(UniqueApp):
             self.set_combo.update()
             self.update_avatar()
 
+    def on_statusbar_box_expose(self, widget, event):
+        """
+        Expose callback for the event box containing the status bar, to paint it
+        in a different colour.
+        """
+        widget.window.draw_rectangle(widget.style.dark_gc[gtk.STATE_NORMAL], True, *event.area)
+        
     def update_upload(self):
         connected = self.is_connected and self.model.iter_n_children(None) > 0
         self.upload_menu.set_sensitive(connected)
