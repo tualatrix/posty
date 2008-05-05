@@ -18,30 +18,30 @@
 import gtk
 from ErrorDialog import ErrorDialog
 from util import greek
+from xml.sax.saxutils import escape
 
-class StatusBar(gtk.Statusbar):
+class StatusBar(gtk.Label):
     def __init__(self, flickr):
-        gtk.Statusbar.__init__(self)
-        self.context = self.get_context_id("quota")
+        gtk.Label.__init__(self)
+        self.set_alignment(0.0, 0.5)
         self.flickr = flickr
         self.quota = None
         self.to_upload = None
 
     def __update(self):
-        self.pop(self.context)
-        if self.quota and self.to_upload:
-            message = _("You have %(quota)s remaining this month (%(to_upload)s to upload)") % self.__dict__
-        elif self.quota:
-            message = _("You have %(quota)s remaining this month") % self.__dict__
-        elif self.to_upload:
-            message = _("%(to_upload)s to upload") % self.__dict__
-        else:
-            message = ""
+        message = ""
 
         if self.flickr.get_username():
-            message = message + " - logged in as " + self.flickr.get_fullname() or self.flickr.get_username()
+            message = message + _("Logged in as <b>%s</b>.  ") % escape(self.flickr.get_fullname() or self.flickr.get_username())
         
-        self.push(self.context, message)
+        if self.quota and self.to_upload:
+            message = message + _("You can upload %(quota)s this month, and have %(to_upload)s to upload.") % self.__dict__
+        elif self.quota:
+            message = message + _("You can upload %(quota)s this month.") % self.__dict__
+        elif self.to_upload:
+            message = message + _("%(to_upload)s to upload.") % self.__dict__
+
+        self.set_markup(message)
     
     def update_quota(self):
         """Call Flickr to get the current upload quota, and update the status bar."""
