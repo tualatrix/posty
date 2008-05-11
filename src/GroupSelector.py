@@ -40,6 +40,11 @@ class GroupSelector(gtk.TreeView):
         
         gtk.TreeView.__init__(self, self.model)
         
+        # Calculate the size of thumbnails based on the size of the text
+        # renderer, but provide a default in case style-set isn't called.
+        self.connect("style-set", self.style_set);
+        self.thumb_size = 24
+
         column = gtk.TreeViewColumn('Selected')
         self.append_column(column)
         
@@ -57,9 +62,9 @@ class GroupSelector(gtk.TreeView):
         column.pack_start(renderer, False)
         column.add_attribute(renderer, "pixbuf", COL_ICON)
         
-        renderer =  gtk.CellRendererText()
-        column.pack_start(renderer, True)
-        column.add_attribute(renderer, "text", COL_NAME)
+        self.text_renderer =  gtk.CellRendererText()
+        column.pack_start(self.text_renderer, True)
+        column.add_attribute(self.text_renderer, "text", COL_NAME)
         
         self.set_size_request(-1, 24 * 3 + self.style_get_property("vertical-separator") * 6)
         self.set_headers_visible(False)
@@ -71,6 +76,9 @@ class GroupSelector(gtk.TreeView):
         self.set_search_equal_func(search_func)
         # TODO: enable case insensitive substring searching
     
+    def style_set(self, widget, old_style):
+        self.thumb_size = self.text_renderer.get_size(self, None)[3]
+
     def update(self):
         # TODO: block changed signals
         self.flickr.groups_pools_getGroups().addCallbacks(self.got_groups, self.twisted_error)
@@ -83,7 +91,7 @@ class GroupSelector(gtk.TreeView):
                             COL_NAME, group.get("name"))
             def got_thumb(thumb, it):
                 self.model.set (it, COL_ICON, thumb)
-            util.get_buddyicon(self.flickr, group, 24).addCallback(got_thumb, it)
+            util.get_buddyicon(self.flickr, group, self.thumb_size).addCallback(got_thumb, it)
     
     def twisted_error(self, failure):
         dialog = ErrorDialog()
