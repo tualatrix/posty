@@ -23,6 +23,11 @@ class SetCombo(gtk.ComboBox):
         gtk.ComboBox.__init__(self)
         self.flickr = flickr
         
+        # Calculate the size of thumbnails based on the size of the text
+        # renderer, but provide a default in case style-set isn't called.
+        self.connect("style-set", self.style_set)
+        self.thumb_size = 24
+
         # ID, name, thumbnail
         self.model =  gtk.ListStore (gobject.TYPE_STRING, gobject.TYPE_STRING, gtk.gdk.Pixbuf)
         self.model.set (self.model.append(), 0, None, 1, "None")
@@ -33,10 +38,14 @@ class SetCombo(gtk.ComboBox):
         renderer = gtk.CellRendererPixbuf()
         self.pack_start (renderer, expand=False)
         self.set_attributes(renderer, pixbuf=2)
-        renderer = gtk.CellRendererText()
-        self.pack_start (renderer, expand=False)
-        self.set_attributes(renderer, text=1)
+        
+        self.text_renderer = gtk.CellRendererText()
+        self.pack_start (self.text_renderer, expand=False)
+        self.set_attributes(self.text_renderer, text=1)
 
+    def style_set(self, widget, old_style):
+        self.thumb_size = self.text_renderer.get_size(self, None)[3]
+    
     def twisted_error(self, failure):
         from ErrorDialog import ErrorDialog
         dialog = ErrorDialog()
@@ -45,7 +54,7 @@ class SetCombo(gtk.ComboBox):
 
     def __got_set_thumb(self, page, it):
         loader = gtk.gdk.PixbufLoader()
-        loader.set_size (32, 32)
+        loader.set_size (self.thumb_size, self.thumb_size)
         loader.write(page)
         loader.close()
         self.model.set (it, 2, loader.get_pixbuf())
