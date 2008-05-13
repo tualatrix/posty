@@ -74,6 +74,7 @@ class Postr(UniqueApp):
                            ("window",
                             "upload_menu",
                             "upload_button",
+                            "avatar_image",
                             "statusbar",
                             "thumbnail_image",
                             "title_entry",
@@ -137,6 +138,7 @@ class Postr(UniqueApp):
             self.cancel_upload = True
         self.progress_dialog = ProgressDialog(cancel)
         self.progress_dialog.set_transient_for(self.window)
+        self.avatar_image.clear()
         # Disable the Upload menu until the user has authenticated
         self.update_upload()
 
@@ -243,7 +245,15 @@ class Postr(UniqueApp):
             self.statusbar.update_quota()
             self.group_selector.update()
             self.set_combo.update()
+            self.update_avatar()
 
+    def on_statusbar_box_expose(self, widget, event):
+        """
+        Expose callback for the event box containing the status bar, to paint it
+        in a different colour.
+        """
+        widget.window.draw_rectangle(widget.style.dark_gc[gtk.STATE_NORMAL], True, *event.area)
+        
     def update_upload(self):
         connected = self.is_connected and self.model.iter_n_children(None) > 0
         self.upload_menu.set_sensitive(connected)
@@ -255,6 +265,24 @@ class Postr(UniqueApp):
         for row in self.model:
             size += row[ImageStore.COL_SIZE]
         self.statusbar.set_upload(size)
+    
+    def update_avatar(self):
+        """
+        Update the avatar displayed at the top of the window.  Called when
+        authentication is completed.
+        """
+        def getinfo_cb(rsp):
+            p = rsp.find("person")
+            data = {
+                "nsid": self.flickr.get_nsid(),
+                "iconfarm": p.get("iconfarm"),
+                "iconserver": p.get("iconserver")
+            }
+            def get_buddyicon_cb(icon):
+                self.avatar_image.set_from_pixbuf(icon)
+            get_buddyicon(self.flickr, data).addCallbacks(get_buddyicon_cb, self.twisted_error)
+        # Need to call people.getInfo to get the iconserver/iconfarm
+        self.flickr.people_getInfo(user_id=self.flickr.get_nsid()).addCallbacks(getinfo_cb, self.twisted_error)
     
     def on_field_changed(self, widget, column):
         """Callback when the entry fields are changed."""
