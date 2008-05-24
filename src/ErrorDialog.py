@@ -27,10 +27,12 @@ class ErrorDialog(gtk.MessageDialog):
         self.connect("response", lambda dialog, response: dialog.destroy())
 
     def set_from_failure (self, failure):
+        print failure
         # TODO: format nicer
         self.format_secondary_text (str (failure.value))
 
     def set_from_exception (self, exception):
+        print exception
         # TODO: format nicer
         self.format_secondary_text (str (exception))
 
