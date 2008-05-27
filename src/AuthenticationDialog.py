@@ -22,9 +22,11 @@ def on_url_clicked(button, url):
     """Global LinkButton handler that starts the default GNOME HTTP handler, or
     firefox."""
     client = gconf.client_get_default()
+    # Escape the & with blackslashes so that browser opening works with Firefox
+    # -remote calls.
+    url = url.replace("&", "\\&")
     browser = client.get_string("/desktop/gnome/url-handlers/http/command") or "firefox %s"
-    # Because URLs contain & it needs to be quoted
-    browser = browser % '"' + url + '"'
+    browser = browser % url
     subprocess.Popen(args=browser, shell=True)
     # TODO: if that didn't work fallback on x-www-browser or something
 
