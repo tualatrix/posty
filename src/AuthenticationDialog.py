@@ -15,19 +15,22 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
-import subprocess
-import gtk, gconf
+import os, gtk, gconf
 
 def on_url_clicked(button, url):
     """Global LinkButton handler that starts the default GNOME HTTP handler, or
     firefox."""
+    # Get the HTTP URL handler
     client = gconf.client_get_default()
-    # Escape the & with blackslashes so that browser opening works with Firefox
-    # -remote calls.
-    url = url.replace("&", "\\&")
-    browser = client.get_string("/desktop/gnome/url-handlers/http/command") or "firefox %s"
-    browser = browser % url
-    subprocess.Popen(args=browser, shell=True)
+    browser = client.get_string("/desktop/gnome/url-handlers/http/command") or "firefox"
+
+    # Because the world sucks and everyone hates me, just use the first word and
+    # hope that is enough.  The problem is that some people have [epiphany %s]
+    # which means the & needs escaping or quoting, others have [iceweasel
+    # -remote "openurl(%s,newtab)"] which means the & must not be escaped or
+    # quoted.  I can't see a general solution
+    browser = browser.split(" ")[0]
+    os.spawnlp(os.P_NOWAIT, browser, browser, url)
     # TODO: if that didn't work fallback on x-www-browser or something
 
 class AuthenticationDialog(gtk.Dialog):
