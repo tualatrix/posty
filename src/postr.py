@@ -579,9 +579,9 @@ class Postr(UniqueApp):
 
         # Check the file size
         filesize = os.path.getsize(filename)
-        if filesize > 10 * 1024 * 1024:
+        if filesize > 20 * 1024 * 1024:
             d = ErrorDialog(self.window)
-            d.set_from_string("Image %s is too large, images must be no larger than 10MB in size." % filename)
+            d.set_from_string("Image %s is too large, images must be no larger than 20MB in size." % filename)
             d.show_all()
             return
         
