@@ -1,0 +1,130 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Postr\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-01-10 10:04+0000\n"
+"PO-Revision-Date: 2008-07-03 19:25+0200\n"
+"Last-Translator: Emmanuele Bassi <ebassi@gmail.com>\n"
+"Language-Team: Italian <it@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/AboutDialog.py:7 src/AuthenticationDialog.py:16 src/postr.glade:8
+#: src/postr.glade:486
+msgid "Flickr Uploader"
+msgstr ""
+
+#: src/AuthenticationDialog.py:19
+msgid "Continue"
+msgstr "Continuar"
+
+#: src/AuthenticationDialog.py:23
+msgid ""
+"Postr needs to login to Flickr to upload your photos. Please click on the "
+"link below to login to Flickr."
+msgstr "Postr necesita registrarse en Flickr para subir sus fotos. Por favor, pulse en el link de abajo para registrase en Flickr."
+
+#: src/AuthenticationDialog.py:32 src/AuthenticationDialog.py:34
+msgid "Login to Flickr"
+msgstr "Registrarse en Flickr"
+
+#: src/postr.py:182
+#, python-format
+msgid "You have %s remaining this month"
+msgstr "Le quedan %s este mes."
+
+#: src/postr.py:194
+msgid "Add Photos"
+msgstr "Añadir fotos"
+
+#: src/postr.py:206
+msgid "Images"
+msgstr "Imágenes"
+
+#: src/postr.py:212
+msgid "All Files"
+msgstr "Todos los archivos"
+
+#: src/postr.py:245
+msgid "<b>Currently Uploading</b>"
+msgstr "<b>Subiendo actualmente</b>"
+
+#: src/postr.py:246
+msgid "Photos are still being uploaded. Are you sure you want to quit?"
+msgstr "Hay fotos que se están subiendo en este momento. ¿Seguro que quiere salir?"
+
+#: src/postr.py:509
+#, python-format
+msgid "Uploading %(index)d of %(count)d"
+msgstr "Subiendo %(index)d de %(count)d"
+
+#: nautilus/postrExtension.py:82
+msgid "Upload to Flickr..."
+msgstr "Subir a Flickr..."
+
+#: nautilus/postrExtension.py:83
+msgid "Upload the selected files into Flickr"
+msgstr "Enviar las fotos seleccionadas a Flickr"
+
+#: src/postr.glade:40
+msgid "_File"
+msgstr "_Archivo"
+
+#: src/postr.glade:49
+msgid "_Add Photos..."
+msgstr "_Añadir fotos..."
+
+#: src/postr.glade:77
+msgid "_Upload"
+msgstr "_Subir"
+
+#: src/postr.glade:117
+msgid "Select"
+msgstr "Seleccionar"
+
+#: src/postr.glade:127
+msgid "_Delete"
+msgstr "_Eliminar"
+
+#: src/postr.glade:155
+msgid "_Select All"
+msgstr "Seleccionar todas"
+
+#: src/postr.glade:177
+msgid "Dese_lect All"
+msgstr "Elimiar la selección"
+
+#: src/postr.glade:187
+msgid "_Invert Selection"
+msgstr "_Invertir la selección"
+
+#: src/postr.glade:200
+msgid "_Help"
+msgstr "A_yuda"
+
+#: src/postr.glade:209
+msgid "_About"
+msgstr "_Acerca de"
+
+#: src/postr.glade:272
+msgid "_Title:"
+msgstr "_Título:"
+
+#: src/postr.glade:301
+msgid "_Description:"
+msgstr "_Descripción:"
+
+#: src/postr.glade:330
+msgid "Ta_gs:"
+msgstr "E_tiquetas:"
+
+#: src/postr.glade:442
+msgid "..."
+msgstr "..."
