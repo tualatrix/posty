@@ -768,6 +768,7 @@ class Postr(UniqueApp):
         self.thumbview.set_sensitive(True)
         self.update_statusbar()
         self.statusbar.update_quota()
+        self.current_upload_it = None
 
     def upload_error(self, failure):
         self.twisted_error(failure)
