@@ -46,6 +46,7 @@ class StatusBar(gtk.Label):
     def update_quota(self):
         """Call Flickr to get the current upload quota, and update the status bar."""
         def got_quota(rsp):
+            self.maxfile = int(rsp.find("user/filesize").get("maxmb"))
             if int(rsp.find("user").get("ispro")):
                 self.quota = None
             else:

@@ -586,9 +586,9 @@ class Postr(UniqueApp):
             d.show_all()
             return
 
-        if filesize > 20 * 1024 * 1024:
+        if filesize > self.statusbar.maxfile * 1024 * 1024:
             d = ErrorDialog(self.window)
-            d.set_from_string("Image %s is too large, images must be no larger than 20MB in size." % filename)
+            d.set_from_string("Image %s is too large, images must be no larger than %dMB in size." % (filename, self.statusbar.maxfile))
             d.show_all()
             return
         
