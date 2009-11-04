@@ -578,7 +578,14 @@ class Postr(UniqueApp):
         # TODO: MIME type check
 
         # Check the file size
-        filesize = os.path.getsize(filename)
+        try:
+            filesize = os.path.getsize(filename)
+        except os.error:
+            d = ErrorDialog(self.window)
+            d.set_from_string("File at %s does not exist or is currently inaccessible." % filename)
+            d.show_all()
+            return
+
         if filesize > 20 * 1024 * 1024:
             d = ErrorDialog(self.window)
             d.set_from_string("Image %s is too large, images must be no larger than 20MB in size." % filename)
