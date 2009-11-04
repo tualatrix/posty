@@ -22,6 +22,12 @@ from os.path import basename
 import pygtk; pygtk.require ("2.0")
 import gobject, gtk, gtk.glade, gconf
 
+try:
+    import gtkspell
+    has_gtkspell = True
+except:
+    has_gtkspell = False
+
 from AboutDialog import AboutDialog
 from AuthenticationDialog import AuthenticationDialog
 from ProgressDialog import ProgressDialog
@@ -107,6 +113,9 @@ class Postr(UniqueApp):
         
         selection = self.thumbview.get_selection()
         selection.connect("changed", self.on_selection_changed)
+
+        if has_gtkspell:
+          gtkspell.Spell(self.desc_view)
 
         # TODO: remove this
         self.current_it = None
