@@ -1,8 +1,29 @@
 #!/usr/bin/env python
 
+import os
 from distutils.core import setup
+from distutils.command.install_data import install_data
 from glob import glob
 from src.version import __version__
+
+
+class InstallData(install_data):
+    def run(self):
+        self.data_files.extend(self._nautilus_plugin())
+        install_data.run(self)
+
+    def _nautilus_plugin(self):
+        files = []
+        cmd = os.popen('pkg-config --variable=pythondir nautilus-python', 'r')
+        res = cmd.readline().strip()
+        ret = cmd.close()
+
+        if ret is None:
+            dest = res[5:]
+            files.append((dest, ['nautilus/postrExtension.py']))
+
+        return files
+
 
 setup(name='Postr',
       version=__version__,
@@ -21,11 +42,8 @@ setup(name='Postr',
                   ('share/icons/hicolor/24x24/apps', glob('data/24x24/*.png')),
                   ('share/icons/hicolor/32x32/apps', glob('data/32x32/*.png')),
                   ('share/icons/hicolor/scalable/apps', glob('data/scalable/*.svg')),
-                  # TODO: inspect nautilus-python.pc to get path
-                  ('lib/nautilus/extensions-1.0/python', ['nautilus/postrExtension.py']),
-                  ('lib/nautilus/extensions-2.0/python', ['nautilus/postrExtension.py']),
-                  ],
-      
+                  ], cmdclass={'install_data': InstallData}
+
       )
 
 # TODO: install translations
