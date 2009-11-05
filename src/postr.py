@@ -95,7 +95,9 @@ class Postr(UniqueApp):
                             "visible_check",
                             "thumbview")
                            )
-        align_labels(glade, ("title_label", "desc_label", "tags_label", "set_label", "privacy_label", "safety_label"))
+        align_labels(glade, ("title_label", "desc_label",
+                             "tags_label", "set_label",
+                             "privacy_label", "safety_label"))
         
         # Just for you, Daniel.
         try:
@@ -555,20 +557,21 @@ class Postr(UniqueApp):
                 raise "Unhandled widget type %s" % field
 
         (model, items) = selection.get_selected_rows()
-        
+
         if items:
             # TODO: do something clever with multiple selections
             self.current_it = self.model.get_iter(items[0])
-            (title, desc, tags, set_it, groups, privacy_it, safety_it, visible) = self.model.get(self.current_it,
-                                                                                                 ImageStore.COL_TITLE,
-                                                                                                 ImageStore.COL_DESCRIPTION,
-                                                                                                 ImageStore.COL_TAGS,
-                                                                                                 ImageStore.COL_SET,
-                                                                                                 ImageStore.COL_GROUPS,
-                                                                                                 ImageStore.COL_PRIVACY,
-                                                                                                 ImageStore.COL_SAFETY,
-                                                                                                 ImageStore.COL_VISIBLE)
-            
+            (title, desc, tags, set_it, groups,
+             privacy_it, safety_it, visible) = self.model.get(self.current_it,
+                           ImageStore.COL_TITLE,
+                           ImageStore.COL_DESCRIPTION,
+                           ImageStore.COL_TAGS,
+                           ImageStore.COL_SET,
+                           ImageStore.COL_GROUPS,
+                           ImageStore.COL_PRIVACY,
+                           ImageStore.COL_SAFETY,
+                           ImageStore.COL_VISIBLE)
+
             enable_field(self.title_entry, title)
             enable_field(self.desc_view, desc)
             enable_field(self.tags_entry, tags)
@@ -577,7 +580,7 @@ class Postr(UniqueApp):
             enable_field(self.privacy_combo, privacy_it)
             enable_field(self.safety_combo, safety_it)
             enable_field(self.visible_check, visible)
-            
+
             self.update_thumbnail(self.thumbnail_image)
         else:
             self.current_it = None
@@ -803,7 +806,7 @@ class Postr(UniqueApp):
     def upload_error(self, failure):
         self.twisted_error(failure)
         self.upload_done()
-        
+
     def upload(self, response=None):
         """Upload worker function, called by the File->Upload callback.  As this
         calls itself in the deferred callback, it takes a response argument."""
@@ -812,24 +815,26 @@ class Postr(UniqueApp):
         if self.current_upload_it:
             self.model.remove(self.current_upload_it)
             self.current_upload_it = None
-        
+
         it = self.model.get_iter_first()
         if self.cancel_upload or it is None:
             self.upload_done()
             return
 
-        (filename, thumb, pixbuf, title, desc, tags, set_it, groups, privacy_it, safety_it, visible) = self.model.get(it,
-                                                                                                                      ImageStore.COL_FILENAME,
-                                                                                                                      ImageStore.COL_THUMBNAIL,
-                                                                                                                      ImageStore.COL_IMAGE,
-                                                                                                                      ImageStore.COL_TITLE,
-                                                                                                                      ImageStore.COL_DESCRIPTION,
-                                                                                                                      ImageStore.COL_TAGS,
-                                                                                                                      ImageStore.COL_SET,
-                                                                                                                      ImageStore.COL_GROUPS,
-                                                                                                                      ImageStore.COL_PRIVACY,
-                                                                                                                      ImageStore.COL_SAFETY,
-                                                                                                                      ImageStore.COL_VISIBLE)
+        (filename, thumb, pixbuf, title, desc,
+         tags, set_it, groups, privacy_it, safety_it,
+         visible) = self.model.get(it,
+                       ImageStore.COL_FILENAME,
+                       ImageStore.COL_THUMBNAIL,
+                       ImageStore.COL_IMAGE,
+                       ImageStore.COL_TITLE,
+                       ImageStore.COL_DESCRIPTION,
+                       ImageStore.COL_TAGS,
+                       ImageStore.COL_SET,
+                       ImageStore.COL_GROUPS,
+                       ImageStore.COL_PRIVACY,
+                       ImageStore.COL_SAFETY,
+                       ImageStore.COL_VISIBLE)
         # Lookup the set ID from the iterator
         if set_it:
             (set_id,) = self.set_combo.get_id_for_iter(set_it)
@@ -849,7 +854,7 @@ class Postr(UniqueApp):
         self.update_progress(filename, title, thumb)
         self.upload_index += 1
         self.current_upload_it = it
-        
+
         if filename:
             d = self.flickr.upload(filename=filename,
                                    title=title, desc=desc,
