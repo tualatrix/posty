@@ -2,6 +2,7 @@
 
 <Project xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:foaf="http://xmlns.com/foaf/0.1/"
+  xmlns:gnome="http://api.gnome.org/doap-extensions#"
   xmlns="http://usefulinc.com/ns/doap#">
   
   <name>Postr</name>
@@ -16,22 +17,77 @@
   <license rdf:resource="http://usefulinc.com/doap/licenses/gpl"/>
   <download-page rdf:resource="http://www.burtonini.com/blog/computers/postr"/>
   
-  <category rdf:resource="http://burtonini.com/doap/category/gnome"/>
-  <category rdf:resource="http://burtonini.com/doap/category/graphics"/>
-  
   <maintainer>
     <foaf:Person>
       <foaf:name>Ross Burton</foaf:name>
       <foaf:mbox rdf:resource="mailto:ross@burtonini.com"/>
     </foaf:Person>
+    <foaf:Person>
+      <foaf:name>Germán Póo-Caamaño</foaf:name>
+      <foaf:mbox rdf:resource="mailto:gpoo@gnome.org"/>
+      <gnome:userid>gpoo</gnome:userid>
+    </foaf:Person>
   </maintainer>
   
   <repository>
-    <BzrRepository>
-      <location rdf:resource="http://burtonini.com/bzr/postr.stable/"/>
-    </BzrRepository>
+    <GitRepository>
+      <browse rdf:resource="http://git.gnome.org/cgit/postr/"/>
+      <location rdf:resource="git://git.gnome.org/postr"/>
+    </GitRepository>
   </repository>
   
+  <bug-database rdf:resource="https://bugzilla.gnome.org/browse.cgi?product=postr" />
+
+  <release>
+    <Version>
+      <name>0.12.4</name> 
+      <branch>postr-0-12</branch>
+      <revision>0.12.4</revision>
+      <created>2009-11-04</created>
+      <file-release rdf:resource="http://ftp.gnome.org/pub/GNOME/sources/postr/"/>
+    </Version>
+  </release>
+
+  <release>
+    <Version>
+      <revision>0.12.3</revision>
+      <created>2008-12-19</created>
+      <file-release rdf:resource="http://burtonini.com/computing/postr-0.12.3.tar.gz"/>
+    </Version>
+  </release>
+
+  <release>
+    <Version>
+      <revision>0.12.2</revision>
+      <created>2008-06-15</created>
+      <file-release rdf:resource="http://burtonini.com/computing/postr-0.12.2.tar.gz"/>
+    </Version>
+  </release>
+
+  <release>
+    <Version>
+      <revision>0.12.1</revision>
+      <created>2008-05-27</created>
+      <file-release rdf:resource="http://burtonini.com/computing/postr-0.12.1.tar.gz"/>
+    </Version>
+  </release>
+
+  <release>
+    <Version>
+      <revision>0.12</revision>
+      <created>2008-04-23</created>
+      <file-release rdf:resource="http://burtonini.com/computing/postr-0.12.tar.gz"/>
+    </Version>
+  </release>
+
+  <release>
+    <Version>
+      <revision>0.11</revision>
+      <created>2008-04-20</created>
+      <file-release rdf:resource="http://burtonini.com/computing/postr-0.11.tar.gz"/>
+    </Version>
+  </release>
+
   <release>
     <Version>
       <revision>0.10</revision>
