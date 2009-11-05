@@ -1,3 +1,6 @@
 *.bak
 *.gladep
 build
+*.pyc
+*~
+*.swp
