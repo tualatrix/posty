@@ -80,6 +80,8 @@ class Postr(UniqueApp):
                            ("window",
                             "upload_menu",
                             "upload_button",
+                            "remove_menu",
+                            "remove_button",
                             "avatar_image",
                             "statusbar",
                             "thumbnail_image",
@@ -150,6 +152,9 @@ class Postr(UniqueApp):
         self.avatar_image.clear()
         # Disable the Upload menu until the user has authenticated
         self.update_upload()
+
+        # We don't have any photos yet, disable remove buttons
+        self.update_remove()
 
         # Update the proxy configuration
         client = gconf.client_get_default()
@@ -233,6 +238,7 @@ class Postr(UniqueApp):
         # We don't care about the arguments, because we just want to know when
         # the model was changed, not what was changed.
         self.update_upload()
+        self.update_remove()
     
     def auth_open_url(self, state):
         """Callback from midway through Flickr authentication.  At this point we
@@ -267,6 +273,11 @@ class Postr(UniqueApp):
         connected = self.is_connected and self.model.iter_n_children(None) > 0
         self.upload_menu.set_sensitive(connected)
         self.upload_button.set_sensitive(connected)
+
+    def update_remove(self):
+        have_photos = self.model.iter_n_children(None) > 0
+        self.remove_menu.set_sensitive(have_photos)
+        self.remove_button.set_sensitive(have_photos)
 
     def update_statusbar(self):
         """Recalculate how much is to be uploaded, and update the status bar."""
@@ -456,6 +467,8 @@ class Postr(UniqueApp):
 
         self.upload_menu.set_sensitive(False)
         self.upload_button.set_sensitive(False)
+        self.remove_menu.set_sensitive(False)
+        self.remove_button.set_sensitive(False)
         self.uploading = True
         self.thumbview.set_sensitive(False)
         self.progress_dialog.show()
@@ -779,6 +792,7 @@ class Postr(UniqueApp):
         self.window.set_title(_("Flickr Uploader"))
         self.upload_menu.set_sensitive(True)
         self.upload_button.set_sensitive(True)
+        self.update_remove()
         self.uploading = False
         self.progress_dialog.hide()
         self.thumbview.set_sensitive(True)
