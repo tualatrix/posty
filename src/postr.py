@@ -118,6 +118,13 @@ class Postr(UniqueApp):
         selection = self.thumbview.get_selection()
         selection.connect("changed", self.on_selection_changed)
 
+        self.thumbview.connect("button_press_event",
+                               self.on_double_click_selection,
+                               self.title_entry)
+        self.thumbview.connect("key-press-event",
+                               self.on_return_key_selection,
+                               self.title_entry)
+
         if has_gtkspell:
           gtkspell.Spell(self.desc_view)
 
@@ -594,7 +601,6 @@ class Postr(UniqueApp):
             disable_field(self.visible_check)
 
             self.thumbnail_image.set_from_icon_name("postr", self.logo_icon_size)
-
         [obj.handler_unblock(i) for obj,i in self.change_signals]
 
     def add_image_filename(self, filename):
@@ -876,3 +882,15 @@ class Postr(UniqueApp):
         if groups:
             d.addCallback(self.add_to_groups, groups)
         d.addCallbacks(self.upload, self.upload_error)
+
+    def on_double_click_selection(self, tree ,event, entry):
+        """This callback is used to focus the entry title after a
+           double click on one image."""
+        if event.type == gtk.gdk._2BUTTON_PRESS:
+            entry.grab_focus()
+    def on_return_key_selection(self, tree ,event, entry):
+        """This callback is used to focus the entry title after
+           Return key is pressed on the image list."""
+        if event.type == gtk.gdk.KEY_PRESS and \
+           event.keyval == gtk.keysyms.Return:
+            entry.grab_focus()
