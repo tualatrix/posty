@@ -27,6 +27,9 @@ class StatusBar(gtk.Label):
         self.flickr = flickr
         self.quota = None
         self.to_upload = None
+        # In case we are offline or we can not get the max file size to
+        # upload, we assume a pro account (20M)
+        self.maxfile = 20
 
     def __update(self):
         message = ""
