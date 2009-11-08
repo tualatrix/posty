@@ -76,3 +76,15 @@ class SetCombo(gtk.ComboBox):
     def get_id_for_iter(self, it):
         if it is None: return None
         return self.model.get(it, 0)
+
+    # This is needed for imports to behave correctly.  The
+    #   index of the iterator on export might no longer be valid
+    #   when the upload set is imported.
+    def get_iter_for_set(self, set_id):
+        iter = self.model.get_iter_root()
+        while iter:
+            iter_set_id = self.model.get(iter, 0)
+            if iter_set_id[0] == set_id:
+                return iter
+            iter = self.model.iter_next(iter)
+        return None

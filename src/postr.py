@@ -38,7 +38,8 @@ from flickrest import Flickr
 import EXIF
 from iptcinfo import IPTCInfo
 from util import *
-
+from datetime import datetime
+import shelve
 
 try:
     from gtkunique import UniqueApp
@@ -82,6 +83,7 @@ class Postr(UniqueApp):
                             "upload_button",
                             "remove_menu",
                             "remove_button",
+                            "save_session_menu",
                             "avatar_image",
                             "statusbar",
                             "thumbnail_image",
@@ -287,6 +289,7 @@ class Postr(UniqueApp):
         have_photos = self.model.iter_n_children(None) > 0
         self.remove_menu.set_sensitive(have_photos)
         self.remove_button.set_sensitive(have_photos)
+        self.save_session_menu.set_sensitive(have_photos)
 
     def update_statusbar(self):
         """Recalculate how much is to be uploaded, and update the status bar."""
@@ -325,10 +328,12 @@ class Postr(UniqueApp):
             value = widget.get_selected_groups()
         else:
             raise "Unhandled widget type %s" % widget
-        
         selection = self.thumbview.get_selection()
         (model, items) = selection.get_selected_rows()
-        for path in items:
+        self._set_value_in_model(column, value, items)
+
+    def _set_value_in_model(self, column, value, rows):
+        for path in rows:
             it = self.model.get_iter(path)
             self.model.set_value(it, column, value)
 
@@ -390,32 +395,47 @@ class Postr(UniqueApp):
         if self.uploading:
             dialog = gtk.MessageDialog(type=gtk.MESSAGE_WARNING, parent=self.window)
             dialog.add_buttons(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                               gtk.STOCK_SAVE, gtk.RESPONSE_ACCEPT,
                                gtk.STOCK_QUIT, gtk.RESPONSE_OK)
             dialog.set_markup(_('<b>Currently Uploading</b>'))
             dialog.format_secondary_text(_('Photos are still being uploaded. '
-                                         'Are you sure you want to quit?'))
+                                           'Are you sure you want to quit? '
+                                           'You can also save your pending upload set for later.'))
             dialog.set_default_response(gtk.RESPONSE_OK)
             response = dialog.run()
             dialog.destroy()
             if response == gtk.RESPONSE_CANCEL:
                 return True
+            elif response == gtk.RESPONSE_ACCEPT:
+                self.save_upload_set()
         elif self.is_connected and self.model.iter_n_children(None) > 0:
             dialog = gtk.MessageDialog(type=gtk.MESSAGE_WARNING, parent=self.window)
             dialog.add_buttons(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                               gtk.STOCK_SAVE, gtk.RESPONSE_ACCEPT,
                                gtk.STOCK_QUIT, gtk.RESPONSE_OK)
             dialog.set_markup(_('<b>Photos to be uploaded</b>'))
             dialog.format_secondary_text(_('There are photos pending to '
-                                         'be uploaded. '
-                                         'Are you sure you want to quit?'))
+                                           'be uploaded. '
+                                           'Are you sure you want to quit? '
+                                           'You can also save your pending upload set for later.'))
             dialog.set_default_response(gtk.RESPONSE_OK)
             response = dialog.run()
             dialog.destroy()
             if response == gtk.RESPONSE_CANCEL:
                 return True
+            elif response == gtk.RESPONSE_ACCEPT:
+                self.save_upload_set()
 
         import twisted.internet.reactor
         twisted.internet.reactor.stop()
-    
+
+    def on_save_session_activate(self, widget):
+        """Callback from File->Save session."""
+        self.save_upload_set()
+
+    def on_load_session_activate(self, widget):
+        self.load_upload_set()
+
     def on_remove_activate(self, widget):
         """Callback from File->Remove or Remove button."""
         selection = self.thumbview.get_selection()
@@ -888,9 +908,197 @@ class Postr(UniqueApp):
            double click on one image."""
         if event.type == gtk.gdk._2BUTTON_PRESS:
             entry.grab_focus()
+
     def on_return_key_selection(self, tree ,event, entry):
         """This callback is used to focus the entry title after
            Return key is pressed on the image list."""
         if event.type == gtk.gdk.KEY_PRESS and \
            event.keyval == gtk.keysyms.Return:
             entry.grab_focus()
+
+    def save_upload_set(self):
+        dialog = gtk.FileChooserDialog(title=None,
+                                       action=gtk.FILE_CHOOSER_ACTION_SAVE,
+                                       buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                                gtk.STOCK_SAVE, gtk.RESPONSE_OK))
+
+        dialog.set_default_response(gtk.RESPONSE_OK)
+
+        default_filename = datetime.strftime(datetime.today(), "upload_saved_on_%m-%d-%y.postr")
+        dialog.set_current_name(default_filename)
+
+        dialog.set_do_overwrite_confirmation(True)
+
+        filter = gtk.FileFilter()
+        filter.set_name("postr upload sets")
+        filter.add_pattern("*.postr")
+        dialog.add_filter(filter)
+
+        filter = gtk.FileFilter()
+        filter.set_name("All Files")
+        filter.add_pattern("*")
+        dialog.add_filter(filter)
+
+        response = dialog.run()
+        if response == gtk.RESPONSE_OK:
+            filename = dialog.get_filename()
+            dest = shelve.open(filename, 'n')
+
+            if self.is_connected:
+                dest["nsid"] = self.flickr.get_nsid()
+
+            iter = self.model.get_iter_root()
+            while iter:
+                path = self.model.get_string_from_iter(iter)
+                dest[path] = self._marshal_row(path, iter)
+                iter = self.model.iter_next(iter)
+
+            dest.close()
+        dialog.destroy()
+
+    def _marshal_row(self, path, iter):
+        (filename,
+         title,
+         desc,
+         tags,
+         set_it,
+         groups,
+         privacy_it,
+         safety_it,
+         visible) = self.model.get(iter,
+                                   ImageStore.COL_FILENAME,
+                                   ImageStore.COL_TITLE,
+                                   ImageStore.COL_DESCRIPTION,
+                                   ImageStore.COL_TAGS,
+                                   ImageStore.COL_SET,
+                                   ImageStore.COL_GROUPS,
+                                   ImageStore.COL_PRIVACY,
+                                   ImageStore.COL_SAFETY,
+                                   ImageStore.COL_VISIBLE)
+
+        if set_it:
+            # Can't use path, because next time we connect, the
+            # combo order/contents might be different.
+            (set_id,) = self.set_combo.get_id_for_iter(set_it)
+        else:
+            set_id = 0
+
+        if privacy_it:
+            privacy_path = self.privacy_combo.model.get_path(privacy_it)
+        else:
+            privacy_path = None
+
+        if safety_it:
+            safety_path = self.safety_combo.model.get_path(safety_it)
+        else:
+            safety_path = None
+
+        args = ( path,
+                 filename,
+                 title,
+                 desc,
+                 tags,
+                 set_id,
+                 groups,
+                 privacy_path,
+                 safety_path,
+                 visible )
+        return args
+
+    def load_upload_set(self):
+        dialog = gtk.FileChooserDialog(title=None,
+                                       action=gtk.FILE_CHOOSER_ACTION_OPEN,
+                                       buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                                gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+
+        dialog.set_default_response(gtk.RESPONSE_OK)
+
+        filter = gtk.FileFilter()
+        filter.set_name("postr upload sets")
+        filter.add_pattern("*.postr")
+        dialog.add_filter(filter)
+
+        filter = gtk.FileFilter()
+        filter.set_name("All Files")
+        filter.add_pattern("*")
+        dialog.add_filter(filter)
+
+        response = dialog.run()
+        if response == gtk.RESPONSE_OK:
+            filename = dialog.get_filename()
+            source = shelve.open(filename, 'r')
+            if source:
+                should_ignore_photosets = False
+                if self.is_connected:
+                    if source.has_key("nsid"):
+                        nsid = source["nsid"]
+
+                        if self.flickr.get_nsid() != nsid:
+                            confirm_dialog = gtk.MessageDialog(buttons=gtk.BUTTONS_YES_NO)
+                            confirm_dialog.set_default_response(gtk.RESPONSE_YES)
+                            confirm_dialog.set_markup(
+                                "You are logged in as %s but loading\nan upload set for %s" %
+                                (self.flickr.get_nsid(), nsid))
+                            confirm_dialog.format_secondary_text("Do you want to continue "
+                                                                 "with the load?  You will "
+                                                                 "not import photoset information.")
+                            response = confirm_dialog.run()
+                            if response == gtk.RESPONSE_NO:
+                                dialog.destroy()
+                                return
+                            else:
+                                should_ignore_photosets = True
+                            confirm_dialog.destroy()
+                else:
+                    if source.has_key("nsid"):
+                        nsid = source["nsid"]
+                        confirm_dialog = gtk.MessageDialog(buttons=gtk.BUTTONS_YES_NO)
+                        confirm_dialog.set_default_response(gtk.RESPONSE_YES)
+                        confirm_dialog.set_markup(
+                            "You are not logged in but loading\nan upload set for %s" % nsid)
+                        confirm_dialog.format_secondary_text("Do you want to continue "
+                                                             "with the load?  You will "
+                                                             "not import photoset information.")
+                        response = confirm_dialog.run()
+                        if response == gtk.RESPONSE_NO:
+                            dialog.destroy()
+                            return
+                        else:
+                            should_ignore_photosets = True
+                        confirm_dialog.destroy()
+
+                index_offset = self.model.iter_n_children(None)
+                index = 0
+                while source.has_key(str(index)):
+                    row = source[str(index)]
+                    self._unmarshal_and_import_row(index + index_offset,
+                                                   row,
+                                                   should_ignore_photosets)
+                    index += 1
+                source.close()
+        dialog.destroy()
+
+    def _unmarshal_and_import_row(self, index, row, should_ignore_photosets):
+        (path, filename, title, desc, tags, set_id, groups, privacy_path, safety_path, visible) = row
+
+        self.add_image_filename(filename)
+        self._set_value_in_model(ImageStore.COL_TITLE, title, [index])
+        self._set_value_in_model(ImageStore.COL_DESCRIPTION, desc, [index])
+        self._set_value_in_model(ImageStore.COL_TAGS, tags, [index])
+
+        if not should_ignore_photosets and set_id:
+            set_iter = self.set_combo.get_iter_for_set(set_id)
+            if set_iter:
+                self._set_value_in_model(ImageStore.COL_SET, set_iter, [index])
+
+        self._set_value_in_model(ImageStore.COL_GROUPS, groups, [index])
+
+        if privacy_path:
+            privacy_iter = self.privacy_combo.model.get_iter(privacy_path)
+            self._set_value_in_model(ImageStore.COL_PRIVACY, privacy_iter, [index])
+
+        if safety_path:
+            safety_iter = self.safety_combo.model.get_iter(safety_path)
+            self._set_value_in_model(ImageStore.COL_SAFETY, safety_iter, [index])
+        self._set_value_in_model(ImageStore.COL_VISIBLE, visible, [index])
+
