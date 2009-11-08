@@ -438,24 +438,20 @@ class Postr(UniqueApp):
 
     def on_remove_activate(self, widget):
         """Callback from File->Remove or Remove button."""
-        selection = self.thumbview.get_selection()
-        (model, items) = selection.get_selected_rows()
         
-        # Remove the items
-        for path in items:
-            self.model.remove(self.model.get_iter(path))
+        def get_selected_iter(model, path, iter, selectList):
+            selectIter = model.get_iter(path)
+            selectList.append(selectIter)
 
-        # Select a new row
-        try:
-            self.thumbview.set_cursor(self.model[items[0]].path)
-        except IndexError:
-            # TODO: It appears that the ability to simply do
-            # gtk_tree_path_previous() is missing in PyGTK.
-            path = list(items[-1])
-            if path[0]:
-                path[0] -= 1
-                self.thumbview.set_cursor(self.model[tuple(path)].path)
+        selectList = []
         
+        selection = self.thumbview.get_selection()
+        selection.selected_foreach(get_selected_iter, selectList)
+        model = self.thumbview.get_model()
+        # actual removal of rows
+        for iter in selectList:
+            model.remove(iter)
+
         self.update_statusbar()
         
     def on_select_all_activate(self, menuitem):
