@@ -408,7 +408,7 @@ class Postr(UniqueApp):
                 return True
             elif response == gtk.RESPONSE_ACCEPT:
                 self.save_upload_set()
-        elif self.is_connected and self.model.iter_n_children(None) > 0:
+        elif self.is_connected and self.model.iter_n_children(None) > 0 and self.model.dirty():
             dialog = gtk.MessageDialog(type=gtk.MESSAGE_WARNING, parent=self.window)
             dialog.add_buttons(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
                                gtk.STOCK_SAVE, gtk.RESPONSE_ACCEPT,
@@ -954,6 +954,8 @@ class Postr(UniqueApp):
                 iter = self.model.iter_next(iter)
 
             dest.close()
+            self.model.markClean()
+
         dialog.destroy()
 
     def _marshal_row(self, path, iter):

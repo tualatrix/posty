@@ -48,3 +48,14 @@ class ImageStore (gtk.ListStore):
                                gtk.TreeIter, # COL_PRIVACY
                                gtk.TreeIter, # COL_SAFETY
                                gobject.TYPE_BOOLEAN) # COL_VISIBLE
+        self._dirty = False
+        self.connect("row-changed", self._on_row_changed)
+
+    def dirty(self):
+        return self._dirty
+
+    def markClean(self):
+        self._dirty = False
+
+    def _on_row_changed(self, model, path, iter):
+        self._dirty = self.iter_n_children(None) > 0
