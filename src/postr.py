@@ -633,13 +633,13 @@ class Postr(UniqueApp):
             filesize = os.path.getsize(filename)
         except os.error:
             d = ErrorDialog(self.window)
-            d.set_from_string("File at %s does not exist or is currently inaccessible." % filename)
+            d.set_from_string(_("File at %s does not exist or is currently inaccessible.") % filename)
             d.show_all()
             return
 
         if filesize > self.statusbar.maxfile * 1024 * 1024:
             d = ErrorDialog(self.window)
-            d.set_from_string("Image %s is too large, images must be no larger than %dMB in size." % (filename, self.statusbar.maxfile))
+            d.set_from_string(_("Image %s is too large, images must be no larger than %dMB in size.") % (filename, self.statusbar.maxfile))
             d.show_all()
             return
         

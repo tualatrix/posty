@@ -23,7 +23,7 @@ class ErrorDialog(gtk.MessageDialog):
                                    type=gtk.MESSAGE_ERROR,
                                    buttons=gtk.BUTTONS_OK,
                                    parent=parent,
-                                   message_format="An error occurred")
+                                   message_format=_("An error occurred"))
         self.connect("response", lambda dialog, response: dialog.destroy())
 
     def set_from_failure (self, failure):
