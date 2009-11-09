@@ -1065,6 +1065,10 @@ class Postr(UniqueApp):
                             should_ignore_photosets = True
                         confirm_dialog.destroy()
 
+                # the model's dirty state should not be changed
+                # when loading an upload set.
+                model_was_dirty = self.model.dirty()
+
                 index_offset = self.model.iter_n_children(None)
                 index = 0
                 while source.has_key(str(index)):
@@ -1074,6 +1078,13 @@ class Postr(UniqueApp):
                                                    should_ignore_photosets)
                     index += 1
                 source.close()
+
+                # obviously a load will make the model dirty, but that
+                # information is already saved, so ensure that the model
+                # is only dirty after a load if it was dirty before
+                if not model_was_dirty:
+                    self.model.markClean()
+
         dialog.destroy()
 
     def _unmarshal_and_import_row(self, index, row, should_ignore_photosets):
