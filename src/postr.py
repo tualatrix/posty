@@ -32,7 +32,7 @@ from AboutDialog import AboutDialog
 from AuthenticationDialog import AuthenticationDialog
 from ProgressDialog import ProgressDialog
 from ErrorDialog import ErrorDialog
-import ImageStore, ImageList, StatusBar, PrivacyCombo, SafetyCombo, GroupSelector
+import ImageStore, ImageList, StatusBar, PrivacyCombo, SafetyCombo, GroupSelector, ContentTypeCombo
 
 from flickrest import Flickr
 import EXIF
@@ -95,6 +95,7 @@ class Postr(UniqueApp):
                             "privacy_combo",
                             "safety_combo",
                             "visible_check",
+                            "content_type_combo",
                             "thumbview")
                            )
         align_labels(glade, ("title_label", "desc_label",
@@ -146,6 +147,7 @@ class Postr(UniqueApp):
         self.change_signals.append((self.privacy_combo, self.privacy_combo.connect('changed', self.on_field_changed, ImageStore.COL_PRIVACY)))
         self.change_signals.append((self.safety_combo, self.safety_combo.connect('changed', self.on_field_changed, ImageStore.COL_SAFETY)))
         self.change_signals.append((self.visible_check, self.visible_check.connect('toggled', self.on_field_changed, ImageStore.COL_VISIBLE)))
+        self.change_signals.append((self.content_type_combo, self.content_type_combo.connect('changed', self.on_field_changed, ImageStore.COL_CONTENT_TYPE)))
         
         self.thumbnail_image.connect('size-allocate', self.update_thumbnail)
         self.old_thumb_allocation = None
@@ -585,7 +587,8 @@ class Postr(UniqueApp):
             # TODO: do something clever with multiple selections
             self.current_it = self.model.get_iter(items[0])
             (title, desc, tags, set_it, groups,
-             privacy_it, safety_it, visible) = self.model.get(self.current_it,
+             privacy_it, safety_it, visible,
+             content_type_it) = self.model.get(self.current_it,
                            ImageStore.COL_TITLE,
                            ImageStore.COL_DESCRIPTION,
                            ImageStore.COL_TAGS,
@@ -593,7 +596,8 @@ class Postr(UniqueApp):
                            ImageStore.COL_GROUPS,
                            ImageStore.COL_PRIVACY,
                            ImageStore.COL_SAFETY,
-                           ImageStore.COL_VISIBLE)
+                           ImageStore.COL_VISIBLE,
+                           ImageStore.COL_CONTENT_TYPE)
 
             enable_field(self.title_entry, title)
             enable_field(self.desc_view, desc)
@@ -603,6 +607,7 @@ class Postr(UniqueApp):
             enable_field(self.privacy_combo, privacy_it)
             enable_field(self.safety_combo, safety_it)
             enable_field(self.visible_check, visible)
+            enable_field(self.content_type_combo, content_type_it)
 
             self.update_thumbnail(self.thumbnail_image)
         else:
@@ -615,6 +620,7 @@ class Postr(UniqueApp):
             disable_field(self.privacy_combo)
             disable_field(self.safety_combo)
             disable_field(self.visible_check)
+            disable_field(self.content_type_combo)
 
             self.thumbnail_image.set_from_icon_name("postr", self.logo_icon_size)
         [obj.handler_unblock(i) for obj,i in self.change_signals]
@@ -845,7 +851,7 @@ class Postr(UniqueApp):
 
         (filename, thumb, pixbuf, title, desc,
          tags, set_it, groups, privacy_it, safety_it,
-         visible) = self.model.get(it,
+         visible, content_type_it) = self.model.get(it,
                        ImageStore.COL_FILENAME,
                        ImageStore.COL_THUMBNAIL,
                        ImageStore.COL_IMAGE,
@@ -856,7 +862,8 @@ class Postr(UniqueApp):
                        ImageStore.COL_GROUPS,
                        ImageStore.COL_PRIVACY,
                        ImageStore.COL_SAFETY,
-                       ImageStore.COL_VISIBLE)
+                       ImageStore.COL_VISIBLE,
+                       ImageStore.COL_CONTENT_TYPE)
         # Lookup the set ID from the iterator
         if set_it:
             (set_id,) = self.set_combo.get_id_for_iter(set_it)
@@ -873,6 +880,11 @@ class Postr(UniqueApp):
         else:
             safety = None
 
+        if content_type_it:
+            content_type = self.content_type_combo.get_content_type_for_iter(content_type_it)
+        else:
+            content_type = None
+
         self.update_progress(filename, title, thumb)
         self.upload_index += 1
         self.current_upload_it = it
@@ -881,7 +893,8 @@ class Postr(UniqueApp):
             d = self.flickr.upload(filename=filename,
                                    title=title, desc=desc,
                                    tags=tags, search_hidden=not visible, safety=safety,
-                                   is_public=is_public, is_family=is_family, is_friend=is_friend)
+                                   is_public=is_public, is_family=is_family, is_friend=is_friend,
+                                   content_type=content_type)
         elif pixbuf:
             # This isn't very nice, but might be the best way
             data = []
@@ -889,7 +902,8 @@ class Postr(UniqueApp):
             d = self.flickr.upload(imageData=''.join(data),
                                    title=title, desc=desc, tags=tags,
                                    search_hidden=not visible, safety=safety,
-                                   is_public=is_public, is_family=is_family, is_friend=is_friend)
+                                   is_public=is_public, is_family=is_family, is_friend=is_friend,
+                                   content_type=content_type)
         else:
             print "No filename or pixbuf stored"
 

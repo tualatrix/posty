@@ -30,8 +30,9 @@ import gobject, gtk
  COL_GROUPS, # Pyton list of group IDs
  COL_PRIVACY, # Iterator containing privacy rules
  COL_SAFETY, # Iterator containing safety
- COL_VISIBLE # If the image is searchable
- ) = range (0, 13)
+ COL_VISIBLE, # If the image is searchable
+ COL_CONTENT_TYPE, # Iterator containing content type
+ ) = range (0, 14)
 
 class ImageStore (gtk.ListStore):
     def __init__(self):
@@ -47,7 +48,8 @@ class ImageStore (gtk.ListStore):
                                object, # COL_GROUPS
                                gtk.TreeIter, # COL_PRIVACY
                                gtk.TreeIter, # COL_SAFETY
-                               gobject.TYPE_BOOLEAN) # COL_VISIBLE
+                               gobject.TYPE_BOOLEAN, # COL_VISIBLE
+                               gtk.TreeIter) # COL_CONTENT_TYPE
         self._dirty = False
         self.connect("row-changed", self._on_row_changed)
 

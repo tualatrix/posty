@@ -160,7 +160,7 @@ class Flickr:
     def upload(self, filename=None, imageData=None,
                title=None, desc=None, tags=None,
                is_public=None, is_family=None, is_friend=None,
-               safety=None, search_hidden=None):
+               safety=None, search_hidden=None, content_type=None):
         # Sanity check the arguments
         if filename is None and imageData is None:
             raise ValueError("Need to pass either filename or imageData")
@@ -184,6 +184,8 @@ class Flickr:
             kwargs['safety_level'] = safety
         if search_hidden is not None:
             kwargs['hidden'] = search_hidden and 2 or 1 # Why Flickr, why?
+        if content_type:
+            kwargs['content_type'] = content_type
         self.__sign(kwargs)
         self.logger.info("Upload args %s" % kwargs)
         

@@ -472,12 +472,27 @@
                       <widget class="GtkTable" id="table2">
                         <property name="visible">True</property>
                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                        <property name="n_rows">3</property>
+                        <property name="n_rows">4</property>
                         <property name="n_columns">2</property>
                         <property name="column_spacing">4</property>
                         <property name="row_spacing">6</property>
                         <child>
                           <placeholder/>
+                        </child>
+                        <child>
+                          <widget class="GtkLabel" id="content_type_label">
+                            <property name="visible">True</property>
+                            <property name="xalign">0</property>
+                            <property name="label" translatable="yes">_Content type:</property>
+                            <property name="use_underline">True</property>
+                            <property name="mnemonic_widget">tags_entry</property>
+                          </widget>
+                          <packing>
+                            <property name="top_attach">2</property>
+                            <property name="bottom_attach">3</property>
+                            <property name="x_options">GTK_FILL</property>
+                            <property name="y_options">GTK_FILL</property>
+                          </packing>
                         </child>
                         <child>
                           <widget class="Custom" id="privacy_combo">
@@ -501,24 +516,6 @@
                           <packing>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <widget class="GtkCheckButton" id="visible_check">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                            <property name="label" translatable="yes">_Visible in search results</property>
-                            <property name="use_underline">True</property>
-                            <property name="response_id">0</property>
-                            <property name="active">True</property>
-                            <property name="draw_indicator">True</property>
-                          </widget>
-                          <packing>
-                            <property name="left_attach">1</property>
-                            <property name="right_attach">2</property>
-                            <property name="top_attach">2</property>
-                            <property name="bottom_attach">3</property>
                           </packing>
                         </child>
                         <child>
@@ -549,13 +546,44 @@
                             <property name="bottom_attach">2</property>
                           </packing>
                         </child>
+                        <child>
+                          <widget class="GtkCheckButton" id="visible_check">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                            <property name="label" translatable="yes">_Visible in search results</property>
+                            <property name="use_underline">True</property>
+                            <property name="response_id">0</property>
+                            <property name="active">True</property>
+                            <property name="draw_indicator">True</property>
+                          </widget>
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="right_attach">2</property>
+                            <property name="top_attach">3</property>
+                            <property name="bottom_attach">4</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <widget class="Custom" id="content_type_combo">
+                            <property name="visible">True</property>
+                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                            <property name="creation_function">ContentTypeCombo.ContentTypeCombo()</property>
+                          </widget>
+                          <packing>
+                            <property name="left_attach">1</property>
+                            <property name="right_attach">2</property>
+                            <property name="top_attach">2</property>
+                            <property name="bottom_attach">3</property>
+                          </packing>
+                        </child>
                       </widget>
                     </child>
                     <child>
                       <widget class="GtkLabel" id="label5">
                         <property name="visible">True</property>
                         <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
-                        <property name="label" translatable="yes">Privacy and Safety</property>
+                        <property name="label" translatable="yes">Privacy, Safety and Type</property>
                       </widget>
                       <packing>
                         <property name="type">label_item</property>
