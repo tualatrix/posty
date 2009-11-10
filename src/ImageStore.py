@@ -32,7 +32,8 @@ import gobject, gtk
  COL_SAFETY, # Iterator containing safety
  COL_VISIBLE, # If the image is searchable
  COL_CONTENT_TYPE, # Iterator containing content type
- ) = range (0, 14)
+ COL_LICENSE # Iterator containing license
+ ) = range (0, 15)
 
 class ImageStore (gtk.ListStore):
     def __init__(self):
@@ -49,7 +50,8 @@ class ImageStore (gtk.ListStore):
                                gtk.TreeIter, # COL_PRIVACY
                                gtk.TreeIter, # COL_SAFETY
                                gobject.TYPE_BOOLEAN, # COL_VISIBLE
-                               gtk.TreeIter) # COL_CONTENT_TYPE
+                               gtk.TreeIter, # COL_CONTENT_TYPE
+                               gtk.TreeIter) # COL_LICENSE
         self._dirty = False
         self.connect("row-changed", self._on_row_changed)
 

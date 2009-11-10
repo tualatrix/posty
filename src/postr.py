@@ -96,6 +96,7 @@ class Postr(UniqueApp):
                             "safety_combo",
                             "visible_check",
                             "content_type_combo",
+                            "license_combo",
                             "thumbview")
                            )
         align_labels(glade, ("title_label", "desc_label",
@@ -148,6 +149,7 @@ class Postr(UniqueApp):
         self.change_signals.append((self.safety_combo, self.safety_combo.connect('changed', self.on_field_changed, ImageStore.COL_SAFETY)))
         self.change_signals.append((self.visible_check, self.visible_check.connect('toggled', self.on_field_changed, ImageStore.COL_VISIBLE)))
         self.change_signals.append((self.content_type_combo, self.content_type_combo.connect('changed', self.on_field_changed, ImageStore.COL_CONTENT_TYPE)))
+        self.change_signals.append((self.license_combo, self.license_combo.connect('changed', self.on_field_changed, ImageStore.COL_LICENSE)))
         
         self.thumbnail_image.connect('size-allocate', self.update_thumbnail)
         self.old_thumb_allocation = None
@@ -227,6 +229,12 @@ class Postr(UniqueApp):
         w = SetCombo.SetCombo(self.flickr)
         w.show()
         return w
+
+    def license_combo_new(self, *args):
+        import LicenseCombo
+        w = LicenseCombo.LicenseCombo(self.flickr)
+        w.show()
+        return w
     
     def image_list_new(self, *args):
         """Custom widget creation function to make the image list."""
@@ -273,6 +281,7 @@ class Postr(UniqueApp):
             self.statusbar.update_quota()
             self.group_selector.update()
             self.set_combo.update()
+            self.license_combo.update()
             self.update_avatar()
 
     def on_statusbar_box_expose(self, widget, event):
@@ -588,7 +597,7 @@ class Postr(UniqueApp):
             self.current_it = self.model.get_iter(items[0])
             (title, desc, tags, set_it, groups,
              privacy_it, safety_it, visible,
-             content_type_it) = self.model.get(self.current_it,
+             content_type_it, license_it) = self.model.get(self.current_it,
                            ImageStore.COL_TITLE,
                            ImageStore.COL_DESCRIPTION,
                            ImageStore.COL_TAGS,
@@ -597,7 +606,8 @@ class Postr(UniqueApp):
                            ImageStore.COL_PRIVACY,
                            ImageStore.COL_SAFETY,
                            ImageStore.COL_VISIBLE,
-                           ImageStore.COL_CONTENT_TYPE)
+                           ImageStore.COL_CONTENT_TYPE,
+                           ImageStore.COL_LICENSE)
 
             enable_field(self.title_entry, title)
             enable_field(self.desc_view, desc)
@@ -608,6 +618,7 @@ class Postr(UniqueApp):
             enable_field(self.safety_combo, safety_it)
             enable_field(self.visible_check, visible)
             enable_field(self.content_type_combo, content_type_it)
+            enable_field(self.license_combo, license_it)
 
             self.update_thumbnail(self.thumbnail_image)
         else:
@@ -621,6 +632,7 @@ class Postr(UniqueApp):
             disable_field(self.safety_combo)
             disable_field(self.visible_check)
             disable_field(self.content_type_combo)
+            disable_field(self.license_combo)
 
             self.thumbnail_image.set_from_icon_name("postr", self.logo_icon_size)
         [obj.handler_unblock(i) for obj,i in self.change_signals]
@@ -818,6 +830,13 @@ class Postr(UniqueApp):
             self.flickr.groups_pools_add(photo_id=photo_id, group_id=group).addErrback(error)
         return rsp
 
+    def set_license(self, rsp, license):
+        """Callback from the upload method to set license for the picture."""
+        photo_id=rsp.find("photoid").text
+        self.flickr.photos_licenses_setLicense(photo_id=photo_id,
+                                               license_id=license).addErrback(self.twisted_error)
+        return rsp
+
     def upload_done(self):
         self.cancel_upload = False
         self.window.set_title(_("Flickr Uploader"))
@@ -851,7 +870,7 @@ class Postr(UniqueApp):
 
         (filename, thumb, pixbuf, title, desc,
          tags, set_it, groups, privacy_it, safety_it,
-         visible, content_type_it) = self.model.get(it,
+         visible, content_type_it, license_it) = self.model.get(it,
                        ImageStore.COL_FILENAME,
                        ImageStore.COL_THUMBNAIL,
                        ImageStore.COL_IMAGE,
@@ -863,7 +882,8 @@ class Postr(UniqueApp):
                        ImageStore.COL_PRIVACY,
                        ImageStore.COL_SAFETY,
                        ImageStore.COL_VISIBLE,
-                       ImageStore.COL_CONTENT_TYPE)
+                       ImageStore.COL_CONTENT_TYPE,
+                       ImageStore.COL_LICENSE)
         # Lookup the set ID from the iterator
         if set_it:
             (set_id,) = self.set_combo.get_id_for_iter(set_it)
@@ -884,6 +904,11 @@ class Postr(UniqueApp):
             content_type = self.content_type_combo.get_content_type_for_iter(content_type_it)
         else:
             content_type = None
+
+        if license_it:
+            license = self.license_combo.get_license_for_iter(license_it)
+        else:
+            license = None
 
         self.update_progress(filename, title, thumb)
         self.upload_index += 1
@@ -911,6 +936,8 @@ class Postr(UniqueApp):
             d.addCallback(self.add_to_set, set_id)
         if groups:
             d.addCallback(self.add_to_groups, groups)
+        if license is not None: # 0 is a valid license.
+            d.addCallback(self.set_license, license)
         d.addCallbacks(self.upload, self.upload_error)
 
     def on_double_click_selection(self, tree ,event, entry):
