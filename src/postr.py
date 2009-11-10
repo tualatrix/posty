@@ -942,6 +942,9 @@ class Postr(UniqueApp):
 
             if self.is_connected:
                 dest["nsid"] = self.flickr.get_nsid()
+                username = self.flickr.get_username()
+                if username:
+                    dest["username"] = username
 
             iter = self.model.get_iter_root()
             while iter:
@@ -1030,16 +1033,17 @@ class Postr(UniqueApp):
                 if self.is_connected:
                     if source.has_key("nsid"):
                         nsid = source["nsid"]
+                        username = source.get("username")
 
                         if self.flickr.get_nsid() != nsid:
+                            markup_args = (self.flickr.get_username(), username) if self.flickr.get_username() and username else (self.flickr.get_nsid(), nsid)
+                            markup_pattern = _("You are logged in as %s but loading\nan upload set for %s")
                             confirm_dialog = gtk.MessageDialog(buttons=gtk.BUTTONS_YES_NO)
                             confirm_dialog.set_default_response(gtk.RESPONSE_YES)
-                            confirm_dialog.set_markup(
-                                "You are logged in as %s but loading\nan upload set for %s" %
-                                (self.flickr.get_nsid(), nsid))
-                            confirm_dialog.format_secondary_text("Do you want to continue "
-                                                                 "with the load?  You will "
-                                                                 "not import photoset information.")
+                            confirm_dialog.set_markup(markup_pattern % markup_args)
+                            confirm_dialog.format_secondary_text(_("Do you want to continue "
+                                                                   "with the load?  You will "
+                                                                   "not import photoset information."))
                             response = confirm_dialog.run()
                             if response == gtk.RESPONSE_NO:
                                 dialog.destroy()
@@ -1049,14 +1053,14 @@ class Postr(UniqueApp):
                             confirm_dialog.destroy()
                 else:
                     if source.has_key("nsid"):
-                        nsid = source["nsid"]
+                        source_user = source.get("username", source["nsid"])
+                        markup_pattern = _("You are not logged in but loading\nan upload set for %s")
                         confirm_dialog = gtk.MessageDialog(buttons=gtk.BUTTONS_YES_NO)
                         confirm_dialog.set_default_response(gtk.RESPONSE_YES)
-                        confirm_dialog.set_markup(
-                            "You are not logged in but loading\nan upload set for %s" % nsid)
-                        confirm_dialog.format_secondary_text("Do you want to continue "
-                                                             "with the load?  You will "
-                                                             "not import photoset information.")
+                        confirm_dialog.set_markup(markup_pattern % source_user)
+                        confirm_dialog.format_secondary_text(_("Do you want to continue "
+                                                               "with the load?  You will "
+                                                               "not import photoset information."))
                         response = confirm_dialog.run()
                         if response == gtk.RESPONSE_NO:
                             dialog.destroy()
