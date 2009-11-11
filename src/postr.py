@@ -115,16 +115,30 @@ class Postr(UniqueApp):
         self.model.connect("row-deleted", self.on_model_changed)
         
         self.thumbview.set_model(self.model)
-        self.thumbview.connect("drag_data_received", self.on_drag_data_received)
 
         self.set_combo.connect("changed", self.on_set_combo_changed)
         
         selection = self.thumbview.get_selection()
         selection.connect("changed", self.on_selection_changed)
 
+        self.drag_signals = []
+        self.drag_signals.append((self.thumbview, self.thumbview.connect(
+                            "drag_data_received", self.on_drag_data_received)))
+
         self.thumbview.connect("row-activated",
                                self.on_row_activated,
                                self.title_entry)
+
+        self.drop_disabled = False
+        self.drag_started = False
+
+        self.thumbview.connect("button_press_event",
+                                self.on_button_press_cb)
+        self.thumbview.connect("button_release_event",
+                                self.on_button_release_cb)
+        self.thumbview.connect("drag_begin", self.drag_begin_cb)
+        self.thumbview.connect("drag_end", self.drag_end_cb)
+
         if has_gtkspell:
           gtkspell.Spell(self.desc_view)
 
@@ -940,6 +954,37 @@ class Postr(UniqueApp):
         """This callback is used to focus the entry title after
             one row is activated."""
         entry.grab_focus()
+
+    def drag_begin_cb(self, thumbview, context, data=None):
+        self.drag_started = True
+
+    def drag_end_cb(self, thumbview, context, data=None):
+        self.drop_disabled = False
+        self.drag_started = False
+        self.thumbview.set_reorderable(False)
+
+        self.thumbview.enable_targets()
+        [obj.handler_unblock(i) for obj,i in self.drag_signals]
+
+    def on_button_press_cb(self, thumbview, event, data=None):
+        if self.drop_disabled:
+            return
+        self.thumbview.unable_targets()
+
+        self.drop_disabled = True
+        [obj.handler_block(i) for obj,i in self.drag_signals]
+        thumbview.set_reorderable(True)
+        return
+
+    def on_button_release_cb(self, thumbview, event, data=None):
+
+        if self.drop_disabled and (not self.drag_started):
+            self.drop_disabled = False
+            thumbview.set_reorderable(False)
+            self.thumbview.enable_targets()
+            [obj.handler_unblock(i) for obj,i in self.drag_signals]
+        return False
+
 
     def save_upload_set(self):
         dialog = gtk.FileChooserDialog(title=None,
