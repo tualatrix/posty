@@ -122,13 +122,9 @@ class Postr(UniqueApp):
         selection = self.thumbview.get_selection()
         selection.connect("changed", self.on_selection_changed)
 
-        self.thumbview.connect("button_press_event",
-                               self.on_double_click_selection,
+        self.thumbview.connect("row-activated",
+                               self.on_row_activated,
                                self.title_entry)
-        self.thumbview.connect("key-press-event",
-                               self.on_return_key_selection,
-                               self.title_entry)
-
         if has_gtkspell:
           gtkspell.Spell(self.desc_view)
 
@@ -940,18 +936,10 @@ class Postr(UniqueApp):
             d.addCallback(self.set_license, license)
         d.addCallbacks(self.upload, self.upload_error)
 
-    def on_double_click_selection(self, tree ,event, entry):
-        """This callback is used to focus the entry title after a
-           double click on one image."""
-        if event.type == gtk.gdk._2BUTTON_PRESS:
-            entry.grab_focus()
-
-    def on_return_key_selection(self, tree ,event, entry):
+    def on_row_activated(self, treeview, iter, path, entry):
         """This callback is used to focus the entry title after
-           Return key is pressed on the image list."""
-        if event.type == gtk.gdk.KEY_PRESS and \
-           event.keyval == gtk.keysyms.Return:
-            entry.grab_focus()
+            one row is activated."""
+        entry.grab_focus()
 
     def save_upload_set(self):
         dialog = gtk.FileChooserDialog(title=None,
