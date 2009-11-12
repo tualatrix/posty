@@ -7,7 +7,7 @@
   
   <name>Postr</name>
   <shortname>postr</shortname>
-  <homepage rdf:resource="http://www.burtonini.com/blog/computers/postr"/>
+  <homepage rdf:resource="http://projects.gnome.org/postr/"/>
   <created>2006-08-15</created>
   
   <shortdesc>A simple Flickr uploader for GNOME.</shortdesc>
@@ -15,7 +15,7 @@
   <programming-language>Python</programming-language>
   <os>Linux</os>
   <license rdf:resource="http://usefulinc.com/doap/licenses/gpl"/>
-  <download-page rdf:resource="http://www.burtonini.com/blog/computers/postr"/>
+  <download-page rdf:resource="http://ftp.gnome.org/pub/GNOME/sources/postr/"/>
   
   <maintainer>
     <foaf:Person>
@@ -44,7 +44,7 @@
       <branch>postr-0-12</branch>
       <revision>0.12.4</revision>
       <created>2009-11-04</created>
-      <file-release rdf:resource="http://ftp.gnome.org/pub/GNOME/sources/postr/"/>
+      <file-release rdf:resource="http://ftp.gnome.org/pub/GNOME/sources/postr/0.12/postr-0.12.4.tar.gz"/>
     </Version>
   </release>
 
