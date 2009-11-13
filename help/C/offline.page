@@ -1,0 +1,32 @@
+<page xmlns="http://projectmallard.org/1.0/"
+      type="topic" stlye="task"
+      id="offline">
+<info>
+  <link type="guide" xref="index#advanced"/>
+  <desc>How to continue your work later.</desc>
+  <revision pkgversion="0.13" version="0.1" date="2009-11-13" status="incomplete"/>
+  <credit type="author">
+    <name>Germán Póo-Caamaño</name>
+    <email>gpoo@gnome.org</email>
+  </credit>
+</info>
+
+<title>Continue the uploading later</title>
+
+  <p></p>
+
+  <steps>
+    <item><p>Save session.</p></item>
+    <item><p>Choose a name.</p></item>
+    <item><p>The next time, you can load a session previously save.</p></item>
+  </steps>
+
+  <note style="tip">
+    <p>
+      If you load a session when you are off-line, the properties that relies
+      on your connection will be lost.  These properties are: sets, groups and
+      privacy.
+    </p>
+  </note>
+
+</page>

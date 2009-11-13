@@ -1,0 +1,38 @@
+<page xmlns="http://projectmallard.org/1.0/"
+      type="guide"
+      id="index">
+
+<info>
+  <desc>Flickr Uploader.</desc>
+  <revision pkgversion="0.13" version="0.1" date="2009-11-13" status="incomplete"/>
+  <credit type="author">
+    <name>Germán Póo-Caamaño</name>
+    <email>gpoo@gnome.org</email>
+  </credit>
+</info>
+
+<title>Postr</title>
+<p>Getting started with Postr</p>
+
+  <section id="getting-started" style="2column">
+    <info>
+      <title type="link">Getting Started</title>
+    </info>
+    <title>Getting Started</title>
+  </section>
+
+  <section id="properties" style="2column">
+    <info>
+      <title type="link">Setting photograph's properties</title>
+    </info>
+    <title>Setting photograph's properties</title>
+  </section>
+
+  <section id="advanced" style="2column">
+    <info>
+      <title type="link">Advanced actions</title>
+    </info>
+    <title>Advanced actions</title>
+  </section>
+
+</page>

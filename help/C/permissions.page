@@ -1,0 +1,37 @@
+<page xmlns="http://projectmallard.org/1.0/"
+      type="topic" stlye="task"
+      id="permissions">
+<info>
+  <link type="guide" xref="index#properties"/>
+  <desc>Setting permissions to your photographs.</desc>
+  <revision pkgversion="0.13" version="0.1" date="2009-11-13" status="incomplete"/>
+  <credit type="author">
+    <name>Germán Póo-Caamaño</name>
+    <email>gpoo@gnome.org</email>
+  </credit>
+</info>
+
+<title>Privacy, safety and license.</title>
+
+  <section id="Privacy">
+    <info>
+      <title type="link">Privacy</title>
+    </info>
+    <title>Privacy of your photographs</title>
+  </section>
+
+  <section id="safety">
+    <info>
+      <title type="link">Safety</title>
+    </info>
+    <title>Defining the safety of your content</title>
+  </section>
+
+  <section id="license">
+    <info>
+      <title type="link">License</title>
+    </info>
+    <title>Choosing a license for your photographs</title>
+  </section>
+
+</page>

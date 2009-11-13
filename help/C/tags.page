@@ -1,0 +1,30 @@
+<page xmlns="http://projectmallard.org/1.0/"
+      type="topic" stlye="task"
+      id="tags">
+<info>
+  <link type="guide" xref="index#properties"/>
+  <desc>Adding tags to your pictures.</desc>
+  <revision pkgversion="0.13" version="0.1" date="2009-11-13" status="incomplete"/>
+  <credit type="author">
+    <name>Germán Póo-Caamaño</name>
+    <email>gpoo@gnome.org</email>
+  </credit>
+</info>
+
+<title>Adding tags to your pictures.</title>
+
+  <section id="what-is-a-tag">
+    <info>
+      <title type="link">What is a tag?</title>
+    </info>
+    <title>What is a tag?</title>
+  </section>
+
+  <section id="creating-a-tag">
+    <info>
+      <title type="link">Creating a tag</title>
+    </info>
+    <title>Creating a tag</title>
+  </section>
+
+</page>

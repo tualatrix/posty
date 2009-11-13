@@ -1,0 +1,16 @@
+<page xmlns="http://projectmallard.org/1.0/"
+      type="topic" stlye="task"
+      id="groups">
+<info>
+  <link type="guide" xref="index#properties"/>
+  <desc>Sharing your photographs with other people.</desc>
+  <revision pkgversion="0.13" version="0.1" date="2009-11-13" status="incomplete"/>
+  <credit type="author">
+    <name>Germán Póo-Caamaño</name>
+    <email>gpoo@gnome.org</email>
+  </credit>
+</info>
+
+<title>Send your photographs to groups of your interest.</title>
+
+</page>

@@ -1,0 +1,32 @@
+Writing documentation
+----------------------
+
+We are using Mallard to write the documentation.  Mallard
+is a subset of Docbook XML with some variations in order
+to make easier the process of writing documentation for
+applications.
+
+The documentation has not been included in the installation
+setup yet, because it only has a general skeleton.
+
+In order to test the see the formated pages, you should run
+yelp giving the full path to the directory of the documentation.
+
+For instance:
+$ yelp /home/foo/code/postr/help/C
+
+
+Mallard resources
+-----------------
+
+Mallard offers an easy format.  You would like to start at:
+http://www.gnome.org/~shaunm/mallard/
+
+It is recommended to look read some tips from Milo
+Casagrande at:
+http://milocasagrande.wordpress.com/2009/10/25/long-time-but-mallard-alive/
+
+As usual, looking what other do to get the things done may also
+help.  For instance, reading the documentation's source of
+Empathy at:
+http://git.gnome.org/cgit/empathy/tree/help/C/?h=gnome-2-28

@@ -1,0 +1,18 @@
+<page xmlns="http://projectmallard.org/1.0/"
+      type="topic" style="task"
+      id="login">
+<info>
+  <link type="guide" xref="index#getting-started"/>
+  <desc>Log in on Flickr</desc>
+  <revision pkgversion="0.13" version="0.1" date="2009-11-13" status="incomplete"/>
+  <credit type="author">
+    <name>Germán Póo-Caamaño</name>
+    <email>gpoo@gnome.org</email>
+  </credit>
+</info>
+<title>Log in on Flickr</title>
+
+  <p>Flickr must authorize to <app>Postr</app> the access to your 
+  information before doing anything else.</p>
+
+</page>

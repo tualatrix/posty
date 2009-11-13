@@ -1,0 +1,18 @@
+<page xmlns="http://projectmallard.org/1.0/"
+      type="topic" style="task"
+      id="uploading">
+<info>
+  <link type="guide" xref="index#getting-started"/>
+  <desc>Uploading photographs on Flickr</desc>
+  <revision pkgversion="0.13" version="0.1" date="2009-11-13" status="incomplete"/>
+  <credit type="author">
+    <name>Germán Póo-Caamaño</name>
+    <email>gpoo@gnome.org</email>
+  </credit>
+</info>
+
+<title>Uploading photographs on Flickr</title>
+
+  <p>This page must be written first.</p>
+
+</page>
