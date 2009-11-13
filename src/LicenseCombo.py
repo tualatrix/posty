@@ -23,7 +23,7 @@ class LicenseCombo(gtk.ComboBox):
         self.flickr = flickr
         
         self.model = gtk.ListStore(gobject.TYPE_STRING, gobject.TYPE_INT)
-        #self.model.set(self.model.append(), 0, "All rights reserved", 1, 0)
+        self.model.set(self.model.append(), 0, _("Default"), 1, -1)
         self.set_model(self.model)
         self.set_active(-1)
 
@@ -57,7 +57,16 @@ class LicenseCombo(gtk.ComboBox):
 
     def get_license_for_iter(self, it):
         if it is None: return None
-        return self.model.get_value(it, 1)
+
+        '''There is no way yet to get the default license using the
+           API provided by Flickr.  However, if we return None, Flickr
+           will set the default defined by the user.  In our case,
+           Default was defined as -1.'''
+        value = self.model.get_value(it, 1)
+        if value == -1:
+            return None
+        else:
+            return value
 
     def get_active_license(self):
         return self.get_license_for_iter(self.get_active_iter())
