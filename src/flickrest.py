@@ -15,10 +15,17 @@
 # this program; if not, write to the Free Software Foundation, Inc., 51 Franklin
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
-import logging, md5, os, mimetools, urllib
+import logging, os, mimetools, urllib
 from twisted.internet import defer
 from twisted.python.failure import Failure
 import proxyclient as client
+
+try:
+    from hashlib import md5
+    has_hashlib = True
+except ImportError:
+    from md5 import md5
+    has_hashlib = False
 
 try:
     from xml.etree import ElementTree
@@ -97,7 +104,11 @@ class Flickr:
         sig = reduce(lambda sig, key: sig + key + str(kwargs[key]),
                      sorted(kwargs.keys()),
                      self.secret)
-        kwargs['api_sig'] = md5.new(sig).hexdigest()
+        if has_hashlib:
+            kwargs['api_sig'] = md5(sig).hexdigest()
+        else:
+            kwargs['api_sig'] = md5.new(sig).hexdigest()
+
 
     def __call(self, method, kwargs):
         kwargs["method"] = method
