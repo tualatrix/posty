@@ -87,10 +87,12 @@ class Postr(UniqueApp):
                             "avatar_image",
                             "statusbar",
                             "thumbnail_image",
+                            "info_table",
                             "title_entry",
                             "desc_view",
                             "tags_entry",
                             "set_combo",
+                            "rename_button",
                             "group_selector",
                             "privacy_combo",
                             "safety_combo",
@@ -362,12 +364,31 @@ class Postr(UniqueApp):
     def on_set_combo_changed(self, combo):
         """Callback when the set combo is changed."""
         set_it = self.set_combo.get_active_iter()
+
+        (id, ) = self.set_combo.get_id_for_iter(set_it) if set_it else (None, )
+        self._update_rename_button(id)
+
         selection = self.thumbview.get_selection()
         (model, items) = selection.get_selected_rows()
         for path in items:
             it = self.model.get_iter(path)
             self.model.set_value(it, ImageStore.COL_SET, set_it)
-    
+
+    def _update_rename_button(self, id):
+        if id == '-1':
+            self.info_table.child_set(self.set_combo,
+                                      "right-attach",
+                                      2)
+            self.rename_button.set_sensitive(True)
+        else:
+            self.info_table.child_set(self.set_combo,
+                                      "right-attach",
+                                      3)
+            self.rename_button.set_sensitive(False)
+
+    def on_rename_activate(self, button):
+        self.set_combo.name_new_photoset()
+
     def on_add_photos_activate(self, widget):
         """Callback from the File->Add Photos menu item or Add button."""
         dialog = gtk.FileChooserDialog(title=_("Add Photos"), parent=self.window,
@@ -515,6 +536,7 @@ class Postr(UniqueApp):
         self.upload_button.set_sensitive(False)
         self.remove_menu.set_sensitive(False)
         self.remove_button.set_sensitive(False)
+        self.rename_button.set_sensitive(False)
         self.uploading = True
         self.thumbview.set_sensitive(False)
         self.progress_dialog.show()
@@ -897,8 +919,14 @@ class Postr(UniqueApp):
         # Lookup the set ID from the iterator
         if set_it:
             (set_id,) = self.set_combo.get_id_for_iter(set_it)
+            if set_id == '-1':
+                new_photoset_name = self.set_combo.new_photoset_name
+                set_id = 0
+            else:
+                new_photoset_name = None
         else:
             set_id = 0
+            new_photoset_name = None
 
         if privacy_it:
             (is_public, is_family, is_friend) = self.privacy_combo.get_acls_for_iter(privacy_it)
@@ -948,7 +976,26 @@ class Postr(UniqueApp):
             d.addCallback(self.add_to_groups, groups)
         if license is not None: # 0 is a valid license.
             d.addCallback(self.set_license, license)
-        d.addCallbacks(self.upload, self.upload_error)
+        # creating a new photoset has implications on subsequent uploads,
+        # so this has to finish before starting the next upload
+        if new_photoset_name:
+            d.addCallback(self.create_photoset_then_continue, new_photoset_name)
+        else:
+            d.addCallbacks(self.upload, self.upload_error)
+
+    def create_photoset_then_continue(self, rsp, photoset_name):
+        photo_id=rsp.find("photoid").text
+        create_photoset = self.flickr.photosets_create(primary_photo_id=photo_id, title=photoset_name)
+        create_photoset.addCallback(self._process_photoset_creation, photoset_name)
+        create_photoset.addErrback(self.upload_error)
+        return rsp
+
+    def _process_photoset_creation(self, create_rsp, photoset_name):
+        photoset = create_rsp.find("photoset")
+        id = photoset.get("id")
+        self.set_combo.set_recently_created_photoset(photoset_name, id)
+        self.upload(create_rsp)
+        return create_rsp
 
     def on_row_activated(self, treeview, iter, path, entry):
         """This callback is used to focus the entry title after
@@ -1019,6 +1066,9 @@ class Postr(UniqueApp):
                 username = self.flickr.get_username()
                 if username:
                     dest["username"] = username
+
+            if self.set_combo.new_photoset_name:
+                dest["new_photoset_name"] = self.set_combo.new_photoset_name
 
             iter = self.model.get_iter_root()
             while iter:
@@ -1142,6 +1192,9 @@ class Postr(UniqueApp):
                         else:
                             should_ignore_photosets = True
                         confirm_dialog.destroy()
+
+                if source.has_key("new_photoset_name"):
+                    self.set_combo.update_new_photoset(source["new_photoset_name"])
 
                 # the model's dirty state should not be changed
                 # when loading an upload set.

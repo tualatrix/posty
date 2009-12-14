@@ -392,7 +392,7 @@
               </packing>
             </child>
             <child>
-              <widget class="GtkTable" id="table1">
+              <widget class="GtkTable" id="info_table">
                 <property name="visible">True</property>
                 <property name="border_width">6</property>
                 <property name="n_rows">7</property>
@@ -718,6 +718,24 @@
                     <property name="mnemonic_widget">set_combo</property>
                   </widget>
                   <packing>
+                    <property name="top_attach">4</property>
+                    <property name="bottom_attach">5</property>
+                    <property name="x_options">GTK_FILL</property>
+                    <property name="y_options"></property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkButton" id="rename_button">
+                    <property name="visible">True</property>
+		    <property name="sensitive">False</property>
+                    <property name="can_focus">True</property>
+                    <property name="label" translatable="yes">Rename</property>
+                    <property name="response_id">0</property>
+                    <signal name="clicked" handler="on_rename_activate"/>
+                  </widget>
+                  <packing>
+                    <property name="left_attach">2</property>
+                    <property name="right_attach">3</property>
                     <property name="top_attach">4</property>
                     <property name="bottom_attach">5</property>
                     <property name="x_options">GTK_FILL</property>
