@@ -20,7 +20,7 @@ from urlparse import urlparse
 from os.path import basename
 
 import pygtk; pygtk.require ("2.0")
-import gobject, gtk, gtk.glade, gconf
+import gobject, gtk, gtk.glade, gconf, gio
 
 try:
     import gtkspell
@@ -55,6 +55,10 @@ except ImportError:
  ROTATED_90_CCW
  ) = (1, 3, 6, 8)
 
+_FILE_ATTRIBUTES = ",".join([gio.FILE_ATTRIBUTE_STANDARD_TYPE,
+                             gio.FILE_ATTRIBUTE_STANDARD_NAME,
+                             gio.FILE_ATTRIBUTE_STANDARD_SIZE,
+                             gio.FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME])
 
 class Postr(UniqueApp):
     def __init__(self):
@@ -399,7 +403,7 @@ class Postr(UniqueApp):
                                                 gtk.RESPONSE_OK))
         dialog.set_select_multiple(True)
         if self.last_folder:
-            dialog.set_current_folder(self.last_folder)
+            dialog.set_current_folder_uri(self.last_folder)
 
         # Add filters for all reasonable image types
         filters = gtk.FileFilter()
@@ -427,9 +431,9 @@ class Postr(UniqueApp):
         
         if dialog.run() == gtk.RESPONSE_OK:
             dialog.hide()
-            self.last_folder = dialog.get_current_folder()
-            for f in dialog.get_filenames():
-                self.add_image_filename(f)
+            self.last_folder = dialog.get_current_folder_uri()
+            for uri in dialog.get_uris():
+                self.add_image_uri(uri)
         dialog.destroy()
             
     def on_quit_activate(self, widget, *args):
@@ -669,47 +673,94 @@ class Postr(UniqueApp):
             self.thumbnail_image.set_from_icon_name("postr", self.logo_icon_size)
         [obj.handler_unblock(i) for obj,i in self.change_signals]
 
-    def add_image_filename(self, filename):
+    def add_image_dir_file(self, gfile):
+        children = gfile.enumerate_children(_FILE_ATTRIBUTES, flags=gio.FILE_QUERY_INFO_NONE)
+        child_info = children.next_file()
+        while child_info:
+            file_type = child_info.get_file_type()
+            if file_type == gio.FILE_TYPE_REGULAR:
+                self.add_image_fileinfo(gfile, child_info)
+            elif file_type == gio.FILE_TYPE_DIRECTORY:
+                dirname = os.path.join(gfile.get_uri(), child_info.get_name())
+                self.add_image_dir_file(gio.File(dirname))
+            else:
+                print "Unhandled file %s" % gfile.get_uri()
+            child_info = children.next_file()
+        children.close()
+
+    def add_image_uri(self, uri):
         """Add a file to the image list.  Called by the File->Add Photo and drag
         and drop callbacks."""
-        # TODO: MIME type check
+        return self.add_image_filename(uri)
 
-        # Check the file size
-        try:
-            filesize = os.path.getsize(filename)
-        except os.error:
-            d = ErrorDialog(self.window)
-            d.set_from_string(_("File at %s does not exist or is currently inaccessible.") % filename)
-            d.show_all()
-            return
+    def add_image_filename(self, filename):
+        gfile = gio.File(filename)
+        fileinfo = gfile.query_info(_FILE_ATTRIBUTES, flags=gio.FILE_QUERY_INFO_NONE)
+        self.add_image_file(gfile, fileinfo)
 
+    def add_image_fileinfo(self, parent, fileinfo):
+        filename = os.path.join(parent.get_uri(), fileinfo.get_name())
+        gfile = gio.File(filename)
+        self.add_image_file(gfile, fileinfo)
+
+    def _on_preview_size_prepared(self, loader, width, height):
+        """Appropriately scale the image preview to fit inside 512x512"""
+        if width > height:
+            new_width = 512
+            new_height = 512 * height / width
+        else:
+            new_width = 512 * width / height
+            new_height = 512
+        loader.set_size(new_width, new_height)
+
+    def add_image_file(self, gfile, fileinfo):
+        filesize = fileinfo.get_size()
         if filesize > self.statusbar.maxfile * 1024 * 1024:
             d = ErrorDialog(self.window)
-            d.set_from_string(_("Image %s is too large, images must be no larger than %dMB in size.") % (filename, self.statusbar.maxfile))
+            d.set_from_string(_("Image %s is too large, images must be no larger than %dMB in size.") % (gfile.get_path(), self.statusbar.maxfile))
             d.show_all()
             return
         
         # TODO: we open the file three times now, which is madness, especially
         # if gnome-vfs is used to read remote files.  Need to find/write EXIF
         # and IPTC parsers that are incremental.
-        
+
+        # only opening the file_stream
+        file_stream = gfile.read()
+
         # First we load the image scaled to 512x512 for the preview.
         try:
-            preview = gtk.gdk.pixbuf_new_from_file_at_size(filename, 512, 512)
+            if gfile.is_native():
+                preview = gtk.gdk.pixbuf_new_from_file_at_size(gfile.get_path(), 512, 512)
+            else:
+                loader = gtk.gdk.PixbufLoader()
+                loader.connect("size-prepared", self._on_preview_size_prepared)
+                loader.write(file_stream.read())
+                loader.close()
+                preview = loader.get_pixbuf()
         except Exception, e:
             d = ErrorDialog(self.window)
             d.set_from_exception(e)
             d.show_all()
             return
         
+        # type 1 is beginning of file
+        if not file_stream.can_seek() or not file_stream.seek(0, type=1):
+            file_stream = gfile.read()
+
         # On a file that doesn't contain EXIF, like a PNG, this just returns an
         # empty set.
         try:
-            exif = EXIF.process_file(open(filename, 'rb'))
+            exif = EXIF.process_file(file_stream)
         except:
             exif = {}
+
+        # type 1 is beginning of file
+        if not file_stream.can_seek() or not file_stream.seek(0, type=1):
+            file_stream = gfile.read()
+
         try:
-            iptc = IPTCInfo(open(filename, 'rb')).data
+            iptc = IPTCInfo(file_stream).data
         except:
             iptc = {}
         
@@ -752,12 +803,12 @@ class Postr(UniqueApp):
                         return value
             return default
         
-        title = slurp(title_tags, os.path.splitext(os.path.basename(filename))[0])
+        title = slurp(title_tags, os.path.splitext(fileinfo.get_display_name())[0])
         desc = slurp(desc_tags)
         tags = slurp(tag_tags)
         
         self.model.set(self.model.append(),
-                       ImageStore.COL_FILENAME, filename,
+                       ImageStore.COL_URI, gfile.get_uri(),
                        ImageStore.COL_SIZE, filesize,
                        ImageStore.COL_IMAGE, None,
                        ImageStore.COL_PREVIEW, preview,
@@ -791,7 +842,7 @@ class Postr(UniqueApp):
             self.model.set(self.model.append(),
                            ImageStore.COL_IMAGE, pixbuf,
                            ImageStore.COL_SIZE, size,
-                           ImageStore.COL_FILENAME, None,
+                           ImageStore.COL_URI, None,
                            ImageStore.COL_PREVIEW, preview,
                            ImageStore.COL_THUMBNAIL, thumb,
                            ImageStore.COL_TITLE, "",
@@ -802,19 +853,15 @@ class Postr(UniqueApp):
         
         elif targetType == ImageList.DRAG_URI:
             for uri in selection.get_uris():
-                # TODO: use gnome-vfs to handle remote files
-                filename = urllib.unquote(urlparse(uri)[2])
-                if os.path.isfile(filename):
-                    self.add_image_filename(filename)
-                elif os.path.isdir(filename):
-                    for root, dirs, files in os.walk(filename):
-                        for f in files:
-                            # TODO: handle symlinks to directories as they are
-                            # in files
-                            self.add_image_filename(os.path.join(root, f))
+                gfile = gio.File(uri)
+                fileinfo = gfile.query_info(_FILE_ATTRIBUTES)
+                file_type = fileinfo.get_file_type()
+                if file_type == gio.FILE_TYPE_REGULAR:
+                    self.add_image_file(gfile, fileinfo)
+                elif file_type == gio.FILE_TYPE_DIRECTORY:
+                    self.add_image_dir_file(gfile)
                 else:
-                    print "Unhandled file %s" % filename
-                    
+                    print "Unhandled file %s" % gfile.get_uri()
         else:
             print "Unhandled target type %d" % targetType
 
@@ -900,10 +947,10 @@ class Postr(UniqueApp):
             self.upload_done()
             return
 
-        (filename, thumb, pixbuf, title, desc,
+        (uri, thumb, pixbuf, title, desc,
          tags, set_it, groups, privacy_it, safety_it,
          visible, content_type_it, license_it) = self.model.get(it,
-                       ImageStore.COL_FILENAME,
+                       ImageStore.COL_URI,
                        ImageStore.COL_THUMBNAIL,
                        ImageStore.COL_IMAGE,
                        ImageStore.COL_TITLE,
@@ -948,12 +995,12 @@ class Postr(UniqueApp):
         else:
             license = None
 
-        self.update_progress(filename, title, thumb)
+        self.update_progress(uri, title, thumb)
         self.upload_index += 1
         self.current_upload_it = it
 
-        if filename:
-            d = self.flickr.upload(filename=filename,
+        if uri:
+            d = self.flickr.upload(uri=uri,
                                    title=title, desc=desc,
                                    tags=tags, search_hidden=not visible, safety=safety,
                                    is_public=is_public, is_family=is_family, is_friend=is_friend,
@@ -1082,7 +1129,7 @@ class Postr(UniqueApp):
         dialog.destroy()
 
     def _marshal_row(self, path, iter):
-        (filename,
+        (uri,
          title,
          desc,
          tags,
@@ -1091,7 +1138,7 @@ class Postr(UniqueApp):
          privacy_it,
          safety_it,
          visible) = self.model.get(iter,
-                                   ImageStore.COL_FILENAME,
+                                   ImageStore.COL_URI,
                                    ImageStore.COL_TITLE,
                                    ImageStore.COL_DESCRIPTION,
                                    ImageStore.COL_TAGS,
@@ -1119,7 +1166,7 @@ class Postr(UniqueApp):
             safety_path = None
 
         args = ( path,
-                 filename,
+                 uri,
                  title,
                  desc,
                  tags,
@@ -1219,9 +1266,9 @@ class Postr(UniqueApp):
         dialog.destroy()
 
     def _unmarshal_and_import_row(self, index, row, should_ignore_photosets):
-        (path, filename, title, desc, tags, set_id, groups, privacy_path, safety_path, visible) = row
+        (path, uri, title, desc, tags, set_id, groups, privacy_path, safety_path, visible) = row
 
-        self.add_image_filename(filename)
+        self.add_image_uri(uri)
         self._set_value_in_model(ImageStore.COL_TITLE, title, [index])
         self._set_value_in_model(ImageStore.COL_DESCRIPTION, desc, [index])
         self._set_value_in_model(ImageStore.COL_TAGS, tags, [index])

@@ -18,7 +18,7 @@
 import gobject, gtk
 
 # Column indexes
-(COL_FILENAME, # The filename of an image (can be None)
+(COL_URI, # The filename of an image (can be None)
  COL_SIZE, # Integer, file size
  COL_IMAGE, # The image data (if filename is None)
  COL_PREVIEW, # A 512x512 preview of the image
@@ -37,7 +37,7 @@ import gobject, gtk
 
 class ImageStore (gtk.ListStore):
     def __init__(self):
-        gtk.ListStore.__init__(self, gobject.TYPE_STRING, # COL_FILENAME
+        gtk.ListStore.__init__(self, gobject.TYPE_STRING, # COL_URI
                                gobject.TYPE_INT, # COL_SIZE
                                gtk.gdk.Pixbuf, # COL_IMAGE
                                gtk.gdk.Pixbuf, # COL_PREVIEW
