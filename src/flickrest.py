@@ -22,10 +22,8 @@ import proxyclient as client
 
 try:
     from hashlib import md5
-    has_hashlib = True
 except ImportError:
     from md5 import md5
-    has_hashlib = False
 
 try:
     from xml.etree import ElementTree
@@ -104,11 +102,7 @@ class Flickr:
         sig = reduce(lambda sig, key: sig + key + str(kwargs[key]),
                      sorted(kwargs.keys()),
                      self.secret)
-        if has_hashlib:
-            kwargs['api_sig'] = md5(sig).hexdigest()
-        else:
-            kwargs['api_sig'] = md5.new(sig).hexdigest()
-
+        kwargs['api_sig'] = md5(sig).hexdigest()
 
     def __call(self, method, kwargs):
         kwargs["method"] = method
