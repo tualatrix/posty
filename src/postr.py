@@ -33,6 +33,7 @@ from AuthenticationDialog import AuthenticationDialog
 from ProgressDialog import ProgressDialog
 from ErrorDialog import ErrorDialog
 import ImageStore, ImageList, StatusBar, PrivacyCombo, SafetyCombo, GroupSelector, ContentTypeCombo
+from proxyclient import UploadProgressTracker
 
 from flickrest import Flickr
 import EXIF
@@ -180,6 +181,7 @@ class Postr(UniqueApp):
             self.cancel_upload = True
         self.progress_dialog = ProgressDialog(cancel)
         self.progress_dialog.set_transient_for(self.window)
+        self.upload_progress_tracker = UploadProgressTracker(self.progress_dialog.image_progress)
         self.avatar_image.clear()
         # Disable the Upload menu until the user has authenticated
         self.update_upload()
@@ -885,8 +887,6 @@ class Postr(UniqueApp):
             self.progress_dialog.thumbnail.set_from_pixbuf(None)
             self.progress_dialog.thumbnail.hide()
 
-        self.progress_dialog.progress.set_fraction(float(self.upload_index) / float(self.upload_count))
-
         # Use named args for i18n
         data = {
             "index": self.upload_index+1,
@@ -1009,7 +1009,7 @@ class Postr(UniqueApp):
                                    title=title, desc=desc,
                                    tags=tags, search_hidden=not visible, safety=safety,
                                    is_public=is_public, is_family=is_family, is_friend=is_friend,
-                                   content_type=content_type)
+                                   content_type=content_type, progress_tracker=self.upload_progress_tracker)
         elif pixbuf:
             # This isn't very nice, but might be the best way
             data = []
@@ -1018,7 +1018,7 @@ class Postr(UniqueApp):
                                    title=title, desc=desc, tags=tags,
                                    search_hidden=not visible, safety=safety,
                                    is_public=is_public, is_family=is_family, is_friend=is_friend,
-                                   content_type=content_type)
+                                   content_type=content_type, progress_tracker=self.upload_progress_tracker)
         else:
             print "No filename or pixbuf stored"
 

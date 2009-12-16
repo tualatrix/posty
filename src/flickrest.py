@@ -165,7 +165,8 @@ class Flickr:
     def upload(self, uri=None, imageData=None,
                title=None, desc=None, tags=None,
                is_public=None, is_family=None, is_friend=None,
-               safety=None, search_hidden=None, content_type=None):
+               safety=None, search_hidden=None, content_type=None,
+               progress_tracker=None):
         # Sanity check the arguments
         if uri is None and imageData is None:
             raise ValueError("Need to pass either uri or imageData")
@@ -206,9 +207,10 @@ class Flickr:
             }
 
         self.logger.info("Calling upload")
-        return client.getPage("http://api.flickr.com/services/upload/",
-                              proxy=self.proxy, method="POST",
-                              headers=headers, postdata=form).addCallback(self.__cb, "upload")
+        return client.upload("http://api.flickr.com/services/upload/",
+                             proxy=self.proxy, method="POST",
+                             headers=headers, postdata=form,
+                             progress_tracker=progress_tracker).addCallback(self.__cb, "upload")
 
     def authenticate_2(self, state):
         def gotToken(e):

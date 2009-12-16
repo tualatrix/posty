@@ -14,17 +14,16 @@ import urlparse, os, types
 
 from twisted.web import http
 from twisted.internet import defer, protocol, reactor
+from twisted.internet.main import CONNECTION_LOST
 from twisted.python import failure
 from twisted.python.util import InsensitiveDict
 from twisted.web import error
-
 
 class PartialDownloadError(error.Error):
     """Page was only partially downloaded, we got disconnected in middle.
 
     The bit that was downloaded is in the response attribute.
     """
-
 
 class HTTPPageGetter(http.HTTPClient):
 
@@ -51,7 +50,9 @@ class HTTPPageGetter(http.HTTPClient):
                 self.sendHeader(key, value)
         self.endHeaders()
         self.headers = {}
-        
+        self.writeTheData(data)
+
+    def writeTheData(self, data):
         if data is not None:
             self.transport.write(data)
 
@@ -389,6 +390,153 @@ def _parse(url, defaultPort=None):
 
 
 def getPage(url, contextFactory=None, proxy=None, *args, **kwargs):
+    """
+    This method has been refactored to _makeDeferredRequest, for more
+    information, see the comment there.
+    """
+    return _makeDeferredRequest(url, contextFactory=contextFactory,
+                                proxy=proxy, *args, **kwargs)
+
+
+def downloadPage(url, file, contextFactory=None, *args, **kwargs):
+    """Download a web page to a file.
+
+    @param file: path to file on filesystem, or file-like object.
+    
+    See HTTPDownloader to see what extra args can be passed.
+    """
+    scheme, host, port, path = _parse(url)
+    factory = HTTPDownloader(url, file, *args, **kwargs)
+    if scheme == 'https':
+        from twisted.internet import ssl
+        if contextFactory is None:
+            contextFactory = ssl.ClientContextFactory()
+        reactor.connectSSL(host, port, factory, contextFactory)
+    else:
+        reactor.connectTCP(host, port, factory)
+    return factory.deferred
+
+class UploadProgressTracker(object):
+    """
+    This object takes a gtk.ProgressBar object as a parameter
+    and appropriately calls progress.set_fraction() as more
+    data gets written to the pipe.
+    """
+    def __init__(self, progress):
+        self._progress = progress
+        self._write_size = 1
+        self._write_progress = 0
+
+    def set_write_size(self, size):
+        """
+        Resets the progress count and records the next image's size
+        """
+        self._write_progress = 0
+        self._write_size = size
+
+    def _onDataWritten(self, size):
+        """ increments the write_progress """
+        self._write_progress += size
+        self._update_progress()
+
+    def _onConnectionLost(self):
+        """ connection lost, same as done writing """
+        self._onWriteDone()
+
+    def _onWriteDone(self):
+        """ done writing, zero out progress """
+        self._write_progress = 0
+        self._write_size = 1
+        self._update_progress()
+
+    def _update_progress(self):
+        """ updates the progress bar, capping at 100% """
+        self._progress.set_fraction(min(float(self._write_progress) / float(self._write_size),
+                                        1))
+
+    def wrap_writeSomeData(self, func):
+        """
+        the horrible decorator to wrap
+        twisted.internet.tcp.Connection's implementation of writeSomeData
+        standard conventions fd->write return value conventions of
+        0 -> done, CONNECTION_LOST -> connection lost, N -> N bytes written
+        """
+        def inner_writeSomeData(data):
+            size = func(data)
+            if size == 0:
+                self._onWriteDone()
+            elif size == CONNECTION_LOST:
+                self._onConnectionLost()
+            else:
+                self._onDataWritten(size)
+            return size
+        return inner_writeSomeData
+
+class UploadHTTPPageGetter(HTTPPageGetter):
+    """
+    Subclass of HTTPPageGetter with one gruesome hack.
+    Looking at the twisted.internet.tcp.Connection class (which
+    this class subclasses) the actual data gets put on the wire
+    on writeSomeData.
+    http://twistedmatrix.com/documents/current/api/twisted.internet.tcp.Connection.html#writeSomeData
+    Since twisted is so abstracted out and simple, we never really
+    see the calls of self.transport.writeSomeData, but we obviously
+    know it is getting called.  This happens in response to a call to
+    self.transport.write.  So we can ensure that writeSomeData is wrapped
+    when write is called.
+    """
+    def set_progress_tracker(self, progress_tracker):
+        self._progress_tracker = progress_tracker
+
+    def writeTheData(self, data):
+        if data is not None:
+            if self._progress_tracker:
+                if not hasattr(self.transport, '__has_wrapped_writeSomeData'):
+                    self.transport.writeSomeData = self._progress_tracker.wrap_writeSomeData(self.transport.writeSomeData)
+                    self.transport.__has_wrapped_writeSomeData = True
+                self._progress_tracker.set_write_size(len(data))
+            self.transport.write(data)
+
+class UploadHTTPClientFactory(HTTPClientFactory):
+    """
+    Subclass of HTTPClientFactory that contains a method
+    set_progress_tracker that allows the user to specify
+    an UploadProgressTracker object to display the uploads
+    send percentage.
+    """
+    protocol = UploadHTTPPageGetter
+    _progress_tracker = None
+
+    def __init__(self, *args, **kwargs):
+        HTTPClientFactory.__init__(self, *args, **kwargs)
+
+    def buildProtocol(self, addr):
+        p = HTTPClientFactory.buildProtocol(self, addr)
+        if self._progress_tracker:
+            p.set_progress_tracker(self._progress_tracker)
+        return p
+
+    def set_progress_tracker(self, progress_tracker):
+        self._progress_tracker = progress_tracker
+    
+def upload(url, contextFactory=None, proxy=None,
+           progress_tracker=None, *args, **kwargs):
+    """
+    This is a horrible hacked version of getPage.  After
+    this method overrides the client_factory_class to
+    UploadHTTPClientFactory, which has the method 'set_progress_tracker'
+    that allows for tracking the progress of the upload.
+    """
+    return _makeDeferredRequest(url, contextFactory=contextFactory,
+                                progress_tracker=progress_tracker,
+                                clientFactoryClass=UploadHTTPClientFactory,
+                                proxy=proxy, *args, **kwargs)
+
+
+def _makeDeferredRequest(url, contextFactory=None, proxy=None,
+                         progress_tracker=None,
+                         clientFactoryClass=None,
+                         *args, **kwargs):
     """Download a web page as a string.
 
     Download a page. Return a deferred, which will callback with a
@@ -401,27 +549,14 @@ def getPage(url, contextFactory=None, proxy=None, *args, **kwargs):
         kwargs['proxy'] = proxy
     else:
         scheme, host, port, path = _parse(url)
-    
-    factory = HTTPClientFactory(url, *args, **kwargs)
-    if scheme == 'https':
-        from twisted.internet import ssl
-        if contextFactory is None:
-            contextFactory = ssl.ClientContextFactory()
-        reactor.connectSSL(host, port, factory, contextFactory)
-    else:
-        reactor.connectTCP(host, port, factory)
-    return factory.deferred
 
+    if not clientFactoryClass:
+        clientFactoryClass = HTTPClientFactory
+    factory = clientFactoryClass(url, *args, **kwargs)
 
-def downloadPage(url, file, contextFactory=None, *args, **kwargs):
-    """Download a web page to a file.
+    if progress_tracker is not None and hasattr(factory, 'set_progress_tracker'):
+        factory.set_progress_tracker(progress_tracker)
 
-    @param file: path to file on filesystem, or file-like object.
-    
-    See HTTPDownloader to see what extra args can be passed.
-    """
-    scheme, host, port, path = _parse(url)
-    factory = HTTPDownloader(url, file, *args, **kwargs)
     if scheme == 'https':
         from twisted.internet import ssl
         if contextFactory is None:

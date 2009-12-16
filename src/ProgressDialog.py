@@ -40,8 +40,8 @@ class ProgressDialog(gtk.Dialog):
         self.label.set_alignment (0.0, 0.0)
         hbox.pack_start (self.label, True, True, 0)
         
-        self.progress = gtk.ProgressBar()
-        vbox.add(self.progress)
+        self.image_progress = gtk.ProgressBar()
+        vbox.add(self.image_progress)
 
         vbox.show_all()
 
@@ -53,9 +53,9 @@ if __name__ == "__main__":
     import gobject
     d = ProgressDialog()
     d.thumbnail.set_from_icon_name ("stock_internet", gtk.ICON_SIZE_DIALOG)
-    d.label.set_text("Uploading")
+    d.label.set_text(_("Uploading"))
     def pulse():
-        d.progress.pulse()
+        d.image_progress.pulse()
         return True
     gobject.timeout_add(200, pulse)
     d.show()
