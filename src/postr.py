@@ -33,7 +33,7 @@ from AuthenticationDialog import AuthenticationDialog
 from ProgressDialog import ProgressDialog
 from ErrorDialog import ErrorDialog
 import ImageStore, ImageList, StatusBar, PrivacyCombo, SafetyCombo, GroupSelector, ContentTypeCombo
-from proxyclient import UploadProgressTracker
+from proxyclient import EXTRA_STEP_SET_ID, EXTRA_STEP_GROUPS, EXTRA_STEP_LICENSE, EXTRA_STEP_NEW_SET, UploadProgressTracker
 
 from flickrest import Flickr
 import EXIF
@@ -901,6 +901,7 @@ class Postr(UniqueApp):
         """Callback from the upload method to add the picture to a set."""
         photo_id=rsp.find("photoid").text
         self.flickr.photosets_addPhoto(photo_id=photo_id, photoset_id=set).addErrback(self.twisted_error)
+        self.upload_progress_tracker.complete_extra_step(EXTRA_STEP_SET_ID)
         return rsp
 
     def add_to_groups(self, rsp, groups):
@@ -912,6 +913,7 @@ class Postr(UniqueApp):
                 if failure.value.code != 6:
                     self.twisted_error(failure)
             self.flickr.groups_pools_add(photo_id=photo_id, group_id=group).addErrback(error)
+        self.upload_progress_tracker.complete_extra_step(EXTRA_STEP_GROUPS)
         return rsp
 
     def set_license(self, rsp, license):
@@ -919,6 +921,7 @@ class Postr(UniqueApp):
         photo_id=rsp.find("photoid").text
         self.flickr.photos_licenses_setLicense(photo_id=photo_id,
                                                license_id=license).addErrback(self.twisted_error)
+        self.upload_progress_tracker.complete_extra_step(EXTRA_STEP_LICENSE)
         return rsp
 
     def upload_done(self):
@@ -1024,16 +1027,23 @@ class Postr(UniqueApp):
 
         if set_id:
             d.addCallback(self.add_to_set, set_id)
+        else:
+            self.upload_progress_tracker.complete_extra_step(EXTRA_STEP_SET_ID)
         if groups:
             d.addCallback(self.add_to_groups, groups)
+        else:
+            self.upload_progress_tracker.complete_extra_step(EXTRA_STEP_GROUPS)
         if license is not None: # 0 is a valid license.
             d.addCallback(self.set_license, license)
+        else:
+            self.upload_progress_tracker.complete_extra_step(EXTRA_STEP_LICENSE)
         # creating a new photoset has implications on subsequent uploads,
         # so this has to finish before starting the next upload
         if new_photoset_name:
             d.addCallback(self.create_photoset_then_continue, new_photoset_name)
         else:
             d.addCallbacks(self.upload, self.upload_error)
+            self.upload_progress_tracker.complete_extra_step(EXTRA_STEP_NEW_SET)
 
     def create_photoset_then_continue(self, rsp, photoset_name):
         photo_id=rsp.find("photoid").text

@@ -416,6 +416,14 @@ def downloadPage(url, file, contextFactory=None, *args, **kwargs):
         reactor.connectTCP(host, port, factory)
     return factory.deferred
 
+( EXTRA_STEP_SET_ID,
+  EXTRA_STEP_GROUPS,
+  EXTRA_STEP_LICENSE,
+  EXTRA_STEP_NEW_SET,
+  EXTRA_STEP_NUM_STEPS ) = range(5)
+
+EXTRA_STEP_FRACTION = 0.04
+
 class UploadProgressTracker(object):
     """
     This object takes a gtk.ProgressBar object as a parameter
@@ -426,11 +434,13 @@ class UploadProgressTracker(object):
         self._progress = progress
         self._write_size = 1
         self._write_progress = 0
+        self._extra_step_progress = 0
 
     def set_write_size(self, size):
         """
         Resets the progress count and records the next image's size
         """
+        self._extra_step_progress = 0
         self._write_progress = 0
         self._write_size = size
 
@@ -441,18 +451,24 @@ class UploadProgressTracker(object):
 
     def _onConnectionLost(self):
         """ connection lost, same as done writing """
-        self._onWriteDone()
-
-    def _onWriteDone(self):
-        """ done writing, zero out progress """
         self._write_progress = 0
         self._write_size = 1
         self._update_progress()
 
+    def _onWriteDone(self):
+        """ done writing, zero out progress """
+        self._update_progress()
+
+    def complete_extra_step(self, step):
+        self._extra_step_progress += EXTRA_STEP_FRACTION
+
     def _update_progress(self):
         """ updates the progress bar, capping at 100% """
-        self._progress.set_fraction(min(float(self._write_progress) / float(self._write_size),
-                                        1))
+        new_fraction = min(float(self._write_progress) / float(self._write_size),
+                           1)
+        new_fraction *= (1 - EXTRA_STEP_NUM_STEPS * EXTRA_STEP_FRACTION)
+        new_fraction += self._extra_step_progress
+        self._progress.set_fraction(new_fraction)
 
     def wrap_writeSomeData(self, func):
         """
