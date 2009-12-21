@@ -262,7 +262,11 @@ class Postr(UniqueApp):
         bar = StatusBar.StatusBar(self.flickr)
         bar.show()
         return bar
-    
+    def tag_entry_new(self, *args):
+        import TagsEntry
+        entry = TagsEntry.TagsEntry(self.flickr)
+        return entry
+
     def on_message(self, app, command, command_data, startup_id, screen, workspace):
         """Callback from UniqueApp, when a message arrives."""
         if command == gtkunique.OPEN:
@@ -299,6 +303,7 @@ class Postr(UniqueApp):
             self.set_combo.update()
             self.license_combo.update()
             self.update_avatar()
+            self.update_tag_list()
 
     def on_statusbar_box_expose(self, widget, event):
         """
@@ -1288,4 +1293,7 @@ class Postr(UniqueApp):
             safety_iter = self.safety_combo.model.get_iter(safety_path)
             self._set_value_in_model(ImageStore.COL_SAFETY, safety_iter, [index])
         self._set_value_in_model(ImageStore.COL_VISIBLE, visible, [index])
+
+    def update_tag_list(self):
+        self.tags_entry.update()
 
