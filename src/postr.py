@@ -21,6 +21,8 @@ from os.path import basename
 
 import pygtk; pygtk.require ("2.0")
 import gobject, gtk, gtk.glade, gconf, gio
+import gnome.ui
+
 
 try:
     import gtkspell
@@ -425,15 +427,48 @@ class Postr(UniqueApp):
         # Add a preview widget
         preview = gtk.Image()
         dialog.set_preview_widget(preview)
+
+        def get_thumbnail(uri):
+            # Given a uri, return a Pixbuf with the thumbnail or
+            # None in case is not possible to get it or
+            # generate it.
+
+            gfile = gio.File(uri)
+            ginfo = gfile.query_info('time::modified,standard::content-type')
+            mtime = ginfo.get_modification_time()
+            mime = ginfo.get_content_type()
+
+            factory = gnome.ui.ThumbnailFactory(gnome.ui.THUMBNAIL_SIZE_NORMAL)
+            thumb_path = factory.lookup(uri, int(mtime))
+
+            if thumb_path:
+                return gtk.gdk.pixbuf_new_from_file(thumb_path)
+
+            # There is no thumbmail, we will try to generate one
+            # or return None if not possible
+            if factory.can_thumbnail(uri, mime, int(mtime)):
+                thumbnail = factory.generate_thumbnail(uri, mime)
+                if thumbnail is not None:
+                    factory.save_thumbnail(thumbnail, uri, int(mtime))
+                return thumbnail
+            else:
+                return None
+
         def update_preview_cb(file_chooser, preview):
             filename = file_chooser.get_preview_filename()
-            try:
-                pixbuf = gtk.gdk.pixbuf_new_from_file_at_size(filename, 128, 128)
-                preview.set_from_pixbuf(pixbuf)
+            uri = file_chooser.get_preview_uri()
+
+            if uri:
+                thumbnail = get_thumbnail(uri)
+
+            if uri and thumbnail:
+                preview.set_from_pixbuf(thumbnail)
                 have_preview = True
-            except:
+            else:
                 have_preview = False
+
             file_chooser.set_preview_widget_active(have_preview)
+
         dialog.connect("update-preview", update_preview_cb, preview)
         
         if dialog.run() == gtk.RESPONSE_OK:
