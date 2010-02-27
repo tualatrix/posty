@@ -1,14 +1,14 @@
 # Swedish translation of Postr.
-# Copyright (C) 2007, 2009 Free Software Foundation, Inc.
+# Copyright (C) 2007, 2009, 2010 Free Software Foundation, Inc.
 # This file is distributed under the same license as the postr package.
-# Daniel Nylander <po@danielnylander.se>, 2007, 2009.
+# Daniel Nylander <po@danielnylander.se>, 2007, 2009, 2010.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Postr\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-11-05 18:32+0100\n"
-"PO-Revision-Date: 2009-11-05 20:54+0100\n"
+"POT-Creation-Date: 2010-02-27 15:09+0100\n"
+"PO-Revision-Date: 2010-02-27 15:25+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
@@ -25,37 +25,37 @@ msgstr "Skicka upp markerade filer till Flickr"
 
 #: ../src/AboutDialog.py:25
 #: ../src/postr.glade.h:4
-#: ../src/postr.py:795
+#: ../src/postr.py:964
 msgid "Flickr Uploader"
 msgstr "Skicka upp till Flickr"
 
-#: ../src/ImageList.py:65
+#: ../src/ImageList.py:72
 msgid "No title"
 msgstr "Ingen titel"
 
-#: ../src/StatusBar.py:35
+#: ../src/StatusBar.py:38
 #, python-format
 msgid "Logged in as <b>%s</b>.  "
 msgstr "Inloggad som <b>%s</b>.  "
 
-#: ../src/StatusBar.py:38
+#: ../src/StatusBar.py:41
 #, python-format
 msgid "You can upload %(quota)s this month, and have %(to_upload)s to upload."
 msgstr "Du kan skicka upp %(quota)s denna månad och har %(to_upload)s att skicka upp."
 
-#: ../src/StatusBar.py:40
+#: ../src/StatusBar.py:43
 #, python-format
 msgid "You can upload %(quota)s this month."
 msgstr "Du kan skicka upp %(quota)s denna månad."
 
-#: ../src/StatusBar.py:42
+#: ../src/StatusBar.py:45
 #, python-format
 msgid "%(to_upload)s to upload."
 msgstr "%(to_upload)s att skicka upp."
 
 #: ../src/postr.glade.h:1
-msgid "..."
-msgstr "..."
+msgid "Add Photos..."
+msgstr "Lägg till foton..."
 
 #: ../src/postr.glade.h:2
 msgid "Add to _Set:"
@@ -66,115 +66,171 @@ msgid "Dese_lect All"
 msgstr "Avmark_era allt"
 
 #: ../src/postr.glade.h:5
-msgid "Privacy and Safety"
-msgstr "Integritet och säkerhet"
+msgid "Privacy, Safety, Type and License"
+msgstr "Integritet, säkerhet, typ och licens"
 
 #: ../src/postr.glade.h:6
+msgid "Remove Photos"
+msgstr "Ta bort foton"
+
+#: ../src/postr.glade.h:7
+msgid "Rename"
+msgstr "Byt namn"
+
+#: ../src/postr.glade.h:8
 msgid "Select"
 msgstr "Markera"
 
-#: ../src/postr.glade.h:7
+#: ../src/postr.glade.h:9
 msgid "Send to Groups"
 msgstr "Skicka till grupper"
 
-#: ../src/postr.glade.h:8
+#: ../src/postr.glade.h:10
 msgid "Ta_gs:"
 msgstr "Ta_ggar:"
 
-#: ../src/postr.glade.h:9
+#: ../src/postr.glade.h:11
 msgid "_Add Photos..."
 msgstr "_Lägg till foton..."
 
-#: ../src/postr.glade.h:10
+#: ../src/postr.glade.h:12
+msgid "_Content type:"
+msgstr "I_nnehållstyp:"
+
+#: ../src/postr.glade.h:13
 msgid "_Description:"
 msgstr "_Beskrivning:"
 
-#: ../src/postr.glade.h:11
+#: ../src/postr.glade.h:14
 msgid "_File"
 msgstr "_Arkiv"
 
-#: ../src/postr.glade.h:12
+#: ../src/postr.glade.h:15
 msgid "_Help"
 msgstr "_Hjälp"
 
-#: ../src/postr.glade.h:13
+#: ../src/postr.glade.h:16
 msgid "_Invert Selection"
 msgstr "_Invertera markering"
 
-#: ../src/postr.glade.h:14
+#: ../src/postr.glade.h:17
+msgid "_License:"
+msgstr "_Licens:"
+
+#: ../src/postr.glade.h:18
+msgid "_Load session"
+msgstr "_Läs in session"
+
+#: ../src/postr.glade.h:19
 msgid "_Privacy:"
 msgstr "_Integritet:"
 
-#: ../src/postr.glade.h:15
+#: ../src/postr.glade.h:20
 msgid "_Remove Photos"
 msgstr "_Ta bort foton"
 
-#: ../src/postr.glade.h:16
+#: ../src/postr.glade.h:21
 msgid "_Safety:"
 msgstr "_Säkerhet:"
 
-#: ../src/postr.glade.h:17
+#: ../src/postr.glade.h:22
+msgid "_Save session"
+msgstr "_Spara session"
+
+#: ../src/postr.glade.h:23
 msgid "_Select All"
 msgstr "_Markera allt"
 
-#: ../src/postr.glade.h:18
+#: ../src/postr.glade.h:24
 msgid "_Switch user..."
 msgstr "_Växla användare..."
 
-#: ../src/postr.glade.h:19
+#: ../src/postr.glade.h:25
 msgid "_Title:"
 msgstr "_Titel:"
 
-#: ../src/postr.glade.h:20
+#: ../src/postr.glade.h:26
 msgid "_Upload"
 msgstr "Skicka _upp"
 
-#: ../src/postr.glade.h:21
+#: ../src/postr.glade.h:27
 msgid "_Visible in search results"
 msgstr "S_ynlig i sökresultat"
 
-#: ../src/postr.glade.h:22
+#: ../src/postr.glade.h:28
 msgid "gtk-about"
 msgstr "Om"
 
-#: ../src/postr.py:340
+#: ../src/postr.py:407
 msgid "Add Photos"
 msgstr "Lägg till foton"
 
-#: ../src/postr.py:352
+#: ../src/postr.py:419
 msgid "Images"
 msgstr "Bilder"
 
-#: ../src/postr.py:356
+#: ../src/postr.py:423
 msgid "All Files"
 msgstr "Alla filer"
 
-#: ../src/postr.py:387
+#: ../src/postr.py:488
 msgid "<b>Currently Uploading</b>"
 msgstr "<b>Skickar upp</b>"
 
-#: ../src/postr.py:388
-msgid "Photos are still being uploaded. Are you sure you want to quit?"
-msgstr "Foton håller på att skickas. Är du säker på att du vill avsluta?"
+#: ../src/postr.py:489
+msgid "Photos are still being uploaded. Are you sure you want to quit? You can also save your pending upload set for later."
+msgstr "Foton håller på att skickas. Är du säker på att du vill avsluta? Du kan även spara din väntande sändning till senare."
 
-#: ../src/postr.py:399
+#: ../src/postr.py:504
 msgid "<b>Photos to be uploaded</b>"
 msgstr "<b>Foton att skickas upp</b>"
 
-#: ../src/postr.py:400
-msgid "There are photos pending to be uploaded. Are you sure you want to quit?"
-msgstr "Det finns foton som väntar på att skickas upp. Är du säker på att du vill avsluta?"
+#: ../src/postr.py:505
+msgid "There are photos pending to be uploaded. Are you sure you want to quit? You can also save your pending upload set for later."
+msgstr "Det finns foton som väntar på att skickas upp. Är du säker på att du vill avsluta? Du kan även spara din väntande sändning till senare."
 
-#: ../src/postr.py:771
+#: ../src/postr.py:762
+#, python-format
+msgid "Image %s is too large, images must be no larger than %dMB in size."
+msgstr "Bilden %s är för stor. Bilder får inte vara större än %d MB."
+
+#: ../src/postr.py:930
 #, python-format
 msgid "Uploading %(index)d of %(count)d"
 msgstr "Skickar upp %(index)d av %(count)d"
 
-#: ../src/postr.py:774
+#: ../src/postr.py:933
 #, python-format
 msgid "Flickr Uploader (%(index)d/%(count)d)"
 msgstr "Skicka upp till Flickr (%(index)d/%(count)d)"
 
+#: ../src/postr.py:1261
+#, python-format
+msgid ""
+"You are logged in as %s but loading\n"
+"an upload set for %s"
+msgstr ""
+"Du är inloggad som %s men läser\n"
+"in en sändning för %s"
+
+#: ../src/postr.py:1265
+#: ../src/postr.py:1282
+msgid "Do you want to continue with the load?  You will not import photoset information."
+msgstr "Vill du fortsätta med inläsningen?  Du kommer inte importera information om fotouppsättningen."
+
+#: ../src/postr.py:1278
+#, python-format
+msgid ""
+"You are not logged in but loading\n"
+"an upload set for %s"
+msgstr ""
+"Du är inte inloggad men läser in\n"
+"en sändning för %s"
+
+#~ msgid "..."
+#~ msgstr "..."
+#~ msgid "Privacy and Safety"
+#~ msgstr "Integritet och säkerhet"
 #~ msgid "Continue"
 #~ msgstr "Fortsätt"
 #~ msgid ""
