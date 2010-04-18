@@ -22,6 +22,8 @@
       <foaf:name>Ross Burton</foaf:name>
       <foaf:mbox rdf:resource="mailto:ross@burtonini.com"/>
     </foaf:Person>
+  </maintainer>
+  <maintainer>
     <foaf:Person>
       <foaf:name>Germán Póo-Caamaño</foaf:name>
       <foaf:mbox rdf:resource="mailto:gpoo@gnome.org"/>
