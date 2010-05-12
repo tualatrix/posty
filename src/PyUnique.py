@@ -26,6 +26,7 @@ import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 from gtk import gdk
 import logging
+import time
 
 # Set the glib main loop as the default main loop for dbus
 #
@@ -105,6 +106,19 @@ class UniqueApp(gobject.GObject):
         # TODO: Find out what the startup_id is meant to be.
         self._startup_id = startup_id
         self.sess_bus = dbus.SessionBus()
+        lock = "org.gtk.PyUnique.lock"
+
+        # Acquire dbus "lock" - I don't want multiple processes
+        # starting at once.
+        while self.sess_bus.request_name(lock) not in [dbus.bus.REQUEST_NAME_REPLY_PRIMARY_OWNER,
+                                                       dbus.bus.REQUEST_NAME_REPLY_ALREADY_OWNER]:
+            time.sleep(0.1)
+
+        # So when we've arrived here, we're sure to be the only
+        # process executing this. A FIXME would be that this lock is a
+        # global lock for all PyUnique applications that hasn't
+        # modified the lock string themselves. Perhaps we should
+        # incorporate self.name into the locking string?
 
         try:
             # Try to get the object of the already running UniqueApp
@@ -118,6 +132,8 @@ class UniqueApp(gobject.GObject):
             # left at its default False state.
             self.busname = dbus.service.BusName(self._name, self.sess_bus)
             self.busobj = UniqueDBusObject(self.sess_bus, "/Factory", self)
+
+        self.sess_bus.release_name(lock)
 
     def is_running(self):
         """ Is another UniqueApp instance running? """
