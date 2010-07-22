@@ -531,17 +531,26 @@ class Postr(UniqueApp):
             selectIter = model.get_iter(path)
             selectList.append(selectIter)
 
-        selectList = []
-        
+        select_list = []
+
         selection = self.thumbview.get_selection()
-        selection.selected_foreach(get_selected_iter, selectList)
+        selection.selected_foreach(get_selected_iter, select_list)
         model = self.thumbview.get_model()
+
+        next_select_iter = model.iter_next(select_list[-1])
+
         # actual removal of rows
-        for iter in selectList:
+        for iter in select_list:
             model.remove(iter)
 
         self.update_statusbar()
-        
+
+        if next_select_iter:
+            self.thumbview.set_cursor(model.get_path(next_select_iter))
+        elif len(model) > 0:
+            self.thumbview.set_cursor(model[-1].path)
+
+
     def on_select_all_activate(self, menuitem):
         """Callback from Edit->Select All."""
         selection = self.thumbview.get_selection()
