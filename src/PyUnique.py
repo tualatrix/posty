@@ -25,7 +25,6 @@ import dbus
 import dbus.service
 from dbus.mainloop.glib import DBusGMainLoop
 from gtk import gdk
-import logging
 import time
 
 # Set the glib main loop as the default main loop for dbus
@@ -58,7 +57,9 @@ class UniqueDBusObject(dbus.service.Object):
         dbus.service.Object.__init__(self, bus, path)
         self.app = app
 
-    @dbus.service.method("org.gtk.PyUniqueApp", in_signature='is', out_signature='s')
+    @dbus.service.method("org.gtk.PyUniqueApp",
+                         in_signature = 'is',
+                         out_signature = 's')
     def SendMessage(self, command, data):
         self.app.emit('message-received', command, data)
         return "OK"
@@ -108,10 +109,12 @@ class UniqueApp(gobject.GObject):
         self.sess_bus = dbus.SessionBus()
         lock = "org.gtk.PyUnique.lock"
 
+        good_requests = [dbus.bus.REQUEST_NAME_REPLY_PRIMARY_OWNER,
+                         dbus.bus.REQUEST_NAME_REPLY_ALREADY_OWNER]
+
         # Acquire dbus "lock" - I don't want multiple processes
         # starting at once.
-        while self.sess_bus.request_name(lock) not in [dbus.bus.REQUEST_NAME_REPLY_PRIMARY_OWNER,
-                                                       dbus.bus.REQUEST_NAME_REPLY_ALREADY_OWNER]:
+        while self.sess_bus.request_name(lock) not in good_requests:
             time.sleep(0.1)
 
         # So when we've arrived here, we're sure to be the only
@@ -124,7 +127,8 @@ class UniqueApp(gobject.GObject):
             # Try to get the object of the already running UniqueApp
             # instance. If this succeeds, there is another instance
             # running, therefore we can set the is-running property.
-            self.running_process = self.sess_bus.get_object(self.props.name, "/Factory")
+            self.running_process = self.sess_bus.get_object(self.props.name,
+                                                            "/Factory")
             self.set_property('is-running', True)
         except dbus.DBusException:
             # We got a DBus exception. This means that most likely,
@@ -151,9 +155,10 @@ class UniqueApp(gobject.GObject):
         if not command in self.commands.values():
             raise UniqueBadCommand, "Undefined command"
         
-        return self.running_process.SendMessage(command, message,
-                                                dbus_interface = "org.gtk.PyUniqueApp")
-        
+        return self.running_process.SendMessage(command,
+                                                message,
+                                                dbus_interface="org.gtk.PyUniqueApp")
+    
     def add_command(self, command_name, command_id):
         """ Adds command_name as a custom command. You must call
         UniqueApp.add_command() before UniqueApp.send_message() in
@@ -183,7 +188,6 @@ class UniqueApp(gobject.GObject):
         """ Emit the message-received signal. Called by the DBus
         listener object. """
         self.emit('message-received', command, data)
-        pass
 
 
     #
@@ -192,7 +196,8 @@ class UniqueApp(gobject.GObject):
     #
         
     def do_get_property(self, prop):
-        """ Actual method for getting a property value from an instance variable """
+        """ Actual method for getting a property value from an
+        instance variable """
         if prop.name == 'is-running':
             return self._is_running
         elif prop.name == 'name':
@@ -205,7 +210,8 @@ class UniqueApp(gobject.GObject):
             raise AttributeError, 'unknown property %s' % prop.name
 
     def do_set_property(self, prop, value):
-        """ Actual method for setting a property value to an instance variable """
+        """ Actual method for setting a property value to an instance
+        variable """
         if prop.name == 'is-running':
             self._is_running = value
         elif prop.name == 'name':
