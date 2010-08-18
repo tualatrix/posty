@@ -107,7 +107,7 @@ class UniqueApp(gobject.GObject):
         # TODO: Find out what the startup_id is meant to be.
         self._startup_id = startup_id
         self.sess_bus = dbus.SessionBus()
-        lock = "org.gtk.PyUnique.lock"
+        lock = "%s.lock" % name #"org.gtk.PyUnique.lock"
 
         good_requests = [dbus.bus.REQUEST_NAME_REPLY_PRIMARY_OWNER,
                          dbus.bus.REQUEST_NAME_REPLY_ALREADY_OWNER]
