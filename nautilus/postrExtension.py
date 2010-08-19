@@ -80,7 +80,8 @@ class PostrExtension(nautilus.MenuProvider):
 
         item = nautilus.MenuItem('PostrExtension::upload_files',
                                  _('Upload to Flickr...'),
-                                 _('Upload the selected files into Flickr'))
+                                 _('Upload the selected files into Flickr'),
+                                 "postr")
         item.connect('activate', self.upload_files, files)
 
         return item,
