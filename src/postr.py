@@ -45,7 +45,8 @@ from datetime import datetime
 import shelve
 
 try:
-    from PyUnique import UniqueApp, RESPONSE_OK, RESPONSE_INVALID
+    import PyUnique
+    from PyUnique import UniqueApp
 except ImportError:
     from DummyUnique import UniqueApp
 
@@ -278,9 +279,9 @@ class Postr(UniqueApp):
         """ PyUnique callback for receiving a message """
         if command == self.commands['OPEN']:
             self.add_image_filename(data)
-            return RESPONSE_OK
+            return PyUnique.RESPONSE_OK
         else:
-            return RESPONSE_INVALID
+            return PyUnique.RESPONSE_INVALID
 
     def on_model_changed(self, *args):
         # We don't care about the arguments, because we just want to know when
