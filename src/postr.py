@@ -279,6 +279,7 @@ class Postr(UniqueApp):
         """ PyUnique callback for receiving a message """
         if command == self.commands['OPEN']:
             self.add_image_filename(data)
+            self.window.present()
             return PyUnique.RESPONSE_OK
         else:
             return PyUnique.RESPONSE_INVALID
