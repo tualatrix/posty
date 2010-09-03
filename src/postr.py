@@ -45,7 +45,8 @@ from datetime import datetime
 import shelve
 
 try:
-    from gtkunique import UniqueApp
+    import PyUnique
+    from PyUnique import UniqueApp
 except ImportError:
     from DummyUnique import UniqueApp
 
@@ -67,7 +68,7 @@ class Postr(UniqueApp):
     def __init__(self):
         UniqueApp.__init__(self, 'com.burtonini.Postr')
         try:
-            self.connect("message", self.on_message)
+            self.connect("message-received", self.on_message_pyunique)
         except AttributeError:
             pass
 
@@ -199,7 +200,10 @@ class Postr(UniqueApp):
         
         # Connect to flickr, go go go
         self.flickr.authenticate_1().addCallbacks(self.auth_open_url, self.twisted_error)
-    
+
+    def open_uri(self, uri):
+        return self.send_message(self.commands['OPEN'], uri)
+
     def twisted_error(self, failure):
         self.update_upload()
         
@@ -271,13 +275,14 @@ class Postr(UniqueApp):
         entry = TagsEntry.TagsEntry(self.flickr)
         return entry
 
-    def on_message(self, app, command, command_data, startup_id, screen, workspace):
-        """Callback from UniqueApp, when a message arrives."""
-        if command == gtkunique.OPEN:
-            self.add_image_filename(command_data)
-            return gtkunique.RESPONSE_OK
+    def on_message_pyunique(self, instance, command, data):
+        """ PyUnique callback for receiving a message """
+        if command == self.commands['OPEN']:
+            self.add_image_filename(data)
+            self.window.present()
+            return PyUnique.RESPONSE_OK
         else:
-            return gtkunique.RESPONSE_ABORT
+            return PyUnique.RESPONSE_INVALID
 
     def on_model_changed(self, *args):
         # We don't care about the arguments, because we just want to know when
