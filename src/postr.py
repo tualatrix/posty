@@ -23,13 +23,6 @@ import pygtk; pygtk.require ("2.0")
 import gobject, gtk, gtk.glade, gconf, gio
 import gnome.ui
 
-
-try:
-    import gtkspell
-    has_gtkspell = True
-except:
-    has_gtkspell = False
-
 from AboutDialog import AboutDialog
 from AuthenticationDialog import AuthenticationDialog
 from ProgressDialog import ProgressDialog
@@ -74,8 +67,8 @@ class Postr(UniqueApp):
 
         self.is_connected = False
         
-        self.flickr = Flickr(api_key="c53cebd15ed936073134cec858036f1d",
-                             secret="7db1b8ef68979779",
+        self.flickr = Flickr(api_key="c437f34483b22367cff3ed8a2103b626",
+                             secret="73231c8a993b4c62",
                              perms="write")
 
         self.logo_icon_size = gtk.icon_size_register("logo", 128, 128)
@@ -148,9 +141,6 @@ class Postr(UniqueApp):
                                 self.on_button_release_cb)
         self.thumbview.connect("drag_begin", self.drag_begin_cb)
         self.thumbview.connect("drag_end", self.drag_end_cb)
-
-        if has_gtkspell:
-          gtkspell.Spell(self.desc_view)
 
         # TODO: remove this
         self.current_it = None
