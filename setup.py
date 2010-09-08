@@ -4,7 +4,7 @@ import os
 from distutils.core import setup
 from distutils.command.install_data import install_data
 from glob import glob
-from src.version import __version__
+from src import __version__
 
 
 class InstallData(install_data):
