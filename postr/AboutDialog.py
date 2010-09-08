@@ -16,7 +16,7 @@
 # St, Fifth Floor, Boston, MA 02110-1301 USA
 
 import gtk
-from version import __version__
+from __init__ import __version__
 
 class AboutDialog(gtk.AboutDialog):
     def __init__(self, parent=None):

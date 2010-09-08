@@ -26,12 +26,7 @@ import optparse
 from twisted.internet import gtk2reactor
 reactor = gtk2reactor.install()
 
-# Import from src first so that we can run directly from the source tree for
-# development.
-try:
-    from src import postr, __version__
-except ImportError, e:
-    from postr import postr, __version__
+from postr import postr, __version__
 
 if __name__ == '__main__':
     parser = optparse.OptionParser(prog="postr",

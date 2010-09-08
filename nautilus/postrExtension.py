@@ -1,4 +1,4 @@
-# Postr's Nautilus Extension, an extension to upload to Flickr using Postr
+# Postr's Nautilus Extension, an extension to upload to Yupoo using Postr
 #
 # Copyright (C) 2007 German Poo-Caaman~o <gpoo@gnome.org>
 #
@@ -79,8 +79,8 @@ class PostrExtension(nautilus.MenuProvider):
         #    return
 
         item = nautilus.MenuItem('PostrExtension::upload_files',
-                                 _('Upload to Flickr...'),
-                                 _('Upload the selected files into Flickr'),
+                                 _('Upload to Yupoo...'),
+                                 _('Upload the selected files into Yupoo'),
                                  "postr")
         item.connect('activate', self.upload_files, files)
 
