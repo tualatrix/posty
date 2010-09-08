@@ -21,24 +21,37 @@ import gettext
 gettext.install('postr')
 
 import sys
+import logging
+import optparse
 from twisted.internet import gtk2reactor
 reactor = gtk2reactor.install()
 
 # Import from src first so that we can run directly from the source tree for
 # development.
 try:
-    from src import postr
+    from src import postr, __version__
 except ImportError, e:
-    from postr import postr
+    from postr import postr, __version__
 
-p = postr.Postr()
-if p.is_running():
-    for url in sys.argv[1:]:
-        p.open_uri(url)
-    sys.exit(0)
-else:
-    p.window.show()
-    p.add_window(p.window)
-    for url in sys.argv[1:]:
-        p.add_image_filename(url)
-    reactor.run()
+if __name__ == '__main__':
+    parser = optparse.OptionParser(prog="postr",
+                                   version="%%prog %s" % __version__,
+                                   description="Postr is a simple yupoo uploader")
+    parser.add_option("-d", "--debug", action="store_true", default=False,
+                      help="Generate more debugging information.  [default: %default]")
+    options, args = parser.parse_args()
+
+    if options.debug or not __file__.startswith('/usr'):
+        logging.basicConfig(level=logging.DEBUG)
+
+    p = postr.Postr()
+    if p.is_running():
+        for url in sys.argv[1:]:
+            p.open_uri(url)
+        sys.exit(0)
+    else:
+        p.window.show()
+        p.add_window(p.window)
+        for url in sys.argv[1:]:
+            p.add_image_filename(url)
+        reactor.run()

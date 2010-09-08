@@ -43,8 +43,6 @@ try:
 except ImportError:
     from DummyUnique import UniqueApp
 
-#logging.basicConfig(level=logging.DEBUG)
-
 # Exif information about image orientation
 (ROTATED_0,
  ROTATED_180,
