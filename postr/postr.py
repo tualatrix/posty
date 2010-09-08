@@ -343,7 +343,8 @@ class Postr(UniqueApp):
                 self.avatar_image.set_from_pixbuf(icon)
             get_buddyicon(self.flickr, data).addCallbacks(get_buddyicon_cb, self.twisted_error)
         # Need to call people.getInfo to get the iconserver/iconfarm
-        self.flickr.people_getInfo(user_id=self.flickr.get_nsid()).addCallbacks(getinfo_cb, self.twisted_error)
+#TX
+#        self.flickr.people_findById(user_id=self.flickr.get_nsid()).addCallbacks(getinfo_cb, self.twisted_error)
     
     def on_field_changed(self, widget, column):
         """Callback when the entry fields are changed."""
@@ -937,7 +938,7 @@ class Postr(UniqueApp):
     def add_to_set(self, rsp, set):
         """Callback from the upload method to add the picture to a set."""
         photo_id=rsp.find("photoid").text
-        self.flickr.photosets_addPhoto(photo_id=photo_id, photoset_id=set).addErrback(self.twisted_error)
+        self.flickr.albums_addPhoto(photo_id=photo_id, photoset_id=set).addErrback(self.twisted_error)
         self.upload_progress_tracker.complete_extra_step(EXTRA_STEP_SET_ID)
         return rsp
 
@@ -1084,7 +1085,7 @@ class Postr(UniqueApp):
 
     def create_photoset_then_continue(self, rsp, photoset_name):
         photo_id=rsp.find("photoid").text
-        create_photoset = self.flickr.photosets_create(primary_photo_id=photo_id, title=photoset_name)
+        create_photoset = self.flickr.albums_create(primary_photo_id=photo_id, title=photoset_name)
         create_photoset.addCallback(self._process_photoset_creation, photoset_name)
         create_photoset.addErrback(self.upload_error)
         return rsp
@@ -1252,7 +1253,7 @@ class Postr(UniqueApp):
             filename = dialog.get_filename()
             source = shelve.open(filename, 'r')
             if source:
-                should_ignore_photosets = False
+                should_ignore_albums = False
                 if self.is_connected:
                     if source.has_key("nsid"):
                         nsid = source["nsid"]
@@ -1272,7 +1273,7 @@ class Postr(UniqueApp):
                                 dialog.destroy()
                                 return
                             else:
-                                should_ignore_photosets = True
+                                should_ignore_albums = True
                             confirm_dialog.destroy()
                 else:
                     if source.has_key("nsid"):
@@ -1289,7 +1290,7 @@ class Postr(UniqueApp):
                             dialog.destroy()
                             return
                         else:
-                            should_ignore_photosets = True
+                            should_ignore_albums = True
                         confirm_dialog.destroy()
 
                 if source.has_key("new_photoset_name"):
@@ -1305,7 +1306,7 @@ class Postr(UniqueApp):
                     row = source[str(index)]
                     self._unmarshal_and_import_row(index + index_offset,
                                                    row,
-                                                   should_ignore_photosets)
+                                                   should_ignore_albums)
                     index += 1
                 source.close()
 
@@ -1317,7 +1318,7 @@ class Postr(UniqueApp):
 
         dialog.destroy()
 
-    def _unmarshal_and_import_row(self, index, row, should_ignore_photosets):
+    def _unmarshal_and_import_row(self, index, row, should_ignore_albums):
         (path, uri, title, desc, tags, set_id, groups, privacy_path, safety_path, visible) = row
 
         self.add_image_uri(uri)
@@ -1325,7 +1326,7 @@ class Postr(UniqueApp):
         self._set_value_in_model(ImageStore.COL_DESCRIPTION, desc, [index])
         self._set_value_in_model(ImageStore.COL_TAGS, tags, [index])
 
-        if not should_ignore_photosets and set_id:
+        if not should_ignore_albums and set_id:
             set_iter = self.set_combo.get_iter_for_set(set_id)
             if set_iter:
                 self._set_value_in_model(ImageStore.COL_SET, set_iter, [index])

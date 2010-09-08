@@ -126,7 +126,7 @@ class Flickr:
             raise FlickrError(0, "Invalid response")
     
     def __getattr__(self, method):
-        method = "flickr." + method.replace("_", ".")
+        method = "yupoo." + method.replace("_", ".")
         if not self.__methods.has_key(method):
             def proxy(method=method, **kwargs):
                 return self.__call(method, kwargs).addCallback(self.__cb, method)
@@ -223,6 +223,7 @@ class Flickr:
             self.fullname = user.get("fullname")
             self.username = user.get("username")
             self.nsid = user.get("nsid")
+            self.logger.debug("the nsid is %s", self.nsid)
 
             # Cache the authentication
             filename = self.__getTokenFile()

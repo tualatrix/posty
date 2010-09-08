@@ -1,4 +1,4 @@
-# Postr, a Flickr Uploader
+#s Postr, a Flickr Uploader
 #
 # Copyright (C) 2006-2008 Ross Burton <ross@burtonini.com>
 #
@@ -74,9 +74,9 @@ class SetCombo(gtk.ComboBox):
         loader.close()
         self.model.set (it, COL_THUMBNAIL, loader.get_pixbuf())
     
-    def __got_photosets(self, rsp):
-        """Callback for the photosets.getList call"""
-        for photoset in rsp.findall("photosets/photoset"):
+    def __got_albums(self, rsp):
+        """Callback for the albums.getList call"""
+        for photoset in rsp.findall("albums/photoset"):
             it = self.model.append()
             self.model.set (it,
                            0, photoset.get("id"),
@@ -86,7 +86,7 @@ class SetCombo(gtk.ComboBox):
             getPage (url).addCallback(self.__got_set_thumb, it).addErrback(self.twisted_error)
 
     def update(self):
-        self.flickr.photosets_getList().addCallbacks(self.__got_photosets, self.twisted_error)
+        self.flickr.albums_getList().addCallbacks(self.__got_albums, self.twisted_error)
 
     def get_id_for_iter(self, it):
         if it is None: return None

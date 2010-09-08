@@ -85,12 +85,14 @@ class TagsEntry(gtk.Entry):
 
         self.completion_model.clear()
 
-        self.flickr.tags_getListUserPopular(user_id=self.flickr.get_nsid(), \
-        count=_USER_POPULAR_TAGS).addCallbacks(self.create_completion_model,
-        self.twisted_error)
+#TODO
+#        self.flickr.tags_getListUserPopular(user_id=self.flickr.get_nsid(), \
+#        count=_USER_POPULAR_TAGS).addCallbacks(self.create_completion_model,
+#        self.twisted_error)
 
-        self.flickr.tags_getHotList(user_id=self.flickr.get_nsid(), count=_HOTS_TAGS)\
-        .addCallbacks(self.create_completion_model, self.twisted_error)
+#TODO yupoo dont have this API
+#        self.flickr.tags_getHotList(user_id=self.flickr.get_nsid(), count=_HOTS_TAGS)\
+#        .addCallbacks(self.create_completion_model, self.twisted_error)
 
     def create_completion_model(self, rsp):
         '''

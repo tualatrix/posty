@@ -81,7 +81,8 @@ class GroupSelector(gtk.TreeView):
 
     def update(self):
         # TODO: block changed signals
-        self.flickr.groups_pools_getGroups().addCallbacks(self.got_groups, self.twisted_error)
+        pass
+#        self.flickr.groups_getList().addCallbacks(self.got_groups, self.twisted_error)
     
     def got_groups(self, rsp):
         for group in rsp.findall("groups/group"):
