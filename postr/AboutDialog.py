@@ -22,9 +22,9 @@ class AboutDialog(gtk.AboutDialog):
     def __init__(self, parent=None):
         gtk.AboutDialog.__init__(self)
         self.set_transient_for(parent)
-        self.set_name(_('Flickr Uploader'))
-        self.set_copyright(u'Copyright \u00A9 2006-2008 Ross Burton')
-        self.set_authors(('Ross Burton <ross@burtonini.com>',))
+        self.set_name(_('Yupoo Uploader'))
+        self.set_copyright(u'Copyright \u00A9 2006-2010 Ross Burton')
+        self.set_authors(('Burton <ross@burtonini.com>', 'TualatriX <tualatrix@gmail.com>'))
         self.set_website('http://projects.gnome.org/postr/')
         self.set_logo_icon_name('postr')
         self.set_version (__version__)

@@ -36,15 +36,15 @@ def on_url_clicked(button, url):
 class AuthenticationDialog(gtk.Dialog):
     def __init__(self, parent, url):
         gtk.Dialog.__init__(self,
-                            title=_("Flickr Uploader"), parent=parent,
+                            title=_("Yupoo Uploader"), parent=parent,
                             flags=gtk.DIALOG_NO_SEPARATOR,
                             buttons=(gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                                      _("Continue"), gtk.RESPONSE_ACCEPT))
         vbox = gtk.VBox(spacing=8)
         vbox.set_border_width(8)
         
-        label = gtk.Label(_("Postr needs to login to Flickr to upload your photos. "
-                          "Please click on the link below to login to Flickr."))
+        label = gtk.Label(_("Postr needs to login to Yupoo to upload your photos. "
+                          "Please click on the link below to login to Yupoo."))
         label.set_line_wrap(True)
         vbox.add(label)
 
@@ -52,9 +52,9 @@ class AuthenticationDialog(gtk.Dialog):
         # available.
         if hasattr(gtk, "LinkButton"):
             gtk.link_button_set_uri_hook(on_url_clicked)
-            button = gtk.LinkButton(url, _("Login to Flickr"))
+            button = gtk.LinkButton(url, _("Login to Yupoo"))
         else:
-            button = gtk.Button(_("Login to Flickr"))
+            button = gtk.Button(_("Login to Yupoo"))
             button.connect("clicked", on_url_clicked, url)
         vbox.add(button)
         

@@ -1,0 +1,10 @@
+[Desktop Entry]
+_Name=Yupoo Uploader
+_Comment=Upload photos to Yupoo
+Icon=postr
+TryExec=postr
+Exec=postr %F
+StartupNotify=true
+Terminal=false
+Type=Application
+Categories=GNOME;GTK;Graphics;

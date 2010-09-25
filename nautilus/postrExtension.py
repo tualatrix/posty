@@ -22,7 +22,7 @@ import gobject, nautilus
 import os, os.path
 from urllib import unquote
 
-PROGRAM_NAME = 'nautilus-postr'
+PROGRAM_NAME = 'postr'
 
 class PostrExtension(nautilus.MenuProvider):
     def __init__(self):

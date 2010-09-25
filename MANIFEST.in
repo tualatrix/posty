@@ -1,0 +1,5 @@
+include *.in COPYING ChangeLog AUTHORS README
+include nautilus/*
+include script/*
+recursive-include data *.png *.xml *.in *.desktop
+recursive-include po *.po *.in

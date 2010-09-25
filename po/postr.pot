@@ -1,0 +1,260 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-09-25 21:16+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../postr/postr.glade.h:1
+msgid "Add Photos..."
+msgstr ""
+
+#: ../postr/postr.glade.h:2
+msgid "Add to _Set:"
+msgstr ""
+
+#: ../postr/postr.glade.h:3
+msgid "Dese_lect All"
+msgstr ""
+
+#: ../postr/postr.glade.h:4
+msgid "Privacy, Safety, Type and License"
+msgstr ""
+
+#: ../postr/postr.glade.h:5
+msgid "Remove Photos"
+msgstr ""
+
+#: ../postr/postr.glade.h:6
+msgid "Rename"
+msgstr ""
+
+#: ../postr/postr.glade.h:7
+msgid "Select"
+msgstr ""
+
+#: ../postr/postr.glade.h:8
+msgid "Send to Groups"
+msgstr ""
+
+#: ../postr/postr.glade.h:9
+msgid "Ta_gs:"
+msgstr ""
+
+#: ../postr/postr.glade.h:10 ../postr/AboutDialog.py:25
+#: ../postr/AuthenticationDialog.py:39 ../postr/postr.py:967
+msgid "Yupoo Uploader"
+msgstr ""
+
+#: ../postr/postr.glade.h:11
+msgid "_Add Photos..."
+msgstr ""
+
+#: ../postr/postr.glade.h:12
+msgid "_Content type:"
+msgstr ""
+
+#: ../postr/postr.glade.h:13
+msgid "_Description:"
+msgstr ""
+
+#: ../postr/postr.glade.h:14
+msgid "_File"
+msgstr ""
+
+#: ../postr/postr.glade.h:15
+msgid "_Help"
+msgstr ""
+
+#: ../postr/postr.glade.h:16
+msgid "_Invert Selection"
+msgstr ""
+
+#: ../postr/postr.glade.h:17
+msgid "_License:"
+msgstr ""
+
+#: ../postr/postr.glade.h:18
+msgid "_Load session"
+msgstr ""
+
+#: ../postr/postr.glade.h:19
+msgid "_Privacy:"
+msgstr ""
+
+#: ../postr/postr.glade.h:20
+msgid "_Remove Photos"
+msgstr ""
+
+#: ../postr/postr.glade.h:21
+msgid "_Safety:"
+msgstr ""
+
+#: ../postr/postr.glade.h:22
+msgid "_Save session"
+msgstr ""
+
+#: ../postr/postr.glade.h:23
+msgid "_Title:"
+msgstr ""
+
+#: ../postr/postr.glade.h:24
+msgid "_Upload"
+msgstr ""
+
+#: ../postr/postr.glade.h:25
+msgid "_Visible in search results"
+msgstr ""
+
+#: ../postr/SetCombo.py:23
+msgid "None"
+msgstr ""
+
+#: ../postr/SetCombo.py:24
+#, python-format
+msgid "Create Photoset \"%s\""
+msgstr ""
+
+#: ../postr/SetCombo.py:26
+msgid "new photoset (%m-%d-%y)"
+msgstr ""
+
+#: ../postr/SetCombo.py:132
+msgid "Name for the new photoset:"
+msgstr ""
+
+#: ../postr/LicenseCombo.py:26
+msgid "Default"
+msgstr ""
+
+#: ../postr/StatusBar.py:38
+#, python-format
+msgid "Logged in as <b>%s</b>.  "
+msgstr ""
+
+#: ../postr/StatusBar.py:41
+#, python-format
+msgid "You can upload %(quota)s this month, and have %(to_upload)s to upload."
+msgstr ""
+
+#: ../postr/StatusBar.py:43
+#, python-format
+msgid "You can upload %(quota)s this month."
+msgstr ""
+
+#: ../postr/StatusBar.py:45
+#, python-format
+msgid "%(to_upload)s to upload."
+msgstr ""
+
+#: ../postr/AuthenticationDialog.py:42
+msgid "Continue"
+msgstr ""
+
+#: ../postr/AuthenticationDialog.py:46
+msgid ""
+"Postr needs to login to Yupoo to upload your photos. Please click on the "
+"link below to login to Yupoo."
+msgstr ""
+
+#: ../postr/AuthenticationDialog.py:55 ../postr/AuthenticationDialog.py:57
+msgid "Login to Yupoo"
+msgstr ""
+
+#: ../postr/ErrorDialog.py:26
+msgid "An error occurred"
+msgstr ""
+
+#: ../postr/postr.py:401
+msgid "Add Photos"
+msgstr ""
+
+#: ../postr/postr.py:413
+msgid "Images"
+msgstr ""
+
+#: ../postr/postr.py:417
+msgid "All Files"
+msgstr ""
+
+#: ../postr/postr.py:482
+msgid "<b>Currently Uploading</b>"
+msgstr ""
+
+#: ../postr/postr.py:483
+msgid ""
+"Photos are still being uploaded. Are you sure you want to quit? You can also "
+"save your pending upload set for later."
+msgstr ""
+
+#: ../postr/postr.py:498
+msgid "<b>Photos to be uploaded</b>"
+msgstr ""
+
+#: ../postr/postr.py:499
+msgid ""
+"There are photos pending to be uploaded. Are you sure you want to quit? You "
+"can also save your pending upload set for later."
+msgstr ""
+
+#: ../postr/postr.py:765
+#, python-format
+msgid "Image %s is too large, images must be no larger than %dMB in size."
+msgstr ""
+
+#: ../postr/postr.py:933
+#, python-format
+msgid "Uploading %(index)d of %(count)d"
+msgstr ""
+
+#: ../postr/postr.py:936
+#, python-format
+msgid "Yupoo Uploader (%(index)d/%(count)d)"
+msgstr ""
+
+#: ../postr/postr.py:1264
+#, python-format
+msgid ""
+"You are logged in as %s but loading\n"
+"an upload set for %s"
+msgstr ""
+
+#: ../postr/postr.py:1268 ../postr/postr.py:1285
+msgid ""
+"Do you want to continue with the load?  You will not import photoset "
+"information."
+msgstr ""
+
+#: ../postr/postr.py:1281
+#, python-format
+msgid ""
+"You are not logged in but loading\n"
+"an upload set for %s"
+msgstr ""
+
+#: ../postr/ProgressDialog.py:56
+msgid "Uploading"
+msgstr ""
+
+#: ../postr/ImageList.py:72
+msgid "No title"
+msgstr ""
+
+#: ../nautilus/postrExtension.py:82
+msgid "Upload to Yupoo..."
+msgstr ""
+
+#: ../nautilus/postrExtension.py:83
+msgid "Upload the selected files into Yupoo"
+msgstr ""

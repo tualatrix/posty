@@ -1,0 +1,26 @@
+[type: gettext/glade]postr/postr.glade
+postr/SafetyCombo.py
+postr/ImageStore.py
+postr/SetCombo.py
+postr/iptcinfo.py
+postr/LicenseCombo.py
+postr/__init__.py
+postr/StatusBar.py
+postr/ContentTypeCombo.py
+postr/DummyUnique.py
+postr/TagsEntry.py
+postr/AboutDialog.py
+postr/proxyclient.py
+postr/PrivacyCombo.py
+postr/AuthenticationDialog.py
+postr/ErrorDialog.py
+postr/PyUnique.py
+postr/postr.py
+postr/ProgressDialog.py
+postr/flickrest.py
+postr/EXIF.py
+postr/GroupSelector.py
+postr/util.py
+postr/debug.py
+postr/ImageList.py
+nautilus/postrExtension.py
