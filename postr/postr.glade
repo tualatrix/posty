@@ -92,8 +92,8 @@
                     <child>
                       <widget class="GtkMenuItem" id="switch_menu">
                         <property name="visible">True</property>
+			<property name="label" translatable="yes">_Switch user...</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
                         <signal name="activate" handler="on_switch_activate"/>
                       </widget>
                     </child>
@@ -101,7 +101,7 @@
                       <widget class="GtkMenuItem" id="upload_menu">
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+			<property name="label" translatable="yes">_Upload</property>
                         <signal name="activate" handler="on_upload_activate"/>
                       </widget>
                     </child>
