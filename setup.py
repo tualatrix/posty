@@ -4,7 +4,7 @@ import os
 from distutils.core import setup
 from distutils.command.install_data import install_data
 from glob import glob
-from src import __version__
+from postr import __version__
 
 
 class InstallData(install_data):
@@ -32,8 +32,8 @@ setup(name='Postr',
       author_email='ross@burtonini.com',
       url='http://www.burtonini.com/',
 
-      scripts=['postr'],
-      package_dir={'postr': 'src'},
+      scripts=['nautilus-postr'],
+      package_dir={'postr': 'postr'},
       packages=['postr'],
       package_data={'postr': ['postr.glade']},
       data_files=[('share/applications', ['data/postr.desktop']),
