@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <glade-interface>
-  <!-- interface-requires gtk+ 2.6 -->
+  <!-- interface-requires gtk+ 2.10 -->
   <!-- interface-naming-policy toplevel-contextual -->
   <widget class="GtkWindow" id="window">
     <property name="visible">True</property>
@@ -23,22 +23,35 @@
                   <widget class="GtkMenu" id="menuitem1_menu">
                     <child>
                       <widget class="GtkImageMenuItem" id="add_photos">
-                        <property name="label">_Add Photos...</property>
+                        <property name="label" translatable="yes">_Add Photos...</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="on_add_photos_activate"/>
                         <accelerator key="O" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image1">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-open</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="remove_menu">
-                        <property name="label">_Remove Photos</property>
+                        <property name="label" translatable="yes">_Remove Photos</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="on_remove_activate"/>
                         <accelerator key="D" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image3">
+                            <property name="visible">True</property>
+                            <property name="yalign">0.49000000953674316</property>
+                            <property name="stock">gtk-remove</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
@@ -48,12 +61,18 @@
                     </child>
                     <child>
                       <widget class="GtkImageMenuItem" id="save_session_menu">
-                        <property name="label">_Save session</property>
+                        <property name="label" translatable="yes">_Save session</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="on_save_session_activate"/>
                         <accelerator key="S" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                        <child internal-child="image">
+                          <widget class="GtkImage" id="image4">
+                            <property name="visible">True</property>
+                            <property name="stock">gtk-save</property>
+                          </widget>
+                        </child>
                       </widget>
                     </child>
                     <child>
@@ -71,8 +90,7 @@
                       </widget>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="switchmenu">
-                        <property name="label">_Switch user...</property>
+                      <widget class="GtkMenuItem" id="switch_menu">
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
@@ -80,8 +98,7 @@
                       </widget>
                     </child>
                     <child>
-                      <widget class="GtkImageMenuItem" id="upload_menu">
-                        <property name="label">_Upload</property>
+                      <widget class="GtkMenuItem" id="upload_menu">
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
@@ -116,7 +133,7 @@
                   <widget class="GtkMenu" id="select2_menu">
                     <child>
                       <widget class="GtkImageMenuItem" id="select_all">
-                        <property name="label">_Select All</property>
+                        <property name="label">gtk-select-all</property>
                         <property name="visible">True</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
